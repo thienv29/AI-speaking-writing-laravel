@@ -30,6 +30,6 @@ Route::resource('exercise-types', ExerciseTypeController::class);
 Route::resource('questions', QuestionController::class);
 Route::resource('attempts', AttemptController::class);
 Route::resource('progress', ProgressController::class);
-Route::resource('vocabulary', VocabularyController::class);
+Route::resource('vocabularies', VocabularyController::class);
 Route::resource('users', UserController::class);
 

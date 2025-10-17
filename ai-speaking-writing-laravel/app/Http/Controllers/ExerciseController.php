@@ -14,7 +14,7 @@ class ExerciseController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Exercise::all());
     }
 
     /**

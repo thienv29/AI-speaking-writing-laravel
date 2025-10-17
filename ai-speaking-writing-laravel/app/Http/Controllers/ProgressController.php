@@ -14,7 +14,7 @@ class ProgressController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Progress::all());
     }
 
     /**

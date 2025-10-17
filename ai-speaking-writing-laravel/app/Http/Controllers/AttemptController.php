@@ -14,7 +14,7 @@ class AttemptController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Attempt::all());
     }
 
     /**

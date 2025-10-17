@@ -9,7 +9,7 @@ class ExerciseType extends Model
 {
     use HasFactory;
 
-    protected $table = 'exercise_type'; 
+    protected $table = 'exercise_types'; 
     protected $fillable = ['name', 'code'];
 
     public function exercises()

@@ -14,7 +14,7 @@ class VocabularyController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(Vocabulary::all());
     }
 
     /**

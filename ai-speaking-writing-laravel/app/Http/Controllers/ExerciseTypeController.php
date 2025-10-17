@@ -14,7 +14,7 @@ class ExerciseTypeController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(ExerciseType::all());
     }
 
     /**
@@ -35,7 +35,6 @@ class ExerciseTypeController extends Controller
      */
     public function store(Request $request)
     {
-        //
     }
 
     /**
