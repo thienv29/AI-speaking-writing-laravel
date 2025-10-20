@@ -41,13 +41,14 @@ class ExerciseTypeController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => ['required', 'string', 'max:255'],
+                'name' => ['required', 'string', 'max:255', 'unique:exercise_types,name'],
                 'code' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:exercise_types,code'],
             ],
             [
                 'name.required' => 'The exercise type name is required.',
                 'name.string' => 'The exercise type name must be a string.',
                 'name.max' => 'The exercise type name may not be greater than 255 characters.',
+                'name.unique' => 'The exercise type name has already been taken.',
                 'code.required' => 'The exercise type code is required.',
                 'code.string'=> 'The exercise type code must be a string.',
                 'code.max' => 'The exercise type code may not be greater than 100 characters.',
@@ -137,7 +138,9 @@ class ExerciseTypeController extends Controller
             $validated = validator(
                 $input,
                 [
-                    'name' => ['sometimes', 'required', 'string', 'max:255'],
+                    'name' => ['sometimes', 'required', 'string', 'max:255',
+                        Rule::unique('exercise_types','name')->ignore($exerciseType->id),
+                    ],
                     'code' => [
                         'sometimes','required','string','max:100','alpha_dash',
                         Rule::unique('exercise_types','code')->ignore($exerciseType->id),
@@ -148,6 +151,7 @@ class ExerciseTypeController extends Controller
                     'name.required'     => 'The exercise type name is required.',
                     'name.string'       => 'The exercise type name must be a string.',
                     'name.max'          => 'The exercise type name may not be greater than 255 characters.',
+                    'name.unique'       => 'The exercise type name has already been taken.',
                     'code.required'     => 'The exercise type code is required.',
                     'code.string'       => 'The exercise type code must be a string.',
                     'code.max'          => 'The exercise type code may not be greater than 100 characters.',
@@ -166,7 +170,6 @@ class ExerciseTypeController extends Controller
             }
 
             $exerciseType->fill($validated)->save();
-            $exerciseType->loadCount('exercises');
 
             return response()->json([
                 'status' => 'success',
