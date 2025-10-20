@@ -9,7 +9,20 @@ class Lesson extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'img_url', 'level', 'active'];
+    protected $fillable = [
+        'title', 
+        'description', 
+        'img_url', 
+        'level', 
+        'active'
+    ];
+
+    protected $attributes = [
+        'description' => null,
+        'img_url'     => null,
+        'level'=> null,
+        'active' => true,
+    ];
 
     public function exercises()
     {

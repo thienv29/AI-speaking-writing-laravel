@@ -10,7 +10,15 @@ class ExerciseType extends Model
     use HasFactory;
 
     protected $table = 'exercise_types'; 
-    protected $fillable = ['name', 'code', 'active'];
+    protected $fillable = [
+        'name',
+        'code', 
+        'active' 
+    ];
+
+    protected $attributes = [
+        'active' => true,
+    ];
 
     public function exercises()
     {

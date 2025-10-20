@@ -28,6 +28,13 @@ class User extends Authenticatable
         'active',
     ];
 
+    protected $attributes = [
+        'dob'         => null,
+        'avatar_url'  => null,
+        'role'        => 'user',
+        'active'      => true,
+    ];
+
     /**
      * The attributes that should be hidden for serialization.
      *

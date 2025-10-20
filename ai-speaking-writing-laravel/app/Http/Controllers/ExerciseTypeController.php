@@ -14,7 +14,7 @@ class ExerciseTypeController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response | \Illuminate\Http\JsonResponse
      */
     public function index()
     {
@@ -66,7 +66,7 @@ class ExerciseTypeController extends Controller
                 'message' => 'Exercise type created successfully.',
                 'data'   => $exerciseType
             ], 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'status'  => 'fail',
                 'message' => 'Validation error.',

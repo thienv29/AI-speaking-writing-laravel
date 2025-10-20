@@ -42,7 +42,7 @@ class LessonController extends Controller
             $validated = $request->validate([
                 'title' => ['required', 'string', 'max:255', 'unique:lessons,title'],
                 'description' => ['nullable', 'string'],
-                'img_url' => ['nullable', 'string', 'max:2048'],
+                'img_url' => ['nullable', 'url', 'max:2048'],
                 'level' => ['required', 'string', 'max:255']
             ],
             [
@@ -53,7 +53,7 @@ class LessonController extends Controller
 
                 'description.string'=> 'The description must be a string.',
 
-                'img_url.string' => 'The image URL must be a string.',
+                'img_url.url' => 'The image URL must be a valid URL.',
                 'img_url.max' => 'The image URL may not be greater than 2048 characters.',
                 
                 'level.required' => 'The level is required.',
@@ -77,7 +77,7 @@ class LessonController extends Controller
                 'message' => 'Lesson created successfully.',
                 'data'   => $lesson
             ], 201);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'status'  => 'fail',
                 'message' => 'Validation error.',
@@ -159,7 +159,7 @@ class LessonController extends Controller
                         Rule::unique('lessons','title')->ignore($lesson->id),
                     ],
                     'description' => ['sometimes','nullable','string','max:255'],
-                    'img_url' => ['sometimes','nullable','string','max:2048'],
+                    'img_url' => ['sometimes','nullable','url','max:2048'],
                     'level' => ['sometimes', 'required', 'string', 'max:255'],
                     'active' => ['sometimes', 'required', 'boolean'],
                 ],
@@ -172,7 +172,7 @@ class LessonController extends Controller
                     'description.string'       => 'The lesson description must be a string.',
                     'description.max'          => 'The lesson description may not be greater than 255 characters.',
 
-                    'img_url.string'       => 'The lesson image URL must be a string.',
+                    'img_url.url'       => 'The lesson image URL must be a valid URL.',
                     'img_url.max'          => 'The lesson image URL may not be greater than 2048 characters.',
 
                     'level.required'     => 'The lesson level is required.',
