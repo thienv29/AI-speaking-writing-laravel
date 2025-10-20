@@ -9,7 +9,7 @@ class Lesson extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'img_url', 'level'];
+    protected $fillable = ['title', 'description', 'img_url', 'level', 'active'];
 
     public function exercises()
     {

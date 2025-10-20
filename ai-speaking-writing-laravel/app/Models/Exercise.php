@@ -16,7 +16,8 @@ class Exercise extends Model
         'instruction',
         'difficulty',
         'img_url',
-        'order_index'
+        'order_index',
+        'active'
     ];
 
     public function lesson()

@@ -14,7 +14,8 @@ class Progress extends Model
         'lesson_id',
         'status',
         'complete_at',
-        'time_spent'
+        'time_spent',
+        'active',
     ];
 
     public function user()

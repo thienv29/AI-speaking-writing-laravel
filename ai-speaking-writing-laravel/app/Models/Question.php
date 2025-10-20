@@ -16,7 +16,8 @@ class Question extends Model
         'order_index',
         'prompt_text',
         'target_text',
-        'starter_text'
+        'starter_text',
+        'active'
     ];
 
     public function exercise()

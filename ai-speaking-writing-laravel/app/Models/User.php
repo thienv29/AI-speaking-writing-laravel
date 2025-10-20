@@ -24,7 +24,8 @@ class User extends Authenticatable
         'dob',
         'avatar_url',
         'password',
-        'role'
+        'role',
+        'active',
     ];
 
     /**
