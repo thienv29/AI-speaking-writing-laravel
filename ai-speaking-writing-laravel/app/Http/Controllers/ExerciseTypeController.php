@@ -130,6 +130,9 @@ class ExerciseTypeController extends Controller
             if ($request->has('code')) {
                 $input['code'] = strtoupper(trim((string) $request->input('code')));
             }
+            if ($request->has('active')) {
+                $input['active'] = (bool) $request->input('active');
+            }
 
             $validated = validator(
                 $input,
@@ -139,6 +142,7 @@ class ExerciseTypeController extends Controller
                         'sometimes','required','string','max:100','alpha_dash',
                         Rule::unique('exercise_types','code')->ignore($exerciseType->id),
                     ],
+                    'active' => ['sometimes', 'required', 'boolean'],
                 ],
                 [
                     'name.required'     => 'The exercise type name is required.',
@@ -149,6 +153,8 @@ class ExerciseTypeController extends Controller
                     'code.max'          => 'The exercise type code may not be greater than 100 characters.',
                     'code.alpha_dash'   => 'The exercise type code may only contain letters, numbers, dashes, and underscores.',
                     'code.unique'       => 'The exercise type code has already been taken.',
+                    'active.boolean'    => 'The active field must be true or false.',
+                    'active.required'   => 'The active field is required.',
                 ]
             )->validate();
 
