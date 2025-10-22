@@ -101,6 +101,10 @@ class LessonController extends Controller
     public function show(Lesson $lesson)
     {
         try {
+            $lesson->load([
+                'exercises',
+            ])->loadCount(['exercises']);
+
             return response()->json([
                 'status' => 'success',
                 'data'   => $lesson,
@@ -192,6 +196,10 @@ class LessonController extends Controller
             }
 
             $lesson->fill($validated)->save();
+
+            $lesson->load([
+                'exercises',
+            ])->loadCount(['exercises']);
 
             return response()->json([
                 'status' => 'success',

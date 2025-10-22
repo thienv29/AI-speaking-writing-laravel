@@ -129,6 +129,11 @@ class UserController extends Controller
     public function show(User $user)
     {
         try {
+            $user->load([
+                'attempts',   
+                'progress',
+            ])->loadCount(['attempts','progress']);
+
             return response()->json([
                 'status' => 'success',
                 'data'   => $user->makeHidden(['password']),
@@ -253,6 +258,11 @@ class UserController extends Controller
             $user->fill($validated);
 
             $user->save();
+
+            $user->load([
+                'attempts',   
+                'progress',
+            ])->loadCount(['attempts','progress']);
 
             return response()->json([
                 'status' => 'success',

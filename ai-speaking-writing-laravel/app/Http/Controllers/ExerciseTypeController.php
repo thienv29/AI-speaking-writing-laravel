@@ -90,6 +90,10 @@ class ExerciseTypeController extends Controller
     public function show(ExerciseType $exerciseType)
     {
         try {
+            $exerciseType->load([
+                'exercises',
+            ])->loadCount(['exercises']);
+
             return response()->json([
                 'status' => 'success',
                 'data'   => $exerciseType,
@@ -170,6 +174,10 @@ class ExerciseTypeController extends Controller
             }
 
             $exerciseType->fill($validated)->save();
+
+            $exerciseType->load([
+                'exercises',
+            ])->loadCount(['exercises']);
 
             return response()->json([
                 'status' => 'success',
