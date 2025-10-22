@@ -140,21 +140,97 @@ class DatabaseSeeder extends Seeder
             ]),
         ]);
 
-        // ❓ QUESTIONS
-        $questions = collect();
-        foreach ($exercises as $exercise) {
-            for ($i = 1; $i <= 3; $i++) {
-                $questions->push(Question::create([
-                    'exercise_id' => $exercise->id,
-                    'order_index' => $i,
-                    'prompt_text' => "Question {$i} for {$exercise->title}",
-                    'target_text' => "Expected answer {$i}",
-                    'starter_text' => "Starter {$i}",
-                    'img_url' => null,
-                    'audio_url' => null
-                ]));
-            }
-        }
+        // ❓ QUESTIONS - Chi tiết từ nhánh speaking
+        $lessonId = $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id;
+        $questions = collect([
+            //Bài tập 1: Speaking - Word
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 1: Bắt đầu nào!')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 1,
+                'target_text' => 'Hello',
+                'prompt_text' => 'Hello',
+                'starter_text' => null
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 1: Bắt đầu nào!')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 2,
+                'target_text' => 'Name',
+                'prompt_text' => 'Name',
+                'starter_text' => null
+            ]),
+
+            //Bài tập 2: Speaking - Sentence
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 2: Bạn là ai?')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 1,
+                'target_text' => 'What is your name?',
+                'prompt_text' => 'What is your name?',
+                'starter_text' => null
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 2: Bạn là ai?')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 2,
+                'target_text' => 'How are you?',
+                'prompt_text' => 'How are you?',
+                'starter_text' => null
+            ]),
+
+            //Bài tập 3: Writing - Complete the sentence
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 3: Hãy giới thiệu nào')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 1,
+                'target_text' => null,
+                'prompt_text' => 'I am...',
+                'starter_text' => 'I am',
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 3: Hãy giới thiệu nào')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 2,
+                'target_text' => null,
+                'prompt_text' => 'My name...',
+                'starter_text' => 'My name',
+            ]),
+
+            //Bài tập 4: Writing - Answer the question
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 4: Làm quen nha')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 1,
+                'target_text' => 'Where do you live?',
+                'prompt_text' => 'Where do you live?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 4: Làm quen nha')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 2,
+                'target_text' => 'How old are you?',
+                'prompt_text' => 'How old are you?',
+                'starter_text' => null,
+            ]),
+        ]);
 
         // 🎙️ ATTEMPTS
         foreach ($users as $user) {
@@ -183,9 +259,12 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        //VOCABULARY
+        //VOCABULARY - Chi tiết từ nhánh speaking
         $words = [
-            ['word' => 'hello', 'phonetic' => '/həˈləʊ/', 'meaning' => 'xin chào', 'note' => 'used for greeting'],
+            ['word' => 'hello', 'phonetic' => '/həˈləʊ/', 'meaning' => 'xin chào', 'note' => 'Một câu chào hỏi cơ bản.'],
+            ['word' => 'name', 'phonetic' => '/neɪm/', 'meaning' => 'tên', 'note' => null],
+            ['word' => 'Vietnam', 'phonetic' => '/ˈviːɛtnæm/', 'meaning' => 'Việt Nam', 'note' => null],
+            ['word' => 'love', 'phonetic' => '/lʌv/', 'meaning' => 'yêu', 'note' => null],
             ['word' => 'study', 'phonetic' => '/ˈstʌdi/', 'meaning' => 'học', 'note' => 'used in education context'],
             ['word' => 'practice', 'phonetic' => '/ˈpræktɪs/', 'meaning' => 'luyện tập', 'note' => 'use in speaking/writing'],
             ['word' => 'teacher', 'phonetic' => '/ˈtiːtʃə(r)/', 'meaning' => 'giáo viên', 'note' => 'person who teaches'],
