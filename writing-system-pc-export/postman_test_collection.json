@@ -1,0 +1,150 @@
+{
+  "info": {
+    "name": "Writing System API Tests",
+    "description": "Test collection for Writing System Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Q&A Exercises",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/writing/qa-exercises",
+          "host": ["{{base_url}}"],
+          "path": ["api", "writing", "qa-exercises"]
+        }
+      }
+    },
+    {
+      "name": "Get Sentence Building Exercises",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/writing/sentence-building-exercises",
+          "host": ["{{base_url}}"],
+          "path": ["api", "writing", "sentence-building-exercises"]
+        }
+      }
+    },
+    {
+      "name": "Get Complete Sentence Exercises",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/writing/complete-sentence-exercises",
+          "host": ["{{base_url}}"],
+          "path": ["api", "writing", "complete-sentence-exercises"]
+        }
+      }
+    },
+    {
+      "name": "Get Random Exercise",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/writing/complete-sentence-exercises/random",
+          "host": ["{{base_url}}"],
+          "path": ["api", "writing", "complete-sentence-exercises", "random"]
+        }
+      }
+    },
+    {
+      "name": "Create Writing Attempt",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"writing_exercise_type\": \"writing_qa_exercise\",\n  \"writing_exercise_id\": 1,\n  \"user_answer\": \"My favorite hobby is playing guitar and reading books.\",\n  \"time_spent\": 180\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/writing/attempts",
+          "host": ["{{base_url}}"],
+          "path": ["api", "writing", "attempts"]
+        }
+      }
+    },
+    {
+      "name": "Get Writing Attempts",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/writing/attempts",
+          "host": ["{{base_url}}"],
+          "path": ["api", "writing", "attempts"]
+        }
+      }
+    },
+    {
+      "name": "Submit Writing Attempt",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"feedback\": \"Good answer! You used good vocabulary.\",\n  \"score\": 90.5,\n  \"is_correct\": true\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/writing/attempts/1/submit",
+          "host": ["{{base_url}}"],
+          "path": ["api", "writing", "attempts", "1", "submit"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    }
+  ]
+}
