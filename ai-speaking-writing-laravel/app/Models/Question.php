@@ -20,6 +20,15 @@ class Question extends Model
         'active'
     ];
 
+    protected $attributes = [
+        'img_url'     => null,
+        'audio_url'   => null,
+        'prompt_text' => null,
+        'target_text' => null,
+        'starter_text'=> null,
+        'active'      => true,
+    ];
+
     public function exercise()
     {
         return $this->belongsTo(Exercise::class, 'exercise_id');
