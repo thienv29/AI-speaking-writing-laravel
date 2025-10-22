@@ -14,7 +14,8 @@ class LessonController extends Controller
      */
     public function index()
     {
-        //
+        $lessons = Lesson::all();
+        return view('lessons.index', compact('lessons'));
     }
 
     /**
@@ -46,7 +47,8 @@ class LessonController extends Controller
      */
     public function show(Lesson $lesson)
     {
-        //
+        $lesson = $lesson->load(['exercises.questions', 'exercises.type']);
+        return view('lessons.show', compact('lesson'));
     }
 
     /**

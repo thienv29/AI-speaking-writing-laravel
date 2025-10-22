@@ -66,5 +66,10 @@ Route::prefix('writing')->group(function () {
     Route::get('attempts/exercise', [WritingAttemptController::class, 'getByExercise']);
     Route::get('attempts/my-attempts', [WritingAttemptController::class, 'getMyAttempts']);
     Route::get('attempts/progress/{userId}', [WritingAttemptController::class, 'getProgressStats']);
+    
+    // Advanced AI Scoring
+    Route::post('advanced-scoring/analyze', [WritingController::class, 'advancedScoring']);
+    Route::post('plagiarism/check', [WritingController::class, 'checkPlagiarism']);
+    Route::post('grammar/analyze', [WritingController::class, 'analyzeGrammar']);
 });
 
