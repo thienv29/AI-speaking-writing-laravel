@@ -152,9 +152,6 @@ class LessonController extends Controller
             if ($request->has('level')) {
                 $input['level'] = trim((string) $request->input('level'));
             }
-            if ($request->has('active')) {
-                $input['active'] = (bool) $request->input('active');
-            }
 
             $validated = validator(
                 $input,
@@ -165,7 +162,6 @@ class LessonController extends Controller
                     'description' => ['sometimes','nullable','string','max:255'],
                     'img_url' => ['sometimes','nullable','url','max:2048'],
                     'level' => ['sometimes', 'required', 'string', 'max:255'],
-                    'active' => ['sometimes', 'required', 'boolean'],
                 ],
                 [
                     'title.required'     => 'The lesson name is required.',
@@ -182,9 +178,6 @@ class LessonController extends Controller
                     'level.required'     => 'The lesson level is required.',
                     'level.string'       => 'The lesson level must be a string.',
                     'level.max'          => 'The lesson level may not be greater than 255 characters.',
-
-                    'active.boolean'    => 'The active field must be true or false.',
-                    'active.required'   => 'The active field is required.',
                 ]
             )->validate();
 
@@ -232,23 +225,60 @@ class LessonController extends Controller
     {
         try {
             if ($lesson->exercises()->exists()) {
+                $lesson->delete(); 
+
                 return response()->json([
-                    'status'  => 'fail',
-                    'message' => 'Cannot delete: there are exercises referencing this lesson.',
-                ], 409);
+                    'status'  => 'success',
+                    'message' => 'Lesson has related exercises → soft deleted (marked deleted_at).',
+                ]);
             }
 
-            $lesson->delete();
+            $lesson->forceDelete(); 
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Lesson deleted.',
+                'message' => 'Lesson had no related exercises → permanently deleted.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('Lesson destroy error', ['id' => $lesson->id ?? null, 'error' => $e]);
+            Log::error('Lesson destroy error', [
+                'id' => $lesson->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Cannot delete lesson: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $lesson = Lesson::withTrashed()->findOrFail($id);
+
+            if ($lesson->trashed()) {
+                $lesson->restore();
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'Lesson restored successfully.',
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'info',
+                'message' => 'Lesson is already active (not deleted).',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Lesson restore error', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Cannot restore lesson: ' . $e->getMessage(),
             ], 500);
         }
     }

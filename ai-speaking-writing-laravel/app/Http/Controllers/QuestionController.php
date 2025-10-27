@@ -169,10 +169,6 @@ class QuestionController extends Controller
                 }
             }
 
-            if ($request->has('active')) {
-                $input['active'] = (bool) $request->input('active');
-            }
-
             $validated = validator(
                 $input,
                 [
@@ -183,7 +179,6 @@ class QuestionController extends Controller
                     'prompt_text'  => ['sometimes','nullable','string'],
                     'target_text'  => ['sometimes','nullable','string'],
                     'starter_text' => ['sometimes','nullable','string'],
-                    'active'       => ['sometimes','required','boolean'],
                 ],
                 [
                     'exercise_id.required' => 'The exercise_id is required.',
@@ -199,8 +194,6 @@ class QuestionController extends Controller
                     'prompt_text.string'   => 'The prompt text must be a string.',
                     'target_text.string'   => 'The target text must be a string.',
                     'starter_text.string'  => 'The starter text must be a string.',
-
-                    'active.boolean'       => 'The active field must be true or false.',
                 ]
             )->validate();
 
@@ -237,23 +230,60 @@ class QuestionController extends Controller
     {
         try {
             if ($question->attempts()->exists()) {
+                $question->delete();
+
                 return response()->json([
-                    'status'  => 'fail',
-                    'message' => 'Cannot delete: there are attempts referencing this question.',
-                ], 409);
+                    'status'  => 'success',
+                    'message' => 'Question has related attempts → soft deleted (marked deleted_at).',
+                ]);
             }
 
-            $question->delete();
+            $question->forceDelete();
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Question deleted.',
+                'message' => 'Question had no related attempts → permanently deleted.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('Question destroy error', ['id' => $question->id ?? null, 'error' => $e]);
+            Log::error('Question destroy error', [
+                'id' => $question->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Cannot delete question: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $question = Question::withTrashed()->findOrFail($id);
+
+            if ($question->trashed()) {
+                $question->restore();
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'Question restored successfully.',
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'info',
+                'message' => 'Question is already active (not deleted).',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Question restore error', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Cannot restore question: ' . $e->getMessage(),
             ], 500);
         }
     }

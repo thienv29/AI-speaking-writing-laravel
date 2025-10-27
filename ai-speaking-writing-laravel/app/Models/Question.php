@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Question extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'exercise_id',
@@ -16,8 +18,7 @@ class Question extends Model
         'order_index',
         'prompt_text',
         'target_text',
-        'starter_text',
-        'active'
+        'starter_text'
     ];
 
     protected $attributes = [
@@ -25,8 +26,7 @@ class Question extends Model
         'audio_url'   => null,
         'prompt_text' => null,
         'target_text' => null,
-        'starter_text'=> null,
-        'active'      => true,
+        'starter_text'=> null
     ];
 
     public function exercise()

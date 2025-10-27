@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Exercise extends Model
+class Exercise extends Model 
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'type_id',
@@ -16,8 +18,11 @@ class Exercise extends Model
         'instruction',
         'difficulty',
         'img_url',
-        'order_index',
-        'active'
+        'order_index'
+    ];
+
+    protected $attributes = [
+        'img_url'    => null,
     ];
 
     public function lesson()

@@ -135,9 +135,6 @@ class ExerciseTypeController extends Controller
             if ($request->has('code')) {
                 $input['code'] = strtoupper(trim((string) $request->input('code')));
             }
-            if ($request->has('active')) {
-                $input['active'] = (bool) $request->input('active');
-            }
 
             $validated = validator(
                 $input,
@@ -149,7 +146,6 @@ class ExerciseTypeController extends Controller
                         'sometimes','required','string','max:100','alpha_dash',
                         Rule::unique('exercise_types','code')->ignore($exerciseType->id),
                     ],
-                    'active' => ['sometimes', 'required', 'boolean'],
                 ],
                 [
                     'name.required'     => 'The exercise type name is required.',
@@ -161,8 +157,6 @@ class ExerciseTypeController extends Controller
                     'code.max'          => 'The exercise type code may not be greater than 100 characters.',
                     'code.alpha_dash'   => 'The exercise type code may only contain letters, numbers, dashes, and underscores.',
                     'code.unique'       => 'The exercise type code has already been taken.',
-                    'active.boolean'    => 'The active field must be true or false.',
-                    'active.required'   => 'The active field is required.',
                 ]
             )->validate();
 
@@ -210,23 +204,60 @@ class ExerciseTypeController extends Controller
     {
         try {
             if ($exerciseType->exercises()->exists()) {
+                $exerciseType->delete();
+
                 return response()->json([
-                    'status'  => 'fail',
-                    'message' => 'Cannot delete: there are exercises referencing this type.',
-                ], 409);
+                    'status'  => 'success',
+                    'message' => 'Exercise type has related exercises → soft deleted (marked deleted_at).',
+                ]);
             }
 
-            $exerciseType->delete();
+            $exerciseType->forceDelete();
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Exercise type deleted.',
+                'message' => 'Exercise type had no related exercises → permanently deleted.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('ExerciseType destroy error', ['id' => $exerciseType->id ?? null, 'error' => $e]);
+            Log::error('ExerciseType destroy error', [
+                'id' => $exerciseType->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Cannot delete exercise type: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $exerciseType = ExerciseType::withTrashed()->findOrFail($id);
+
+            if ($exerciseType->trashed()) {
+                $exerciseType->restore();
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'Exercise type restored successfully.',
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'info',
+                'message' => 'Exercise type is already active (not deleted).',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Exercise type restore error', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Cannot restore exercise type: ' . $e->getMessage(),
             ], 500);
         }
     }

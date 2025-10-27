@@ -131,8 +131,7 @@ class UserController extends Controller
         try {
             $user->load([
                 'attempts',   
-                'progress',
-            ])->loadCount(['attempts','progress']);
+            ])->loadCount(['attempts']);
 
             return response()->json([
                 'status' => 'success',
@@ -169,7 +168,7 @@ class UserController extends Controller
     {
         try {
             $payload = $request->only([
-                'name','email','password','password_confirmation','phone_number','dob','avatar_url','active','role'
+                'name','email','password','password_confirmation','phone_number','dob','avatar_url','role'
             ]);
 
             if (array_key_exists('name', $payload) && !is_null($payload['name'])) {
@@ -180,9 +179,6 @@ class UserController extends Controller
             }
             if (array_key_exists('password', $payload) && !is_null($payload['password'])) {
                 $payload['password'] = trim((string)$payload['password']);
-            }
-            if (array_key_exists('active', $payload) && !is_null($payload['active'])) {
-                $payload['active'] = (bool)$payload['active'];
             }
             if (array_key_exists('phone_number', $payload) && !is_null($payload['phone_number'])) {
                 $payload['phone_number'] = trim((string)$payload['phone_number']);
@@ -208,7 +204,6 @@ class UserController extends Controller
                     'dob' => ['sometimes','nullable','date'],
                     'phone_number' => ['sometimes','nullable','string','max:15', 
                         Rule::unique('users','phone_number')->ignore($user->id)],
-                    'active'  => ['sometimes','boolean'],
                     'role' => ['sometimes','string','in:user,admin'],
                 ],
                 [
@@ -239,8 +234,6 @@ class UserController extends Controller
 
                     'role.in' => 'The role must be either user or admin.',
                     'role.string' => 'The role must be a string.',
-
-                    'active.boolean' => 'The active flag must be boolean.',
                 ]
             )->validate();
 
@@ -293,17 +286,61 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         try {
-            $user->delete();
+            if ($user->attempts()->exists()) {
+                $user->delete();
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'User has related attempts → soft deleted (marked deleted_at).',
+                ]);
+            }
+
+            $user->forceDelete();
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'User deleted.',
+                'message' => 'User had no related attempts → permanently deleted.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('User destroy error', ['id' => $user->id ?? null, 'error' => $e]);
+            Log::error('User destroy error', [
+                'id' => $user->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Cannot delete user: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+
+            if ($user->trashed()) {
+                $user->restore();
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'User restored successfully.',
+                ]);
+            }
+
+            return response()->json([
+                'status'  => 'info',
+                'message' => 'User is already active (not deleted).',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('User restore error', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Cannot restore user: ' . $e->getMessage(),
             ], 500);
         }
     }
