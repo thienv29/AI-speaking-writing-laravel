@@ -8,10 +8,16 @@ use Illuminate\Support\Str;
 
 class AttemptService
 {
+    protected $templateValidator;
+
+    public function __construct(TemplateValidatorService $templateValidator)
+    {
+        $this->templateValidator = $templateValidator;
+    }
     public function evaluateWritingAttempt(int $questionId, ?int $userId, string $userAnswer): Attempt
     {
         // Load Question với Exercise và ExerciseType để biết loại bài
-        $question = Question::with(['exercise.type'])
+        $question = Question::with(['exercise.type', 'exercise.lesson'])
             ->findOrFail($questionId);
 
         $cleanAnswer = trim($userAnswer);
@@ -30,11 +36,73 @@ class AttemptService
             'feedback'       => $result['feedback'],
         ]);
 
-        return $attempt->load(['question:id,exercise_id,order_index', 'question.exercise:id,title', 'user:id,name,email']);
+        // Add score to the response
+        $attempt->score = $result['score'] ?? null;
+        $attempt->template_used = $result['template_used'] ?? null;
+        $attempt->extracted_value = $result['extracted_value'] ?? null;
+        $attempt->evaluation_meta = $result['evaluation_meta'] ?? null;
+        $attempt->effect = $result['effect'] ?? null;
+
+        $attempt->load([
+            'user:id,name,email',
+            'question' => function ($query) {
+                $query->select('id', 'exercise_id', 'order_index', 'prompt_text', 'target_text', 'starter_text')
+                    ->with(['exercise' => function ($exerciseQuery) {
+                        $exerciseQuery->select('id', 'title', 'type_id', 'lesson_id')
+                            ->with([
+                                'type:id,code,name',
+                                'lesson:id,title'
+                            ]);
+                    }]);
+            },
+        ]);
+
+        return $attempt;
+    }
+
+    /**
+     * Get template hint for a question
+     */
+    public function getTemplateHint(int $questionId): ?string
+    {
+        $question = Question::findOrFail($questionId);
+        return $this->templateValidator->getTemplateHint($question);
     }
 
     private function evaluateByType(string $typeCode, Question $question, string $userAnswer): array
     {
+        // Try template validation first
+        if ($this->templateValidator->hasTemplate($question)) {
+            $templateResult = $this->templateValidator->evaluate($question, $userAnswer);
+            
+            // If template validation succeeded, return it
+            if ($templateResult['valid']) {
+                return [
+                    'is_correct' => true,
+                    'feedback' => $templateResult['feedback'],
+                    // pass through score; do not coerce to 100 for binary templates
+                    'score' => $templateResult['score'] ?? null,
+                    'template_used' => $templateResult['template_used'] ?? null,
+                    'extracted_value' => $templateResult['extracted_value'] ?? null,
+                    'evaluation_meta' => $templateResult['evaluation_meta'] ?? null,
+                    'effect' => $templateResult['effect'] ?? null
+                ];
+            }
+            
+            // If template validation failed, return template feedback
+            return [
+                'is_correct' => false,
+                'feedback' => $templateResult['feedback'],
+                // for binary templates, keep score null; graded templates may return 0
+                'score' => $templateResult['score'] ?? null,
+                'template_used' => $templateResult['template_used'] ?? null,
+                'extracted_value' => $templateResult['extracted_value'] ?? null,
+                'evaluation_meta' => $templateResult['evaluation_meta'] ?? null,
+                'effect' => $templateResult['effect'] ?? null
+            ];
+        }
+        
+        // Fallback to original evaluation methods
         switch ($typeCode) {
             case 'WAQ': // Answer the question
                 return $this->evaluateAnswerQuestion($question, $userAnswer);
@@ -52,11 +120,21 @@ class AttemptService
         $score = 0;
         $reasons = [];
         
-        // Kiểm tra có trả lời không
-        if (mb_strlen($userAnswer) >= 5) {
-            $score += 40;
+        // Phân tích câu hỏi để xác định yêu cầu độ dài
+        $questionText = strtolower($question->prompt_text ?? '');
+        $expectedLength = $this->getExpectedAnswerLength($questionText);
+        
+        // Kiểm tra độ dài phù hợp với loại câu hỏi
+        $answerLength = mb_strlen($userAnswer);
+        if ($answerLength >= $expectedLength['min']) {
+            $score += 30;
+            
+            // Bonus nếu đủ dài cho câu hỏi mở
+            if ($expectedLength['min'] > 10 && $answerLength >= $expectedLength['good']) {
+                $score += 10;
+            }
         } else {
-            $reasons[] = "Câu trả lời quá ngắn!";
+            $reasons[] = "Câu trả lời quá ngắn! (Cần ít nhất {$expectedLength['min']} ký tự)";
         }
         
         // So sánh với target_text nếu có
@@ -67,25 +145,71 @@ class AttemptService
             
             if ($targetWords->count() > 0) {
                 $coverage = $overlap / $targetWords->count();
-                $score += $coverage * 40;
                 
-                if ($coverage < 0.3) {
+                // Nếu có ít nhất 1 từ trùng khớp thì cho điểm
+                if ($coverage > 0) {
+                    $score += 30; // Điểm cố định nếu có từ trùng
+                } else {
                     $reasons[] = "Chưa trả lời đúng chủ đề!";
                 }
+                
+                // Bonus điểm nếu trùng nhiều từ
+                if ($coverage >= 0.5) {
+                    $score += 15; // Bonus 15 điểm
+                }
+            }
+        } else {
+            // Nếu không có target_text, cho điểm dựa trên độ dài phù hợp
+            if ($answerLength >= $expectedLength['good']) {
+                $score += 30;
+            } else {
+                $score += 20;
             }
         }
         
         // Kiểm tra ngữ pháp cơ bản
         if (preg_match('/[.!?]$/', $userAnswer)) {
-            $score += 20;
+            $score += 15;
         } else {
             $reasons[] = "Thiếu dấu câu cuối câu!";
         }
+        
+        // Kiểm tra viết hoa đầu câu
+        if (preg_match('/^[A-Z]/', $userAnswer)) {
+            $score += 15;
+        } else {
+            $reasons[] = "Cần viết hoa đầu câu!";
+        }
+        
+        // Giới hạn tối đa 100 điểm
+        $score = min($score, 100);
         
         $isCorrect = $score >= 60;
         $feedback = $this->generateFeedback($score, $reasons, "Trả lời câu hỏi");
         
         return ['is_correct' => $isCorrect, 'feedback' => $feedback];
+    }
+    
+    private function getExpectedAnswerLength(string $questionText): array
+    {
+        // Câu hỏi đơn giản - chỉ cần trả lời ngắn
+        $simpleQuestions = ['what is your name', 'how old are you', 'where are you from', 'what time is it'];
+        foreach ($simpleQuestions as $pattern) {
+            if (strpos($questionText, $pattern) !== false) {
+                return ['min' => 5, 'good' => 15];
+            }
+        }
+        
+        // Câu hỏi mở - cần trả lời dài
+        $openQuestions = ['describe', 'tell me about', 'explain', 'why', 'how do you', 'what do you think'];
+        foreach ($openQuestions as $pattern) {
+            if (strpos($questionText, $pattern) !== false) {
+                return ['min' => 20, 'good' => 50];
+            }
+        }
+        
+        // Câu hỏi trung bình
+        return ['min' => 10, 'good' => 25];
     }
 
     private function evaluateCompleteSentence(Question $question, string $userAnswer): array

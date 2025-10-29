@@ -19,7 +19,13 @@ class QuestionController extends Controller
     {
         try {
             $query = Question::query()
-                ->with('exercise:id,title')
+                ->with(['exercise' => function ($q) {
+                    $q->select('id', 'title', 'type_id', 'lesson_id')
+                        ->with([
+                            'type:id,code,name',
+                            'lesson:id,title'
+                        ]);
+                }])
                 ->orderBy('exercise_id')
                 ->orderBy('order_index');
 
@@ -123,7 +129,13 @@ class QuestionController extends Controller
     public function show(Question $question)
     {
         try {
-            $question->load('exercise:id,title');
+            $question->load(['exercise' => function ($q) {
+                $q->select('id', 'title', 'type_id', 'lesson_id')
+                    ->with([
+                        'type:id,code,name',
+                        'lesson:id,title'
+                    ]);
+            }]);
 
             return response()->json([
                 'status' => 'success',

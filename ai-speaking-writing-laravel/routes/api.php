@@ -41,6 +41,7 @@ Route::post('/questions/{id}/restore', [QuestionController::class, 'restore']);
 
 Route::resource('attempts', AttemptController::class);
 Route::post('/attempts/{id}/restore', [AttemptController::class, 'restore']);
+Route::get('/questions/{id}/template-hint', [AttemptController::class, 'getTemplateHint']);
 
 
 Route::resource('users', UserController::class);

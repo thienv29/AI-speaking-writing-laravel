@@ -210,4 +210,26 @@ class AttemptController extends Controller
     {
         //
     }
+
+    /**
+     * Get template hint for a question
+     */
+    public function getTemplateHint(Request $request, int $questionId)
+    {
+        try {
+            $hint = $this->attemptService->getTemplateHint($questionId);
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'hint' => $hint
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get template hint: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

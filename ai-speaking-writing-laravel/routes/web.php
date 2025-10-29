@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WritingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,5 +15,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('home');
 });
+
+// Writing UI Routes
+Route::get('/writing', [WritingController::class, 'index'])->name('writing.index');
+Route::get('/writing/question/{id}', [WritingController::class, 'show'])->name('writing.question');

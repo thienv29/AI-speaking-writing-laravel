@@ -194,9 +194,9 @@ class DatabaseSeeder extends Seeder
                 'img_url' => null,
                 'audio_url' => null,
                 'order_index' => 1,
-                'target_text' => null,
-                'prompt_text' => 'I am...',
-                'starter_text' => 'I am',
+                'target_text' => 'My favorite hobby is playing the piano.',
+                'prompt_text' => 'Complete the sentence about your favorite hobby.',
+                'starter_text' => 'My favorite hobby is',
             ]),
             Question::create([
                 'exercise_id' => $exercises->where('lesson_id', $lessonId)
@@ -204,9 +204,9 @@ class DatabaseSeeder extends Seeder
                 'img_url' => null,
                 'audio_url' => null,
                 'order_index' => 2,
-                'target_text' => null,
-                'prompt_text' => 'My name...',
-                'starter_text' => 'My name',
+                'target_text' => 'I live in Hanoi.',
+                'prompt_text' => 'Complete the sentence to tell where you live.',
+                'starter_text' => 'I live in',
             ]),
 
             //Bài 4
@@ -216,8 +216,8 @@ class DatabaseSeeder extends Seeder
                 'img_url' => null,
                 'audio_url' => null,
                 'order_index' => 1,
-                'target_text' => 'Where do you live?',
-                'prompt_text' => 'Where do you live?',
+                'target_text' => 'My name is Anna.',
+                'prompt_text' => 'What is your name?',
                 'starter_text' => null,
             ]),
             Question::create([
@@ -226,8 +226,48 @@ class DatabaseSeeder extends Seeder
                 'img_url' => null,
                 'audio_url' => null,
                 'order_index' => 2,
-                'target_text' => 'How old are you?',
+                'target_text' => 'I am 8 years old.',
                 'prompt_text' => 'How old are you?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 4')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 3,
+                'target_text' => 'I live in Hanoi.',
+                'prompt_text' => 'Where do you live?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 4')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 4,
+                'target_text' => 'Hello, teacher!',
+                'prompt_text' => 'Say hello to your teacher.',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 4')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 5,
+                'target_text' => "It is 7 o'clock.",
+                'prompt_text' => "What time is it? Answer using the format 'It is [number] o'clock'.",
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 4')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 6,
+                'target_text' => 'Today is sunny.',
+                'prompt_text' => 'Describe the weather today using the format "Today is ...".',
                 'starter_text' => null,
             ]),
 
@@ -238,8 +278,8 @@ class DatabaseSeeder extends Seeder
                 'img_url' => null,
                 'audio_url' => null,
                 'order_index' => 1,
-                'target_text' => "Vietnam",
-                'prompt_text' => 'Vietnam',
+                'target_text' => 'sunny',
+                'prompt_text' => 'sunny',
                 'starter_text' => null,
             ]),
             Question::create([
@@ -247,9 +287,19 @@ class DatabaseSeeder extends Seeder
                     ->where('title', 'Bài tập 5')->first()->id,
                 'img_url' => null,
                 'audio_url' => null,
-                'order_index' => 1,
-                'target_text' => "love",
-                'prompt_text' => 'Love',
+                'order_index' => 2,
+                'target_text' => 'friend',
+                'prompt_text' => 'friend',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercises->where('lesson_id', $lessonId)
+                    ->where('title', 'Bài tập 5')->first()->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 3,
+                'target_text' => 'family',
+                'prompt_text' => 'family',
                 'starter_text' => null,
             ]),
         ]);
