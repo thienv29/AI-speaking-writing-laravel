@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attempt;
+use App\Services\AttemptService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -10,6 +11,12 @@ use Illuminate\Validation\Rule;
 
 class AttemptController extends Controller
 {
+    protected AttemptService $attemptService;
+
+    public function __construct(AttemptService $attemptService)
+    {
+        $this->attemptService = $attemptService;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -74,6 +81,25 @@ class AttemptController extends Controller
                 }
             }
 
+            // Check if this is a writing attempt (has user_answer but no user_audio_url)
+            $isWritingAttempt = !empty($input['user_answer']) && empty($input['user_audio_url']);
+            
+            if ($isWritingAttempt) {
+                // Auto-evaluate writing using AttemptService
+                $attempt = $this->attemptService->evaluateWritingAttempt(
+                    (int) $input['question_id'],
+                    $input['user_id'] ?? null,
+                    (string) $input['user_answer']
+                );
+                
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'Writing attempt evaluated successfully.',
+                    'data'    => $attempt,
+                ], 201);
+            }
+
+            // Original logic for speaking attempts (manual evaluation)
             $validated = validator(
                 $input,
                 [

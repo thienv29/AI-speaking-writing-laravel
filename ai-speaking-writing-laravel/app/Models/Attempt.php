@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Attempt extends Model
 {
     use HasFactory;
+    
+    public $timestamps = false;
 
     protected $fillable = [
         'user_id',
