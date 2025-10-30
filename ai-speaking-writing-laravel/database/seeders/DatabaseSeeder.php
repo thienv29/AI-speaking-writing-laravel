@@ -4,16 +4,13 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use App\Models\{
     User,
     Lesson,
     Exercise,
     ExerciseType,
     Question,
-    Attempt,
-    Progress,
-    Vocabulary
+    Attempt
 };
 
 class DatabaseSeeder extends Seeder
@@ -304,17 +301,133 @@ class DatabaseSeeder extends Seeder
             ]),
         ]);
 
-        //VOCABULARY
-        $words = [
-            ['word' => 'hello', 'phonetic' => '/həˈləʊ/', 'meaning' => 'xin chào', 'note' => 'Một câu chào hỏi cơ bản.'],
-            ['word' => 'name', 'phonetic' => '/neɪm/', 'meaning' => 'tên', 'note' => null],
-            ['word' => 'Vietnam', 'phonetic' => '/ˈviːɛtnæm/', 'meaning' => 'Việt Nam', 'note' => null],
-            ['word' => 'love', 'phonetic' => '/lʌv/', 'meaning' => 'yêu', 'note' => null],
-        ];
+        // Add exercises and questions for Bài 2: Hoạt động hàng ngày
+        $lesson2Id = $lessons->where('title', 'Bài 2: Hoạt động hàng ngày')->first()->id;
+        
+        $exercise2 = Exercise::create([
+            'type_id' => $types->where('code', 'WAQ')->first()->id,
+            'lesson_id' => $lesson2Id,
+            'title' => 'Luyện viết về hoạt động hàng ngày',
+            'instruction' => 'Trả lời các câu hỏi về thói quen hàng ngày của bạn:',
+            'difficulty' => 'Trung bình',
+            'img_url' => null,
+            'order_index' => 1
+        ]);
 
-        foreach ($words as $w) {
-            Vocabulary::create($w);
-        }
+        $exercises->push($exercise2);
+
+        // Questions for Bài 2
+        $questions->push(
+            Question::create([
+                'exercise_id' => $exercise2->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 1,
+                'target_text' => 'My favorite hobby is reading books.',
+                'prompt_text' => 'What is your favorite hobby?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise2->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 2,
+                'target_text' => 'I live in Ho Chi Minh City.',
+                'prompt_text' => 'Where do you live?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise2->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 3,
+                'target_text' => "It is 9 o'clock.",
+                'prompt_text' => "What time do you usually wake up? Answer using the format 'It is [number] o'clock'.",
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise2->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 4,
+                'target_text' => 'Today is rainy.',
+                'prompt_text' => 'Describe the weather today using the format "Today is ...".',
+                'starter_text' => null,
+            ])
+        );
+
+        // Add exercises and questions for Bài 3: Môi trường
+        $lesson3Id = $lessons->where('title', 'Bài 3: Môi trường')->first()->id;
+        
+        $exercise3 = Exercise::create([
+            'type_id' => $types->where('code', 'WAQ')->first()->id,
+            'lesson_id' => $lesson3Id,
+            'title' => 'Luyện viết về môi trường',
+            'instruction' => 'Trả lời các câu hỏi về môi trường:',
+            'difficulty' => 'Khó',
+            'img_url' => null,
+            'order_index' => 1
+        ]);
+
+        $exercises->push($exercise3);
+
+        // Questions for Bài 3
+        $questions->push(
+            Question::create([
+                'exercise_id' => $exercise3->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 1,
+                'target_text' => 'My name is Emma.',
+                'prompt_text' => 'What is your name?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise3->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 2,
+                'target_text' => 'I am 10 years old.',
+                'prompt_text' => 'How old are you?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise3->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 3,
+                'target_text' => 'My favorite hobby is planting trees.',
+                'prompt_text' => 'What is your favorite hobby?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise3->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 4,
+                'target_text' => 'I live in Da Nang.',
+                'prompt_text' => 'Where do you live?',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise3->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 5,
+                'target_text' => 'Hello, teacher!',
+                'prompt_text' => 'Say hello to your teacher.',
+                'starter_text' => null,
+            ]),
+            Question::create([
+                'exercise_id' => $exercise3->id,
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => 6,
+                'target_text' => 'Today is sunny.',
+                'prompt_text' => 'Describe the weather today using the format "Today is ...".',
+                'starter_text' => null,
+            ])
+        );
 
         $this->command->info('All tables seeded successfully!');
     }

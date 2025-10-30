@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('meta')
-<title>Luyện Viết Tiếng Anh - I-CLC Learning Playground</title>
+<title>{{ str_replace('Bài ', 'Unit ', $lesson->title) }} - I-CLC Learning Playground</title>
 @endsection
 
 @section('navigation')
@@ -23,62 +23,59 @@
 @section('content')
 <section class="writing-hero">
     <div class="hero-content">
-        <span class="hero-tagline">📝 Sân chơi luyện viết tiếng Anh</span>
+        <span class="hero-tagline">📝 {{ str_replace('Bài ', 'Unit ', $lesson->title) }}</span>
         <h1 class="hero-title">
-            Luyện Viết Tiếng Anh<br>
+            Chọn dạng bài tập<br>
             <span class="highlight">Cùng I-CLC</span>
         </h1>
-        <p class="hero-description">
-            Chọn loại bài tập phù hợp và bắt đầu hành trình chinh phục kỹ năng viết tiếng Anh của bạn!
-        </p>
+        @if(!empty($lesson->description))
+            <p class="hero-description">{{ $lesson->description }}</p>
+        @endif
     </div>
     <div class="hero-illustration">
-        <img src="/assets/images/home-kids-2.png" alt="Kids Writing">
+        <img src="{{ $lesson->img_url ?? '/assets/images/home-kids-2.png' }}" alt="{{ $lesson->title }}">
     </div>
 </section>
 
 <section class="exercises-section">
     <div class="container">
         <div class="section-header">
-            <h2 class="section-title">Chọn bài học</h2>
-            <p class="section-subtitle">Mỗi bài học có nhiều dạng bài tập giúp bạn phát triển kỹ năng viết</p>
+            <h2 class="section-title">Các dạng bài tập</h2>
+            <p class="section-subtitle">Chọn dạng bài tập bạn muốn luyện tập trong bài học này</p>
         </div>
 
         <div class="exercises-grid">
-            @forelse($lessons as $index => $lesson)
+            @foreach($exercises as $index => $exercise)
             <div class="exercise-card" data-animate>
                 <div class="card-image-wrapper">
-                    <img src="{{ $lesson['img_url'] ?? '/assets/images/home-kids-' . (($index % 3) + 1) . '.png' }}" alt="{{ $lesson['title'] }}" class="card-image">
+                    <img src="/assets/images/home-kids-{{ ($index % 3) + 1 }}.png" alt="Kids Learning" class="card-image">
                 </div>
                 <div class="card-icon">
-                    📚
+                    @if($exercise['code'] === 'WAQ')
+                        ✍️
+                    @elseif($exercise['code'] === 'WCS')
+                        ✏️
+                    @else
+                        📝
+                    @endif
                 </div>
                 <div class="card-content">
-                    @if(!empty($lesson['level']))
-                        <div class="difficulty-badge difficulty-{{ strtolower($lesson['level']) }}">
-                            {{ strtoupper($lesson['level']) }}
-                        </div>
+                    <h3 class="card-title">{{ $exercise['title'] }}</h3>
+                    <p class="card-type">{{ $exercise['type'] }}</p>
+                    @if(!empty($exercise['instruction']))
+                        <p class="card-description">{{ $exercise['instruction'] }}</p>
                     @endif
-                    <h3 class="card-title">{{ str_replace('Bài ', 'Unit ', $lesson['title']) }}</h3>
-                    @if(!empty($lesson['description']))
-                        <p class="card-description">{{ $lesson['description'] }}</p>
+                    @if(!empty($exercise['difficulty']))
+                        <p class="card-difficulty">Độ khó: {{ $exercise['difficulty'] }}</p>
                     @endif
-                    <p class="card-type">{{ $lesson['exercises_count'] }} BÀI TẬP</p>
-                    <a href="/writing/lesson/{{ $lesson['id'] }}/exercises" class="card-btn">
-                        Xem bài tập
+                    <a href="/writing/question/{{ $exercise['first_question_id'] }}" class="card-btn">
+                        Bắt đầu ngay
                         <span class="btn-arrow">→</span>
                     </a>
                 </div>
                 <div class="card-decoration"></div>
             </div>
-            @empty
-            <div class="no-exercises">
-                <div class="no-exercises-icon">📚</div>
-                <h3>Chưa có bài học</h3>
-                <p>Hiện tại chưa có bài học nào. Vui lòng quay lại sau!</p>
-                <a href="/" class="back-home-btn">Về trang chủ</a>
-            </div>
-            @endforelse
+            @endforeach
         </div>
     </div>
 </section>
@@ -88,7 +85,7 @@
 <footer class="writing-footer">
     <div class="footer-content">
         <p>&copy; 2024 I-CLC - Inter-Continental Language Center. All rights reserved.</p>
-        <a href="/">← Về trang chủ</a>
+        <a href="/writing">← Quay lại danh sách bài học</a>
     </div>
 </footer>
 @endsection
@@ -130,3 +127,4 @@
     });
 </script>
 @endpush
+

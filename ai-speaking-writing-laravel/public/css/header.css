@@ -1,0 +1,275 @@
+:root {
+    --purple: #6b2c90;
+    --purple-dark: #511b71;
+    --purple-light: #ad6af1;
+    --orange: #f89b1c;
+    --yellow: #f5c12c;
+    --green: #2ecc71;
+    --blue: #3c69e7;
+    --navy: #1f2a56;
+    --soft-bg: linear-gradient(140deg, #fbf7ff 0%, #fef5ed 60%, #f1f5ff 100%);
+}
+
+/* Global font and body styles - ensure consistency across all pages */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: var(--soft-bg);
+    color: var(--navy);
+    overflow-x: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+/* Floating bubbles */
+.floating-bubbles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(245, 193, 44, 0.08);
+    animation: floatBubble 20s infinite ease-in-out;
+}
+
+.bubble.one {
+    width: 80px;
+    height: 80px;
+    left: 10%;
+}
+
+.bubble.two {
+    width: 120px;
+    height: 120px;
+    left: 70%;
+    animation-delay: 5s;
+    background: rgba(107, 44, 144, 0.06);
+}
+
+.bubble.three {
+    width: 60px;
+    height: 60px;
+    left: 40%;
+    animation-delay: 10s;
+    background: rgba(248, 155, 28, 0.08);
+}
+
+@keyframes floatBubble {
+    0%, 100% {
+        transform: translate(0, 0);
+        opacity: 0.3;
+    }
+    33% {
+        transform: translate(50px, -100px);
+        opacity: 0.6;
+    }
+    66% {
+        transform: translate(-30px, -50px);
+        opacity: 0.4;
+    }
+}
+
+/* Topbar */
+.topbar {
+    background: var(--purple);
+    color: #fff;
+    font-size: 13px;
+    padding: 6px 6vw;
+    display: flex;
+    justify-content: flex-end;
+    gap: 18px;
+}
+
+.topbar a {
+    color: #fff;
+    opacity: 0.88;
+}
+
+.topbar a:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+/* Header */
+header {
+    font-family: 'Poppins', sans-serif;
+    padding: 24px 6vw;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: transparent;
+}
+
+header.sticky {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(107, 44, 144, 0.1);
+    padding: 16px 6vw;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--purple);
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.logo-img {
+    height: 54px;
+    width: auto;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.logo-area:hover .logo-img {
+    transform: scale(1.05) rotate(5deg);
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    font-weight: 600;
+    color: var(--purple);
+    align-items: center;
+    font-family: 'Poppins', sans-serif;
+}
+
+nav a:not(.cta-btn) {
+    position: relative;
+    padding: 4px 0;
+}
+
+nav a:not(.cta-btn)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--orange);
+    transition: width 0.3s ease;
+}
+
+nav a:not(.cta-btn):hover::after {
+    width: 100%;
+}
+
+nav a:not(.cta-btn):hover {
+    color: var(--purple-dark);
+}
+
+/* CTA Button - Common styles */
+.cta-btn {
+    background: linear-gradient(135deg, var(--orange), var(--yellow));
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;
+    box-shadow: 0 12px 30px rgba(245, 143, 127, 0.35);
+}
+
+.cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(245, 143, 127, 0.45);
+}
+
+.cta-btn:active {
+    transform: translateY(0);
+}
+
+.cta-btn:focus {
+    outline: 2px solid var(--purple);
+    outline-offset: 2px;
+}
+
+/* CTA Button kids decoration (for writing page) */
+.btn-kids-decoration {
+    position: absolute;
+    top: -25px;
+    right: -15px;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+    z-index: 10;
+    animation: climbButton 2s ease-in-out infinite;
+}
+
+.btn-kids-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(107, 44, 144, 0.3));
+    transform-origin: bottom center;
+}
+
+.cta-btn:hover .btn-kids-decoration {
+    animation: climbButtonHover 0.5s ease-in-out;
+    transform: translateY(-5px) rotate(5deg);
+}
+
+@keyframes climbButton {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-3px) rotate(2deg);
+    }
+}
+
+@keyframes climbButtonHover {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(8deg) scale(1.1);
+    }
+    100% {
+        transform: translateY(-5px) rotate(5deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    nav {
+        font-size: 14px;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 640px) {
+    header {
+        padding: 16px 4vw;
+    }
+    
+    .topbar {
+        padding: 6px 4vw;
+        font-size: 12px;
+    }
+}
+

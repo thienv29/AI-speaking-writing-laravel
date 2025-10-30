@@ -17,7 +17,19 @@ class LessonController extends Controller
      */
     public function index()
     {
-        return response()->json(Lesson::all());
+        $lessons = Lesson::with([
+            'exercises' => function($query) {
+                $query->select('id', 'lesson_id', 'title', 'order_index')
+                      ->orderBy('order_index');
+            },
+            'exercises.questions' => function($query) {
+                $query->select('id', 'exercise_id', 'order_index')
+                      ->orderBy('order_index')
+                      ->limit(1);
+            }
+        ])->get();
+        
+        return response()->json($lessons);
     }
 
     /**

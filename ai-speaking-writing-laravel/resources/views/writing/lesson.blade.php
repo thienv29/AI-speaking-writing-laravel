@@ -29,7 +29,7 @@
             <span class="highlight">Cùng I-CLC</span>
         </h1>
         <p class="hero-description">
-            Chọn loại bài tập phù hợp và bắt đầu hành trình chinh phục kỹ năng viết tiếng Anh của bạn!
+            Mỗi bài học có nhiều dạng bài tập giúp bạn phát triển kỹ năng viết
         </p>
     </div>
     <div class="hero-illustration">
@@ -41,44 +41,44 @@
     <div class="container">
         <div class="section-header">
             <h2 class="section-title">Chọn bài học</h2>
-            <p class="section-subtitle">Mỗi bài học có nhiều dạng bài tập giúp bạn phát triển kỹ năng viết</p>
         </div>
 
         <div class="exercises-grid">
-            @forelse($lessons as $index => $lesson)
-            <div class="exercise-card" data-animate>
-                <div class="card-image-wrapper">
-                    <img src="{{ $lesson['img_url'] ?? '/assets/images/home-kids-' . (($index % 3) + 1) . '.png' }}" alt="{{ $lesson['title'] }}" class="card-image">
+            @foreach($allLessons as $index => $l)
+                @php
+                    $lessonExercises = $l->exercises->filter(function ($ex) {
+                        return $ex->questions->isNotEmpty();
+                    });
+                    $exercisesCount = $lessonExercises->count();
+                @endphp
+                @if($exercisesCount > 0)
+                <div class="exercise-card" data-animate>
+                    <div class="card-image-wrapper">
+                        <img src="{{ $l->img_url ?? '/assets/images/home-kids-' . (($index % 3) + 1) . '.png' }}" alt="{{ $l->title }}" class="card-image">
+                    </div>
+                    <div class="card-icon">
+                        📚
+                    </div>
+                    <div class="card-content">
+                        @if(!empty($l->level))
+                            <div class="difficulty-badge difficulty-{{ strtolower($l->level) }}">
+                                {{ strtoupper($l->level) }}
+                            </div>
+                        @endif
+                        <h3 class="card-title">{{ str_replace('Bài ', 'Unit ', $l->title) }}</h3>
+                        @if(!empty($l->description))
+                            <p class="card-description">{{ $l->description }}</p>
+                        @endif
+                        <p class="card-type">{{ $exercisesCount }} BÀI TẬP</p>
+                        <a href="/writing/lesson/{{ $l->id }}/exercises" class="card-btn">
+                            Xem bài tập
+                            <span class="btn-arrow">→</span>
+                        </a>
+                    </div>
+                    <div class="card-decoration"></div>
                 </div>
-                <div class="card-icon">
-                    📚
-                </div>
-                <div class="card-content">
-                    @if(!empty($lesson['level']))
-                        <div class="difficulty-badge difficulty-{{ strtolower($lesson['level']) }}">
-                            {{ strtoupper($lesson['level']) }}
-                        </div>
-                    @endif
-                    <h3 class="card-title">{{ str_replace('Bài ', 'Unit ', $lesson['title']) }}</h3>
-                    @if(!empty($lesson['description']))
-                        <p class="card-description">{{ $lesson['description'] }}</p>
-                    @endif
-                    <p class="card-type">{{ $lesson['exercises_count'] }} BÀI TẬP</p>
-                    <a href="/writing/lesson/{{ $lesson['id'] }}/exercises" class="card-btn">
-                        Xem bài tập
-                        <span class="btn-arrow">→</span>
-                    </a>
-                </div>
-                <div class="card-decoration"></div>
-            </div>
-            @empty
-            <div class="no-exercises">
-                <div class="no-exercises-icon">📚</div>
-                <h3>Chưa có bài học</h3>
-                <p>Hiện tại chưa có bài học nào. Vui lòng quay lại sau!</p>
-                <a href="/" class="back-home-btn">Về trang chủ</a>
-            </div>
-            @endforelse
+                @endif
+            @endforeach
         </div>
     </div>
 </section>
@@ -88,7 +88,7 @@
 <footer class="writing-footer">
     <div class="footer-content">
         <p>&copy; 2024 I-CLC - Inter-Continental Language Center. All rights reserved.</p>
-        <a href="/">← Về trang chủ</a>
+        <a href="/writing">← Quay lại danh sách bài học</a>
     </div>
 </footer>
 @endsection

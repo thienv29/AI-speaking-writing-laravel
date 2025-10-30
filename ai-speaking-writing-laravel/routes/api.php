@@ -10,7 +10,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\AttemptController;
 use App\Http\Controllers\ProgressController;
 use App\Http\Controllers\VocabularyController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\TranslationController;
 
 
 /*
@@ -23,6 +23,8 @@ use App\Http\Controllers\UserController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+Route::post('/translate', [TranslationController::class, 'translate']);
 
 Route::post('/lessons/{id}/restore', [LessonController::class, 'restore']);
 Route::resource('lessons', LessonController::class);
