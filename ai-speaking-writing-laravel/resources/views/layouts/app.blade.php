@@ -22,7 +22,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Common CSS -->
+    <!-- Common CSS - Shared styles (variables, global, header, topbar) -->
+    <link rel="stylesheet" href="/css/common.css">
+    
+    <!-- Header CSS - Header-specific styles -->
     <link rel="stylesheet" href="/css/header.css">
     
     <!-- Page-specific CSS -->
