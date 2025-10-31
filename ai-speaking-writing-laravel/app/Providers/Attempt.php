@@ -12,7 +12,6 @@ class Attempt extends Model
     protected $fillable = [
         'user_id',
         'question_id',
-        'attempt_number',
         'user_answer',
         'user_audio_url',
         'is_correct',
