@@ -11,9 +11,6 @@ use App\Models\{
     Exercise,
     ExerciseType,
     Question,
-    Attempt,
-    Progress,
-    Vocabulary
 };
 
 class DatabaseSeeder extends Seeder
@@ -253,18 +250,6 @@ class DatabaseSeeder extends Seeder
                 'starter_text' => null,
             ]),
         ]);
-
-        //VOCABULARY
-        $words = [
-            ['word' => 'hello', 'phonetic' => '/həˈləʊ/', 'meaning' => 'xin chào', 'note' => 'Một câu chào hỏi cơ bản.'],
-            ['word' => 'name', 'phonetic' => '/neɪm/', 'meaning' => 'tên', 'note' => null],
-            ['word' => 'Vietnam', 'phonetic' => '/ˈviːɛtnæm/', 'meaning' => 'Việt Nam', 'note' => null],
-            ['word' => 'love', 'phonetic' => '/lʌv/', 'meaning' => 'yêu', 'note' => null],
-        ];
-
-        foreach ($words as $w) {
-            Vocabulary::create($w);
-        }
 
         $this->command->info('All tables seeded successfully!');
     }
