@@ -103,8 +103,9 @@
                             Làm lại
                         </button>
                     </div>
-                    <div class="loading" id="loading">
-                        ⏳ Hệ thống đang chấm bài...
+                    <div class="loading" id="loading" style="display: none;">
+                        <div class="spinner"></div>
+                        <span>AI đang chấm bài của bạn...</span>
                     </div>
                     <div class="error" id="error">
                         ❌ Lỗi: <span id="errorMessage"></span>

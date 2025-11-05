@@ -46,10 +46,7 @@
                     @foreach($exercises as $exercise)
                     <div class="exercise-item">
                         <div class="exercise-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="12" cy="12" r="10" fill="#3498DB" opacity="0.1"/>
-                                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM8 12H16M8 16H12" stroke="#3498DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
+                            <span class="exercise-icon-emoji">📝</span>
                         </div>
                         <div class="exercise-info">
                             <a href="/writing/question/{{ $exercise['first_question_id'] }}" class="exercise-title">
