@@ -542,7 +542,14 @@ function showError(message) {
 
 function navigateToQuestion(questionId) {
     if (questionId) {
-        window.location.href = `/writing/question/${questionId}`;
+        // Check if we're in iframe mode
+        if (window.frameElement) {
+            // In iframe, change URL but stay in embed
+            window.location.href = `/embed/question/${questionId}`;
+        } else {
+            // Normal navigation
+            window.location.href = `/writing/question/${questionId}`;
+        }
     }
 }
 

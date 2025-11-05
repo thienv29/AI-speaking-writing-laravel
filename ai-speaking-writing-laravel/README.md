@@ -5,13 +5,13 @@ English learning platform for children with AI-powered grammar and spell checkin
 ## Features
 
 - ✍️ **Writing Exercises**: Multiple exercise types (WAQ, WCS, WSG)
-- 📝 **Template Validation**: Smart validation for common patterns (name, age, hobby, weather, etc.)
-- ✅ **Grammar Checking**: Multi-API grammar checking with fallback strategy
-- 🔤 **Spell Checking**: Custom spell checker with dictionary and fuzzy matching
+- 🤖 **AI-Powered Scoring**: Google Gemini API for intelligent grammar checking and feedback
+- 👶 **Kid-Friendly Feedback**: Simple, encouraging feedback designed for children under 13
 - 🌐 **Translation**: English-Vietnamese dictionary with popup UI
-- 📊 **Detailed Scoring**: Granular scoring with visual feedback
+- 📊 **Detailed Scoring**: Granular scoring with visual feedback and highlights
 - 🎨 **Kid-Friendly UI**: Beautiful, animated interface designed for children
 - 🔊 **Sound Effects**: Audio feedback for correct/incorrect answers
+- 🎯 **Embed Support**: Iframe-ready pages for embedding into other websites
 - 📈 **Review System**: View and filter student attempts
 
 ## Requirements
@@ -77,40 +77,45 @@ npm run dev
 npm run production
 ```
 
-## Optional Services
+## Gemini API Setup (Required for Scoring)
 
-### Grammar Checking Services
+The app uses Google Gemini API for intelligent scoring and feedback.
 
-The app works without any of these, but you can enable them for better grammar checking:
+### 1. Get Gemini API Key
 
-#### LanguageTool (FREE - Default)
-- ✅ Already enabled by default
-- 20 requests/minute limit
-- No configuration needed
+1. Go to https://aistudio.google.com/app/apikey
+2. Sign in with your Google account
+3. Click "Create API Key"
+4. Copy the API key
 
-#### Ollama (Local LLM - FREE)
+### 2. Configure in .env
+
+```env
+GEMINI_API_KEY=your_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+```
+
+### 3. API Limits (Free Tier)
+
+- **60 requests/minute**
+- **1,500 requests/day**
+
+The app includes rate limiting and caching to stay within these limits.
+
+### 4. Optional: Other Services
+
+#### Ollama (Local LLM - Optional)
 ```env
 OLLAMA_ENABLED=true
 OLLAMA_URL=http://localhost:11434
 OLLAMA_MODEL=mistral
 ```
-**Note**: Requires Ollama installed locally. See `OLLAMA_SETUP.md` for details.
 
-#### OpenAI GPT (Paid)
+#### OpenAI GPT (Optional)
 ```env
 OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 OPENAI_MODEL=gpt-3.5-turbo
 ```
-**Note**: See `OPENAI_SETUP.md` for setup instructions.
-
-#### Gemini (Paid)
-```env
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-pro
-```
-**Note**: See `GEMINI_SETUP.md` for setup instructions.
-
-**Priority**: LanguageTool → OpenAI → Gemini → Ollama
 
 ## Project Structure
 
@@ -137,15 +142,24 @@ public/
 └── assets/            # Images, sounds
 ```
 
-## Documentation
+## Embed Feature (Iframe)
 
-- `DEPLOYMENT_GUIDE.md` - Production deployment guide
-- `FREE_USAGE_GUIDE.md` - How to use free services
-- `OPENAI_SETUP.md` - OpenAI GPT setup instructions
-- `GEMINI_SETUP.md` - Gemini API setup instructions
-- `OLLAMA_SETUP.md` - Ollama local LLM setup
-- `SETUP_CHECKLIST.md` - Pre-push checklist
-- `PROJECT_EVALUATION.md` - Project evaluation and metrics
+The app supports embedding writing exercises into other websites using iframe:
+
+```
+http://localhost:8000/embed/question/{question_id}
+```
+
+### Usage Example
+
+```html
+<iframe 
+    src="http://localhost:8000/embed/question/1" 
+    width="100%" 
+    height="800px"
+    frameborder="0">
+</iframe>
+```
 
 ## Development
 
