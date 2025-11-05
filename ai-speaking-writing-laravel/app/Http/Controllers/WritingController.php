@@ -305,8 +305,16 @@ class WritingController extends Controller
             ));
             
             // Remove X-Frame-Options to allow embedding from any origin
-            // Note: For production, consider using Content-Security-Policy instead
             $response->headers->remove('X-Frame-Options');
+            
+            // Set Content-Security-Policy to allow embedding
+            // Allow embedding from any origin, but restrict script sources to same origin
+            $response->headers->set('Content-Security-Policy', "frame-ancestors *; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
+            
+            // Allow CORS for API calls from iframe
+            $response->headers->set('Access-Control-Allow-Origin', '*');
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
             
             return $response;
         } catch (\Throwable $e) {

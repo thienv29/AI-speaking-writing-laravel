@@ -129,7 +129,9 @@ public/
 
 ## Embed Feature (Iframe)
 
-The app supports embedding writing exercises into other websites using iframe:
+The app supports embedding writing exercises into other websites using iframe.
+
+### Route
 
 ```
 http://localhost:8000/embed/question/{question_id}
@@ -142,9 +144,25 @@ http://localhost:8000/embed/question/{question_id}
     src="http://localhost:8000/embed/question/1" 
     width="100%" 
     height="800px"
-    frameborder="0">
+    frameborder="0"
+    allow="clipboard-read; clipboard-write">
 </iframe>
 ```
+
+### Features
+
+- ✅ Standalone HTML page (no parent layout)
+- ✅ Responsive design optimized for iframe
+- ✅ CORS headers configured for cross-origin requests
+- ✅ Content-Security-Policy allows embedding from any origin
+- ✅ Question navigation works within iframe
+- ✅ API calls (submit answers) work from iframe
+
+### Notes
+
+- The embed page loads the same question interface but without header/footer/navigation
+- All JavaScript and CSS are included and work independently
+- API endpoints are accessible from iframe (CORS enabled)
 
 ## Development
 
