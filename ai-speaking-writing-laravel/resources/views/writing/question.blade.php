@@ -42,6 +42,18 @@
                     <span class="tag">Loại bài: <strong id="typeTag">—</strong></span>
                     <span class="tag">Câu số <strong id="orderTag">#1</strong></span>
                 </div>
+                @if(isset($allQuestions) && $allQuestions->count() > 1)
+                <div class="question-selector">
+                    <label for="questionSelect" class="question-selector-label">Chọn câu hỏi:</label>
+                    <select id="questionSelect" class="question-select" onchange="navigateToQuestion(this.value)">
+                        @foreach($allQuestions as $q)
+                            <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
+                                Câu {{ $q->order_index }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -115,6 +127,7 @@
     let exerciseEffects = {};
     let audioContext = null;
     let audioUnlocked = false;
+    let audioCache = {}; // Cache for audio objects
     const fallbackToneMap = {
         success: 880,
         failure: 330,
@@ -299,7 +312,7 @@
             </div>
             <div class="result-text">${feedbackText}</div>
             ${effectMessage ? `<div class="effect-message">${escapeHtml(effectMessage)}</div>` : ''}
-            ${highlightHtml || notesHtml ? `<div class="hl-container">${highlightHtml}${notesHtml}</div>` : ''}
+            ${notesHtml ? `<div class="hl-container">${notesHtml}</div>` : ''}
             <div class="result-actions">
                 <button class="btn-primary" type="button" onclick="resetAnswer()">Làm thêm lần nữa</button>
                 <a href="/writing" class="btn-secondary" style="text-decoration:none;">Chọn bài khác</a>
@@ -673,6 +686,13 @@
         document.getElementById('error').style.display = 'block';
     }
     
+    // Navigate to selected question
+    function navigateToQuestion(questionId) {
+        if (questionId) {
+            window.location.href = `/writing/question/${questionId}`;
+        }
+    }
+    
     // Load question when page loads
     window.addEventListener('DOMContentLoaded', () => {
         loadQuestion();
@@ -722,8 +742,10 @@
             return;
         }
         
-        // Chỉ translate text tiếng Anh (không chứa ký tự tiếng Việt)
-        if (!/^[a-zA-Z\s'-]+$/.test(selectedText)) {
+        // Chỉ translate text tiếng Anh (cho phép dấu câu)
+        // Remove punctuation for checking, but keep original text for translation
+        const cleanedText = selectedText.replace(/[.,!?;:]/g, '');
+        if (!/^[a-zA-Z\s'-]+$/.test(cleanedText)) {
             hideTranslationPopup();
             return;
         }

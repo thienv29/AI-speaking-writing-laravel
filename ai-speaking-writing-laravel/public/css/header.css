@@ -63,7 +63,24 @@
     }
     
     .topbar {
-        padding: 6px 4vw;
+        padding: 8px 4vw;
         font-size: 12px;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .topbar-links {
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .topbar-phone {
+        font-size: 13px;
+    }
+    
+    .topbar-phone-icon {
+        width: 14px;
+        height: 14px;
     }
 }

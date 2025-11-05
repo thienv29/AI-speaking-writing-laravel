@@ -35,7 +35,7 @@ html {
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: var(--soft-bg);
     color: var(--navy);
     overflow-x: hidden;
@@ -106,15 +106,33 @@ a {
     background: var(--purple);
     color: #fff;
     font-size: 13px;
-    padding: 6px 6vw;
+    padding: 10px 6vw;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.topbar-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
     display: flex;
-    justify-content: flex-end;
-    gap: 18px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.topbar-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .topbar a {
     color: #fff;
     opacity: 0.88;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .topbar a:hover {
@@ -122,13 +140,51 @@ a {
     transform: translateY(-1px);
 }
 
+.topbar-phone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Full screen support for topbar */
+@media (min-width: 1920px) {
+    .topbar {
+        padding: 12px 8vw;
+        font-size: 14px;
+    }
+    
+    .topbar-wrapper {
+        max-width: 1800px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .topbar {
+        padding: 14px 10vw;
+        font-size: 15px;
+    }
+    
+    .topbar-wrapper {
+        max-width: 2200px;
+    }
+}
+
+.topbar-phone-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+}
+
 /* Header */
 header {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     padding: 24px 6vw;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
     transition: all 0.3s ease;
     position: sticky;
     top: 0;
@@ -141,6 +197,58 @@ header.sticky {
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 20px rgba(107, 44, 144, 0.1);
     padding: 16px 6vw;
+}
+
+.header-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Full screen support for header */
+@media (min-width: 1920px) {
+    header {
+        padding: 28px 8vw;
+    }
+    
+    header.sticky {
+        padding: 20px 8vw;
+    }
+    
+    .header-wrapper {
+        max-width: 1800px;
+    }
+}
+
+@media (min-width: 2560px) {
+    header {
+        padding: 32px 10vw;
+    }
+    
+    header.sticky {
+        padding: 24px 10vw;
+    }
+    
+    .header-wrapper {
+        max-width: 2200px;
+    }
+    
+    .logo-img {
+        height: 64px;
+    }
+    
+    nav {
+        font-size: 17px;
+        gap: 28px;
+    }
+    
+    .cta-btn {
+        padding: 12px 28px;
+        font-size: 16px;
+    }
 }
 
 .logo-area {
@@ -169,7 +277,7 @@ nav {
     font-weight: 600;
     color: var(--purple);
     align-items: center;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 nav a:not(.cta-btn) {
@@ -285,4 +393,3 @@ nav a:not(.cta-btn):hover {
     background: var(--purple-dark);
     transform: translateY(-5px);
 }
-

@@ -7,7 +7,6 @@ use App\Models\Question;
 use App\Models\Exercise;
 use App\Models\ExerciseType;
 use App\Models\Lesson;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class WritingController extends Controller
@@ -46,7 +45,8 @@ class WritingController extends Controller
                     'code' => $exercise->type->code,
                     'instruction' => $exercise->instruction,
                     'order_index' => $exercise->order_index,
-                    'first_question_id' => $firstQuestion ? $firstQuestion->id : null
+                    'first_question_id' => $firstQuestion ? $firstQuestion->id : null,
+                    'questions_count' => $exercise->questions->count()
                 ];
                 
                 if ($includeDifficulty) {
@@ -228,19 +228,22 @@ class WritingController extends Controller
             // Get all questions for navigation (optional)
             $allQuestions = Question::where('exercise_id', $exercise->id)
                 ->orderBy('order_index')
-                ->pluck('id')
-                ->toArray();
+                ->get(['id', 'order_index']);
             
-            $currentIndex = array_search($question->id, $allQuestions);
-            $previousQuestionId = $currentIndex > 0 ? $allQuestions[$currentIndex - 1] : null;
-            $nextQuestionId = $currentIndex < count($allQuestions) - 1 ? $allQuestions[$currentIndex + 1] : null;
+            $currentIndex = $allQuestions->search(function ($q) use ($question) {
+                return $q->id === $question->id;
+            });
+            
+            $previousQuestionId = $currentIndex > 0 ? $allQuestions[$currentIndex - 1]->id : null;
+            $nextQuestionId = $currentIndex < count($allQuestions) - 1 ? $allQuestions[$currentIndex + 1]->id : null;
             
             return view('writing.question', compact(
                 'question',
                 'exercise',
                 'exerciseType',
                 'previousQuestionId',
-                'nextQuestionId'
+                'nextQuestionId',
+                'allQuestions'
             ));
         } catch (\Throwable $e) {
             Log::error('Writing show error', [

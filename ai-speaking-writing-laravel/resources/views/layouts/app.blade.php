@@ -17,10 +17,10 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/images/logo.png">
     
-    <!-- Fonts -->
+    <!-- Fonts - Inter for better Vietnamese support -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
     <!-- Common CSS - Shared styles (variables, global, header, topbar) -->
     <link rel="stylesheet" href="/css/common.css">
@@ -43,15 +43,19 @@
     @endif
 
     <header>
-        <div class="logo-area">
-            <img src="/assets/images/logo.png" alt="I-CLC Logo" class="logo-img">
-            <div>
-                <strong>I-CLC</strong><br>
+        <div class="header-wrapper">
+            <div class="logo-area">
+                <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
+                    <img src="/assets/images/logo.png" alt="I-CLC Logo" class="logo-img">
+                    <div>
+                        <strong>I-CLC</strong><br>
+                    </div>
+                </a>
             </div>
+            <nav>
+                @yield('navigation')
+            </nav>
         </div>
-        <nav>
-            @yield('navigation')
-        </nav>
     </header>
 
     <main>

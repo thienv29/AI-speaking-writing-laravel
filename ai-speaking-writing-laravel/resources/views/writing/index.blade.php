@@ -18,58 +18,80 @@
 
 @push('styles')
 <link rel="stylesheet" href="/css/writing.css">
+<link rel="stylesheet" href="/css/course-content.css">
 @endpush
 
 @section('content')
-<section class="writing-hero">
-    <div class="hero-content">
-        <span class="hero-tagline">📝 Sân chơi luyện viết tiếng Anh</span>
-        <h1 class="hero-title">
-            Luyện Viết Tiếng Anh<br>
-            <span class="highlight">Cùng I-CLC</span>
-        </h1>
-        <p class="hero-description">
-            Chọn loại bài tập phù hợp và bắt đầu hành trình chinh phục kỹ năng viết tiếng Anh của bạn!
-        </p>
-    </div>
-    <div class="hero-illustration">
-        <img src="/assets/images/home-kids-2.png" alt="Kids Writing">
-    </div>
-</section>
-
-<section class="exercises-section">
+<section class="course-content-section">
     <div class="container">
-        <div class="section-header">
-            <h2 class="section-title">Chọn bài học</h2>
-            <p class="section-subtitle">Mỗi bài học có nhiều dạng bài tập giúp bạn phát triển kỹ năng viết</p>
+        <div class="course-header">
+            <div class="course-header-icon">📚</div>
+            <h1 class="course-content-title">NỘI DUNG KHÓA HỌC</h1>
+            <p class="course-header-subtitle">Chọn bài học để bắt đầu luyện tập</p>
         </div>
-
-        <div class="exercises-grid">
+        
+        <div class="course-sections">
             @forelse($lessons as $index => $lesson)
-            <div class="exercise-card" data-animate>
-                <div class="card-image-wrapper">
-                    <img src="{{ $lesson['img_url'] ?? '/assets/images/home-kids-' . (($index % 3) + 1) . '.png' }}" alt="{{ $lesson['title'] }}" class="card-image">
-                </div>
-                <div class="card-icon">
-                    📚
-                </div>
-                <div class="card-content">
-                    @if(!empty($lesson['level']))
-                        <div class="difficulty-badge difficulty-{{ strtolower($lesson['level']) }}">
-                            {{ strtoupper($lesson['level']) }}
+            <div class="course-section">
+                <div class="section-header" data-section-index="{{ $index }}">
+                    <div class="section-title-wrapper">
+                        @if(!empty($lesson['level']))
+                            <span class="section-level-badge level-{{ strtolower($lesson['level']) }}">
+                                {{ strtoupper($lesson['level']) }}
+                            </span>
+                        @endif
+                        <div class="section-title-group">
+                            <h2 class="section-title">{{ str_replace('Bài ', 'Unit ', $lesson['title']) }}</h2>
+                            @if(!empty($lesson['description']))
+                                <span class="section-description">{{ $lesson['description'] }}</span>
+                            @endif
                         </div>
-                    @endif
-                    <h3 class="card-title">{{ str_replace('Bài ', 'Unit ', $lesson['title']) }}</h3>
-                    @if(!empty($lesson['description']))
-                        <p class="card-description">{{ $lesson['description'] }}</p>
-                    @endif
-                    <p class="card-type">{{ $lesson['exercises_count'] }} BÀI TẬP</p>
-                    <a href="/writing/lesson/{{ $lesson['id'] }}/exercises" class="card-btn">
-                        Xem bài tập
-                        <span class="btn-arrow">→</span>
-                    </a>
+                        <span class="section-summary">
+                            <span class="summary-icon">📝</span>
+                            {{ $lesson['exercises_count'] }} bài tập
+                        </span>
+                    </div>
+                    <div class="section-toggle">
+                        <svg class="toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M4 6L8 10L12 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
                 </div>
-                <div class="card-decoration"></div>
+                
+                <div class="section-content">
+                    @foreach($lesson['exercises'] as $exercise)
+                    <div class="exercise-item exercise-type-{{ strtolower($exercise['code']) }}">
+                        <div class="exercise-icon">
+                            @if($exercise['code'] === 'WAQ')
+                                <span class="exercise-icon-emoji">✍️</span>
+                            @elseif($exercise['code'] === 'WCS')
+                                <span class="exercise-icon-emoji">✏️</span>
+                            @elseif($exercise['code'] === 'WSG')
+                                <span class="exercise-icon-emoji">📝</span>
+                            @else
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.1"/>
+                                    <path d="M10 8L15 12L10 16V8Z" fill="currentColor"/>
+                                </svg>
+                            @endif
+                        </div>
+                        <div class="exercise-info">
+                            <a href="/writing/question/{{ $exercise['first_question_id'] }}" class="exercise-title">
+                                {{ $exercise['title'] }}
+                            </a>
+                            @if(!empty($exercise['instruction']))
+                                <span class="exercise-subtitle">{{ $exercise['instruction'] }}</span>
+                            @endif
+                        </div>
+                        <div class="exercise-meta">
+                            <span class="exercise-count">
+                                <span class="count-icon">❓</span>
+                                {{ $exercise['questions_count'] }} câu
+                            </span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
             </div>
             @empty
             <div class="no-exercises">
@@ -95,38 +117,37 @@
 
 @push('scripts')
 <script>
-    // Animate cards on scroll
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry, index) => {
-            if (entry.isIntersecting) {
-                setTimeout(() => {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }, index * 150);
+    // Collapsible sections
+    document.querySelectorAll('.section-header').forEach(header => {
+        header.addEventListener('click', function() {
+            const section = this.closest('.course-section');
+            const content = section.querySelector('.section-content');
+            const icon = this.querySelector('.toggle-icon');
+            
+            section.classList.toggle('expanded');
+            
+            if (section.classList.contains('expanded')) {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.style.maxHeight = '0';
+                icon.style.transform = 'rotate(0deg)';
             }
         });
-    }, observerOptions);
-
-    document.querySelectorAll('[data-animate]').forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(card);
     });
-
-    // Card hover effects
-    document.querySelectorAll('.exercise-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-8px) scale(1.02)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
-        });
-    });
+    
+    // Expand first section by default
+    const firstSection = document.querySelector('.course-section');
+    if (firstSection) {
+        firstSection.classList.add('expanded');
+        const firstContent = firstSection.querySelector('.section-content');
+        if (firstContent) {
+            firstContent.style.maxHeight = firstContent.scrollHeight + 'px';
+        }
+        const firstIcon = firstSection.querySelector('.toggle-icon');
+        if (firstIcon) {
+            firstIcon.style.transform = 'rotate(180deg)';
+        }
+    }
 </script>
 @endpush
