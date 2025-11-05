@@ -105,7 +105,7 @@
                     </div>
                     <div class="loading" id="loading" style="display: none;">
                         <div class="spinner"></div>
-                        <span>AI đang chấm bài của bạn...</span>
+                        <span>đang chấm bài của bạn...</span>
                     </div>
                     <div class="error" id="error">
                         ❌ Lỗi: <span id="errorMessage"></span>

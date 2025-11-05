@@ -29,6 +29,7 @@
     min-height: calc(100vh - 80px);
     background: var(--bg);
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .question-page-wrapper .container {
@@ -38,6 +39,7 @@
     position: relative;
     z-index: 1;
     width: 100%;
+    box-sizing: border-box;
 }
 
 /* Full screen support */
