@@ -383,6 +383,7 @@
     padding: 22px;
     margin-bottom: 24px;
     position: relative;
+    overflow-y: visible;
 }
 
 .prompt-card::before {
@@ -419,6 +420,7 @@
     border: 1px solid rgba(52, 152, 219, 0.2);
     border-radius: 20px;
     padding: 20px;
+    overflow-y: visible;
 }
 
 .answer-label {
@@ -497,7 +499,8 @@
     padding: 28px;
     display: none;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .result-card:hover {
