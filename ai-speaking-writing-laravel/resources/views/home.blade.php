@@ -88,22 +88,42 @@
     <div class="section-title"> Vì sao chọn I-CLC?</div>
     <div class="feature-grid">
         <div class="feature-card">
-            <div class="feature-icon">💡</div>
+            <div class="feature-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#6B2C90" opacity="0.1"/>
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#6B2C90"/>
+                </svg>
+            </div>
             <div class="feature-title">Chương trình chuẩn quốc tế</div>
             <div class="feature-desc">Áp dụng phương pháp CCM & CLIL giúp bé hình thành tư duy ngôn ngữ tự nhiên và phản xạ nhanh.</div>
         </div>
         <div class="feature-card">
-            <div class="feature-icon">🧠</div>
+            <div class="feature-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#2ECC71" opacity="0.1"/>
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="#2ECC71"/>
+                </svg>
+            </div>
             <div class="feature-title">Nền tảng trực tuyến thông minh</div>
             <div class="feature-desc">AI gợi ý, highlight phần cần cải thiện, hiệu ứng khen thưởng giúp bé hứng thú khi luyện tập.</div>
         </div>
         <div class="feature-card">
-            <div class="feature-icon">🎓</div>
+            <div class="feature-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#3498DB" opacity="0.1"/>
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2ZM12 15.5L16.5 18L15.5 13L19.5 9.5L14.5 9L12 4.5L9.5 9L4.5 9.5L8.5 13L7.5 18L12 15.5Z" fill="#3498DB"/>
+                </svg>
+            </div>
             <div class="feature-title">Đội ngũ giáo viên tận tâm</div>
             <div class="feature-desc">Giáo viên bản ngữ & Việt Nam kết hợp, đồng hành trong mọi khóa học từ mầm non đến thiếu niên.</div>
         </div>
         <div class="feature-card">
-            <div class="feature-icon">🏆</div>
+            <div class="feature-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#F39C12" opacity="0.1"/>
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#F39C12"/>
+                </svg>
+            </div>
             <div class="feature-title">Thành tích tự hào</div>
             <div class="feature-desc">18 năm kinh nghiệm, hơn 2400 gia đình tin chọn. Bé được khuyến khích thể hiện bản thân mỗi ngày.</div>
         </div>
