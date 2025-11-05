@@ -59,6 +59,26 @@ async function loadQuestion() {
             safeSetText('questionPrompt', promptText);
             safeSetText('exerciseSubtitle', buildSubtitle(question));
 
+            // Display exercise instruction
+            const instructionSection = document.getElementById('instructionSection');
+            const instructionText = document.getElementById('instructionText');
+            if (instructionSection && instructionText && exercise.instruction) {
+                instructionText.textContent = exercise.instruction;
+                instructionSection.style.display = 'block';
+            }
+
+            // Display template hint
+            const hintSection = document.getElementById('hintSection');
+            const hintText = document.getElementById('hintText');
+            if (hintSection && hintText) {
+                const template = (question.effect && question.effect.template) || '';
+                const hint = getTemplateHint(template, question);
+                if (hint) {
+                    hintText.textContent = hint;
+                    hintSection.style.display = 'block';
+                }
+            }
+
             questionEffects = question.effect || {};
             exerciseEffects = questionEffects.exercise || {};
             applyExerciseBackground();
@@ -141,6 +161,24 @@ function buildSubtitle(question) {
         hobby: 'Chia sẻ sở thích của con bằng câu "My favorite hobby is …".'
     };
     return subtitles[template] || 'Viết câu trả lời đầy đủ, nhớ viết hoa chữ cái đầu và kết thúc bằng dấu chấm nhé!';
+}
+
+function getTemplateHint(template, question) {
+    if (question.starter_text) {
+        return `Viết tiếp câu: "${question.starter_text} [phần còn lại của câu]"`;
+    }
+    
+    const hints = {
+        name: 'Format: Hello, [tên của bạn] hoặc My name is [tên của bạn].',
+        greeting: 'Format: Hello, [tên của bạn].',
+        age: 'Format: I am [số tuổi] years old.',
+        location: 'Format: I live in [nơi bạn sống].',
+        time: 'Format: It is [số giờ] o\'clock (chỉ dùng với giờ tròn, không dùng phút).',
+        weather: 'Format: Today is [sunny/rainy/cloudy/windy/snowy].',
+        hobby: 'Format: My favorite hobby is [sở thích của bạn].'
+    };
+    
+    return hints[template] || null;
 }
 
 async function loadTemplateHint(questionId) {

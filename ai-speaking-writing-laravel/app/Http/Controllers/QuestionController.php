@@ -121,7 +121,7 @@ class QuestionController extends Controller
     {
         try {
             $question->load(['exercise' => function ($q) {
-                $q->select('id', 'title', 'type_id', 'lesson_id')
+                $q->select('id', 'title', 'type_id', 'lesson_id', 'instruction')
                     ->with([
                         'type:id,code,name',
                         'lesson:id,title'

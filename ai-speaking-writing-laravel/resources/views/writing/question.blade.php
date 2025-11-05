@@ -85,6 +85,14 @@
                 <div class="prompt-card">
                     <h2>Đề bài</h2>
                     <p id="questionPrompt">Please wait...</p>
+                    <div class="instruction-section" id="instructionSection" style="display: none;">
+                        <div class="instruction-label">📝 Hướng dẫn:</div>
+                        <div class="instruction-text" id="instructionText"></div>
+                    </div>
+                    <div class="hint-section" id="hintSection" style="display: none;">
+                        <div class="hint-label">💡 Gợi ý:</div>
+                        <div class="hint-text" id="hintText"></div>
+                    </div>
                 </div>
 
                 <div class="answer-wrapper">
