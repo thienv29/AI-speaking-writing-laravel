@@ -102,21 +102,6 @@ GEMINI_MODEL=gemini-1.5-flash
 
 The app includes rate limiting and caching to stay within these limits.
 
-### 4. Optional: Other Services
-
-#### Ollama (Local LLM - Optional)
-```env
-OLLAMA_ENABLED=true
-OLLAMA_URL=http://localhost:11434
-OLLAMA_MODEL=mistral
-```
-
-#### OpenAI GPT (Optional)
-```env
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-OPENAI_MODEL=gpt-3.5-turbo
-```
-
 ## Project Structure
 
 ```

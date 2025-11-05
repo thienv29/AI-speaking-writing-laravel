@@ -32,19 +32,7 @@ return [
 
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
-        'model' => env('GEMINI_MODEL', 'gemini-pro'),
-    ],
-
-    'openai' => [
-        'api_key' => env('OPENAI_API_KEY'),
-        'model' => env('OPENAI_MODEL', 'gpt-3.5-turbo'),
-        'organization' => env('OPENAI_ORGANIZATION'),
-    ],
-
-    'ollama' => [
-        'url' => env('OLLAMA_URL', 'http://localhost:11434'),
-        'model' => env('OLLAMA_MODEL', 'llama3'),
-        'enabled' => env('OLLAMA_ENABLED', false),
+        'model' => env('GEMINI_MODEL', 'gemini-1.5-flash'),
     ],
 
 ];
