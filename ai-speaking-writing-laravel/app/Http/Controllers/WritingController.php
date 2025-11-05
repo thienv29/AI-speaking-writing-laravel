@@ -13,14 +13,31 @@ class WritingController extends Controller
 {
     /**
      * Get writing exercise type IDs
-     * 
-     * @return array
      */
     private function getWritingTypeIds(): array
     {
         return ExerciseType::whereIn('code', ExerciseTypes::writingTypes())
             ->pluck('id')
             ->toArray();
+    }
+
+    /**
+     * Get lessons with writing exercises
+     */
+    private function getLessonsWithWritingExercises(array $writingTypes)
+    {
+        return Lesson::whereHas('exercises', function ($query) use ($writingTypes) {
+                $query->whereIn('type_id', $writingTypes);
+            })
+            ->with(['exercises' => function ($query) use ($writingTypes) {
+                $query->whereIn('type_id', $writingTypes)
+                    ->with(['type', 'questions' => function ($q) {
+                        $q->orderBy('order_index');
+                    }])
+                    ->orderBy('order_index');
+            }])
+            ->orderBy('id')
+            ->get();
     }
 
     /**
@@ -72,20 +89,8 @@ class WritingController extends Controller
         try {
             $writingTypes = $this->getWritingTypeIds();
             
-            // Get lessons that have writing exercises
-            $lessons = Lesson::whereHas('exercises', function ($query) use ($writingTypes) {
-                $query->whereIn('type_id', $writingTypes);
-            })
-            ->with(['exercises' => function ($query) use ($writingTypes) {
-                $query->whereIn('type_id', $writingTypes)
-                    ->with(['type', 'questions' => function ($q) {
-                        $q->orderBy('order_index');
-                    }])
-                    ->orderBy('order_index');
-            }])
-            ->orderBy('id')
-            ->get()
-            ->map(function ($lesson) {
+            $lessons = $this->getLessonsWithWritingExercises($writingTypes)
+                ->map(function ($lesson) {
                 $exercises = $this->formatExercises($lesson->exercises);
                 
                 return [
@@ -121,21 +126,9 @@ class WritingController extends Controller
     {
         try {
             $writingTypes = $this->getWritingTypeIds();
-            
-            // Get all lessons with exercises
-            $allLessons = Lesson::with(['exercises' => function ($query) use ($writingTypes) {
-                $query->whereIn('type_id', $writingTypes)
-                    ->with(['type', 'questions' => function ($q) {
-                        $q->orderBy('order_index');
-                    }])
-                    ->orderBy('order_index');
-            }])
-            ->whereHas('exercises', function ($q) use ($writingTypes) {
-                $q->whereIn('type_id', $writingTypes);
-            })
-            ->orderBy('level')
-            ->orderBy('title')
-            ->get();
+            $allLessons = $this->getLessonsWithWritingExercises($writingTypes)
+                ->sortBy(['level', 'title'])
+                ->values();
             
             return view('writing.lesson', compact('allLessons'));
         } catch (\Throwable $e) {
@@ -154,7 +147,6 @@ class WritingController extends Controller
     {
         try {
             $writingTypes = $this->getWritingTypeIds();
-            
             $lesson = Lesson::with(['exercises' => function ($query) use ($writingTypes) {
                 $query->whereIn('type_id', $writingTypes)
                     ->with(['type', 'questions' => function ($q) {
