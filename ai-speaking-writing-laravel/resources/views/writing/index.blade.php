@@ -143,6 +143,13 @@
                 content.style.maxHeight = '0';
                 icon.style.transform = 'rotate(0deg)';
             }
+            
+            // Prevent double scrollbar
+            setTimeout(() => {
+                if (content.scrollHeight > window.innerHeight) {
+                    content.style.maxHeight = 'none';
+                }
+            }, 350);
         });
     });
     
