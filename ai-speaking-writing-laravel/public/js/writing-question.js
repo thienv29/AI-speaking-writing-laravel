@@ -30,7 +30,7 @@ const animationClassMap = {
 async function loadQuestion() {
     try {
         const pathParts = window.location.pathname.split('/');
-        currentQuestionId = pathParts[pathParts.length - 1];
+        currentQuestionId = parseInt(pathParts[pathParts.length - 1]);
         
         const response = await fetch(`/api/questions/${currentQuestionId}`);
         const data = await response.json();
@@ -41,6 +41,9 @@ async function loadQuestion() {
             const exerciseType = exercise.type || {};
             const lesson = exercise.lesson || {};
             const lessonTitle = lesson.title || 'I-CLC Lesson';
+            
+            // Update currentQuestionId to match loaded question
+            currentQuestionId = question.id;
 
             // Safe element updates - check if element exists before setting
             const safeSetText = (id, text) => {
@@ -61,13 +64,9 @@ async function loadQuestion() {
             safeSetText('questionPrompt', promptText);
             safeSetText('exerciseSubtitle', buildSubtitle(question));
 
-            // Load all questions for navigation if not already loaded
+            // Load all questions for navigation
             if (exercise.id) {
-                // Reset when loading new question
-                if (allQuestionsList.length === 0 || currentQuestionId != question.id) {
-                    allQuestionsList = [];
-                    loadAllQuestions(exercise.id, question.id);
-                }
+                await loadAllQuestions(exercise.id, question.id);
             }
 
             // Display exercise instruction
@@ -595,8 +594,8 @@ async function loadAllQuestions(exerciseId, currentId) {
         const data = await response.json();
         if (data.status === 'success' && data.data) {
             allQuestionsList = data.data.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-            // Find current question index
-            currentQuestionIndex = allQuestionsList.findIndex(q => q.id == currentId);
+            // Find current question index - convert to number for comparison
+            currentQuestionIndex = allQuestionsList.findIndex(q => parseInt(q.id) === parseInt(currentId));
             if (currentQuestionIndex === -1) currentQuestionIndex = 0;
             
             // Update dropdown selector
@@ -639,21 +638,29 @@ function updateQuestionCounter() {
 function navigateToPrevious() {
     if (currentQuestionIndex > 0 && allQuestionsList.length > 0) {
         const prevQuestion = allQuestionsList[currentQuestionIndex - 1];
-        navigateToQuestion(prevQuestion.id);
+        if (prevQuestion && prevQuestion.id) {
+            navigateToQuestion(prevQuestion.id);
+        }
     }
 }
 
 function navigateToNext() {
     if (currentQuestionIndex < allQuestionsList.length - 1 && allQuestionsList.length > 0) {
         const nextQuestion = allQuestionsList[currentQuestionIndex + 1];
-        navigateToQuestion(nextQuestion.id);
+        if (nextQuestion && nextQuestion.id) {
+            navigateToQuestion(nextQuestion.id);
+        }
     }
 }
 
 function navigateToQuestion(questionId) {
     if (questionId) {
-        // Check if we're in iframe mode
-        if (window.frameElement) {
+        // Check if we're in iframe mode (multiple ways to detect)
+        const isInIframe = window.frameElement || 
+                          window.self !== window.top || 
+                          window.location.pathname.includes('/embed/');
+        
+        if (isInIframe) {
             // In iframe, change URL but stay in embed
             window.location.href = `/embed/question/${questionId}`;
         } else {
