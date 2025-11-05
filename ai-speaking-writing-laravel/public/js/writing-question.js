@@ -1,5 +1,7 @@
 // Writing Question Page JavaScript
 let currentQuestionId = null;
+let allQuestionsList = []; // Store all questions for navigation
+let currentQuestionIndex = 0;
 let questionEffects = {};
 let exerciseEffects = {};
 let audioContext = null;
@@ -58,6 +60,15 @@ async function loadQuestion() {
             const promptText = question.prompt_text || (question.starter_text ? `${question.starter_text} ...` : '—');
             safeSetText('questionPrompt', promptText);
             safeSetText('exerciseSubtitle', buildSubtitle(question));
+
+            // Load all questions for navigation if not already loaded
+            if (exercise.id) {
+                // Reset when loading new question
+                if (allQuestionsList.length === 0 || currentQuestionId != question.id) {
+                    allQuestionsList = [];
+                    loadAllQuestions(exercise.id, question.id);
+                }
+            }
 
             // Display exercise instruction
             const instructionSection = document.getElementById('instructionSection');
@@ -576,6 +587,67 @@ function formatFeedbackForKids(markdownText) {
 function showError(message) {
     document.getElementById('errorMessage').textContent = message;
     document.getElementById('error').style.display = 'block';
+}
+
+async function loadAllQuestions(exerciseId, currentId) {
+    try {
+        const response = await fetch(`/api/questions?exercise_id=${exerciseId}`);
+        const data = await response.json();
+        if (data.status === 'success' && data.data) {
+            allQuestionsList = data.data.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+            // Find current question index
+            currentQuestionIndex = allQuestionsList.findIndex(q => q.id == currentId);
+            if (currentQuestionIndex === -1) currentQuestionIndex = 0;
+            
+            // Update dropdown selector
+            const select = document.getElementById('questionSelect');
+            if (select) {
+                select.value = currentId;
+            }
+            
+            // Update navigation buttons
+            updateNavigationButtons();
+            updateQuestionCounter();
+        }
+    } catch (error) {
+        console.warn('Could not load all questions for navigation:', error);
+    }
+}
+
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevQuestionBtn');
+    const nextBtn = document.getElementById('nextQuestionBtn');
+    
+    if (prevBtn) {
+        prevBtn.disabled = currentQuestionIndex <= 0;
+        prevBtn.style.opacity = currentQuestionIndex <= 0 ? '0.5' : '1';
+    }
+    
+    if (nextBtn) {
+        nextBtn.disabled = currentQuestionIndex >= allQuestionsList.length - 1;
+        nextBtn.style.opacity = currentQuestionIndex >= allQuestionsList.length - 1 ? '0.5' : '1';
+    }
+}
+
+function updateQuestionCounter() {
+    const counter = document.getElementById('questionCounter');
+    if (counter && allQuestionsList.length > 0) {
+        counter.textContent = `(${currentQuestionIndex + 1}/${allQuestionsList.length})`;
+    }
+}
+
+function navigateToPrevious() {
+    if (currentQuestionIndex > 0 && allQuestionsList.length > 0) {
+        const prevQuestion = allQuestionsList[currentQuestionIndex - 1];
+        navigateToQuestion(prevQuestion.id);
+    }
+}
+
+function navigateToNext() {
+    if (currentQuestionIndex < allQuestionsList.length - 1 && allQuestionsList.length > 0) {
+        const nextQuestion = allQuestionsList[currentQuestionIndex + 1];
+        navigateToQuestion(nextQuestion.id);
+    }
 }
 
 function navigateToQuestion(questionId) {

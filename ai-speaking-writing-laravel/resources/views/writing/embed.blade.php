@@ -68,15 +68,26 @@
                         <span class="tag">Câu số <strong id="orderTag">#1</strong></span>
                     </div>
                     @if(isset($allQuestions) && $allQuestions->count() > 1)
-                    <div class="question-selector">
-                        <label for="questionSelect" class="question-selector-label">Chọn câu hỏi:</label>
-                        <select id="questionSelect" class="question-select" onchange="navigateToQuestion(this.value)">
-                            @foreach($allQuestions as $q)
-                                <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
-                                    Câu {{ $q->order_index }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="question-navigation">
+                        <div class="question-nav-controls">
+                            <button id="prevQuestionBtn" class="nav-btn" onclick="navigateToPrevious()" title="Câu trước">
+                                ← Trước
+                            </button>
+                            <div class="question-selector">
+                                <label for="questionSelect" class="question-selector-label">Câu hỏi:</label>
+                                <select id="questionSelect" class="question-select" onchange="navigateToQuestion(this.value)">
+                                    @foreach($allQuestions as $q)
+                                        <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
+                                            Câu {{ $q->order_index }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="question-counter" id="questionCounter"></span>
+                            </div>
+                            <button id="nextQuestionBtn" class="nav-btn" onclick="navigateToNext()" title="Câu sau">
+                                Sau →
+                            </button>
+                        </div>
                     </div>
                     @endif
                 </div>
