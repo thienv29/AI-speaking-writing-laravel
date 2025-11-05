@@ -30,13 +30,29 @@ const animationClassMap = {
 // Load question data
 async function loadQuestion() {
     try {
-        const pathParts = window.location.pathname.split('/');
-        currentQuestionId = parseInt(pathParts[pathParts.length - 1]);
+        const pathParts = window.location.pathname.split('/').filter(part => part);
+        const lastPart = pathParts[pathParts.length - 1];
+        
+        // Validate ID is a number
+        if (!lastPart || isNaN(lastPart)) {
+            throw new Error('Invalid question ID: ' + lastPart);
+        }
+        
+        currentQuestionId = parseInt(lastPart);
+        
+        if (!currentQuestionId || currentQuestionId <= 0) {
+            throw new Error('Question ID must be a positive number');
+        }
         
         const response = await fetch(`/api/questions/${currentQuestionId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
-        if (data.status === 'success') {
+        if (data.status === 'success' && data.data) {
             const question = data.data;
             const exercise = question.exercise || {};
             const exerciseType = exercise.type || {};
@@ -96,10 +112,13 @@ async function loadQuestion() {
             applyExerciseBackground();
             loadTemplateHint(currentQuestionId);
         } else {
-            throw new Error('Failed to load question');
+            const errorMsg = data.message || 'Failed to load question';
+            throw new Error(errorMsg);
         }
     } catch (error) {
-        showError('Không thể tải câu hỏi: ' + error.message);
+        console.error('Error loading question:', error);
+        const errorMessage = error.message || 'Không thể tải câu hỏi. Vui lòng thử lại.';
+        showError('Không thể tải câu hỏi: ' + errorMessage);
     }
 }
 
