@@ -1,5 +1,6 @@
 // Writing Question Page JavaScript
 let currentQuestionId = null;
+let currentExerciseId = null;
 let allQuestionsList = []; // Store all questions for navigation
 let currentQuestionIndex = 0;
 let questionEffects = {};
@@ -42,8 +43,9 @@ async function loadQuestion() {
             const lesson = exercise.lesson || {};
             const lessonTitle = lesson.title || 'I-CLC Lesson';
             
-            // Update currentQuestionId to match loaded question
+            // Update currentQuestionId and currentExerciseId to match loaded question
             currentQuestionId = question.id;
+            currentExerciseId = exercise.id;
 
             // Safe element updates - check if element exists before setting
             const safeSetText = (id, text) => {
@@ -596,12 +598,20 @@ async function loadAllQuestions(exerciseId, currentId) {
             allQuestionsList = data.data.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
             // Find current question index - convert to number for comparison
             currentQuestionIndex = allQuestionsList.findIndex(q => parseInt(q.id) === parseInt(currentId));
-            if (currentQuestionIndex === -1) currentQuestionIndex = 0;
+            if (currentQuestionIndex === -1) {
+                currentQuestionIndex = 0;
+            }
             
             // Update dropdown selector
             const select = document.getElementById('questionSelect');
             if (select) {
                 select.value = currentId;
+            }
+            
+            // Update exercise selector
+            const exerciseSelect = document.getElementById('exerciseSelect');
+            if (exerciseSelect && exerciseId) {
+                exerciseSelect.value = exerciseId;
             }
             
             // Update navigation buttons
@@ -650,6 +660,24 @@ function navigateToNext() {
         if (nextQuestion && nextQuestion.id) {
             navigateToQuestion(nextQuestion.id);
         }
+    }
+}
+
+function navigateToExercise(exerciseId) {
+    if (exerciseId) {
+        // Load first question of the selected exercise
+        fetch(`/api/exercises/${exerciseId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' && data.data.questions && data.data.questions.length > 0) {
+                    // Get first question ordered by order_index
+                    const firstQuestion = data.data.questions.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))[0];
+                    navigateToQuestion(firstQuestion.id);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading exercise:', error);
+            });
     }
 }
 

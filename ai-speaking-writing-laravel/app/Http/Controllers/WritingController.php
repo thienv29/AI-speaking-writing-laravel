@@ -290,18 +290,26 @@ class WritingController extends Controller
             
             $exercise = $question->exercise;
             $exerciseType = $exercise->type;
+            $lesson = $exercise->lesson;
             
             // Get all questions for navigation (optional)
             $allQuestions = Question::where('exercise_id', $exercise->id)
                 ->orderBy('order_index')
                 ->get(['id', 'order_index']);
             
+            // Get all exercises for the same lesson (for exercise selector)
+            $allExercises = \App\Models\Exercise::where('lesson_id', $lesson->id)
+                ->orderBy('order_index')
+                ->get(['id', 'title', 'order_index']);
+            
             // Set headers to allow iframe embedding
             $response = response()->view('writing.embed', compact(
                 'question',
                 'exercise',
                 'exerciseType',
-                'allQuestions'
+                'lesson',
+                'allQuestions',
+                'allExercises'
             ));
             
             // Remove X-Frame-Options to allow embedding from any origin

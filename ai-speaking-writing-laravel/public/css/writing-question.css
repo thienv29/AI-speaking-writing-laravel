@@ -207,8 +207,41 @@ body:has(.question-page-wrapper) main,
     margin-top: 12px;
 }
 
-.question-navigation {
+.exercise-selector-wrapper {
     margin-top: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.exercise-selector-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy);
+}
+
+.exercise-select {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(107, 44, 144, 0.3);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--violet);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 200px;
+}
+
+.exercise-select:hover {
+    border-color: var(--violet);
+    background: rgba(255, 255, 255, 1);
+}
+
+.question-navigation {
+    margin-top: 12px;
 }
 
 .question-nav-controls {

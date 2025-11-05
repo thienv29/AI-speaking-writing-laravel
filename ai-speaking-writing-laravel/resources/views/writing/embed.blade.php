@@ -67,6 +67,18 @@
                         <span class="tag">Loại bài: <strong id="typeTag">—</strong></span>
                         <span class="tag">Câu số <strong id="orderTag">#1</strong></span>
                     </div>
+                    @if(isset($allExercises) && $allExercises->count() > 1)
+                    <div class="exercise-selector-wrapper">
+                        <label for="exerciseSelect" class="exercise-selector-label">Bài tập:</label>
+                        <select id="exerciseSelect" class="exercise-select" onchange="navigateToExercise(this.value)">
+                            @foreach($allExercises as $ex)
+                                <option value="{{ $ex->id }}" {{ $ex->id == $exercise->id ? 'selected' : '' }}>
+                                    {{ $ex->title }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
                     @if(isset($allQuestions) && $allQuestions->count() > 1)
                     <div class="question-navigation">
                         <div class="question-nav-controls">
