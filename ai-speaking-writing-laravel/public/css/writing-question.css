@@ -701,16 +701,12 @@
     color: #666;
     margin-top: 15px;
     padding: 20px;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
     gap: 12px;
     font-size: 16px;
     font-weight: 500;
-}
-
-.loading[style*="display: block"],
-.loading:not([style*="display: none"]) {
-    display: flex !important;
 }
 
 .spinner {

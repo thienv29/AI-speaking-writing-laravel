@@ -208,10 +208,15 @@
         unlockAudio(); // Unlock audio on user interaction
         playSound(exerciseEffects.button_sound, 'button');
 
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('error').style.display = 'none';
-        document.getElementById('resultCard').style.display = 'none';
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingEl = document.getElementById('loading');
+        const errorEl = document.getElementById('error');
+        const resultCard = document.getElementById('resultCard');
+        
+        submitBtn.disabled = true;
+        loadingEl.style.display = 'flex';
+        errorEl.style.display = 'none';
+        resultCard.style.display = 'none';
         
         try {
             const response = await fetch('/api/attempts', {
