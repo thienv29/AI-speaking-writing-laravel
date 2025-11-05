@@ -592,24 +592,37 @@ function showError(message) {
 
 async function loadAllQuestions(exerciseId, currentId) {
     try {
-        console.log('Loading all questions for exercise:', exerciseId, 'current question:', currentId);
+        if (!exerciseId) {
+            console.warn('No exercise ID provided');
+            return;
+        }
+        
         const response = await fetch(`/api/questions?exercise_id=${exerciseId}`);
         const data = await response.json();
-        if (data.status === 'success' && data.data) {
+        
+        if (data.status === 'success' && data.data && Array.isArray(data.data)) {
+            // Sort by order_index
             allQuestionsList = data.data.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-            console.log('Loaded questions:', allQuestionsList);
             
-            // Find current question index - convert to number for comparison
-            currentQuestionIndex = allQuestionsList.findIndex(q => parseInt(q.id) === parseInt(currentId));
+            // Find current question index - use both string and number comparison
+            currentQuestionIndex = allQuestionsList.findIndex(q => 
+                q.id == currentId || parseInt(q.id) === parseInt(currentId)
+            );
+            
             if (currentQuestionIndex === -1) {
-                console.warn('Current question not found in list, setting index to 0');
+                // If current question not found, try to find by matching currentQuestionId
+                currentQuestionIndex = allQuestionsList.findIndex(q => 
+                    q.id == currentQuestionId || parseInt(q.id) === parseInt(currentQuestionId)
+                );
+            }
+            
+            if (currentQuestionIndex === -1) {
                 currentQuestionIndex = 0;
             }
-            console.log('Current question index:', currentQuestionIndex);
             
             // Update dropdown selector
             const select = document.getElementById('questionSelect');
-            if (select) {
+            if (select && currentId) {
                 select.value = currentId;
             }
             
@@ -624,9 +637,11 @@ async function loadAllQuestions(exerciseId, currentId) {
             updateQuestionCounter();
         } else {
             console.warn('Failed to load questions:', data);
+            allQuestionsList = [];
         }
     } catch (error) {
         console.error('Could not load all questions for navigation:', error);
+        allQuestionsList = [];
     }
 }
 
@@ -634,15 +649,19 @@ function updateNavigationButtons() {
     const prevBtn = document.getElementById('prevQuestionBtn');
     const nextBtn = document.getElementById('nextQuestionBtn');
     
-    if (prevBtn) {
-        prevBtn.disabled = currentQuestionIndex <= 0;
-        prevBtn.style.opacity = currentQuestionIndex <= 0 ? '0.5' : '1';
-    }
+    if (!prevBtn || !nextBtn) return;
     
-    if (nextBtn) {
-        nextBtn.disabled = currentQuestionIndex >= allQuestionsList.length - 1;
-        nextBtn.style.opacity = currentQuestionIndex >= allQuestionsList.length - 1 ? '0.5' : '1';
-    }
+    // Only disable if we're sure we can't navigate
+    const canGoPrev = currentQuestionIndex > 0 && allQuestionsList.length > 0;
+    const canGoNext = currentQuestionIndex < allQuestionsList.length - 1 && allQuestionsList.length > 0;
+    
+    prevBtn.disabled = !canGoPrev;
+    prevBtn.style.opacity = canGoPrev ? '1' : '0.5';
+    prevBtn.style.cursor = canGoPrev ? 'pointer' : 'not-allowed';
+    
+    nextBtn.disabled = !canGoNext;
+    nextBtn.style.opacity = canGoNext ? '1' : '0.5';
+    nextBtn.style.cursor = canGoNext ? 'pointer' : 'not-allowed';
 }
 
 function updateQuestionCounter() {
@@ -653,40 +672,36 @@ function updateQuestionCounter() {
 }
 
 function navigateToPrevious() {
-    console.log('Previous clicked:', { currentQuestionIndex, allQuestionsListLength: allQuestionsList.length, allQuestionsList });
-    if (allQuestionsList.length === 0) {
-        console.warn('allQuestionsList is empty, cannot navigate');
+    // Reload questions list if empty
+    if (allQuestionsList.length === 0 && currentExerciseId) {
+        loadAllQuestions(currentExerciseId, currentQuestionId).then(() => {
+            navigateToPrevious();
+        });
         return;
     }
+    
     if (currentQuestionIndex > 0 && allQuestionsList.length > 0) {
         const prevQuestion = allQuestionsList[currentQuestionIndex - 1];
         if (prevQuestion && prevQuestion.id) {
-            console.log('Navigating to previous question:', prevQuestion.id);
             navigateToQuestion(prevQuestion.id);
-        } else {
-            console.warn('Previous question not found:', prevQuestion);
         }
-    } else {
-        console.warn('Cannot go to previous: currentQuestionIndex =', currentQuestionIndex);
     }
 }
 
 function navigateToNext() {
-    console.log('Next clicked:', { currentQuestionIndex, allQuestionsListLength: allQuestionsList.length, allQuestionsList });
-    if (allQuestionsList.length === 0) {
-        console.warn('allQuestionsList is empty, cannot navigate');
+    // Reload questions list if empty
+    if (allQuestionsList.length === 0 && currentExerciseId) {
+        loadAllQuestions(currentExerciseId, currentQuestionId).then(() => {
+            navigateToNext();
+        });
         return;
     }
+    
     if (currentQuestionIndex < allQuestionsList.length - 1 && allQuestionsList.length > 0) {
         const nextQuestion = allQuestionsList[currentQuestionIndex + 1];
         if (nextQuestion && nextQuestion.id) {
-            console.log('Navigating to next question:', nextQuestion.id);
             navigateToQuestion(nextQuestion.id);
-        } else {
-            console.warn('Next question not found:', nextQuestion);
         }
-    } else {
-        console.warn('Cannot go to next: currentQuestionIndex =', currentQuestionIndex, 'listLength =', allQuestionsList.length);
     }
 }
 
