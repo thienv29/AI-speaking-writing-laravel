@@ -1,6 +1,18 @@
 /* Writing Question Page - Specific Styles */
 /* Common styles (variables, header, topbar) are in common.css and header.css */
 
+/* Prevent double scrollbar - remove any scrollbar from child elements */
+body:has(.question-page-wrapper) main,
+.question-page-wrapper,
+.question-page-wrapper *:not(.celebration-overlay):not(.confetti-piece):not(.star-burst):not(textarea) {
+    overflow-y: visible !important;
+}
+
+/* Ensure textarea can still scroll if needed */
+.question-page-wrapper textarea {
+    overflow-y: auto !important;
+}
+
 .bg-shape {
     position: absolute;
     border-radius: 50%;
@@ -29,7 +41,7 @@
     min-height: calc(100vh - 80px);
     background: var(--bg);
     overflow-x: hidden;
-    overflow-y: visible;
+    overflow-y: visible !important;
     box-sizing: border-box;
 }
 
@@ -41,7 +53,8 @@
     z-index: 1;
     width: 100%;
     box-sizing: border-box;
-    overflow-y: visible;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
 }
 
 /* Full screen support */
@@ -251,7 +264,8 @@
     gap: 28px;
     margin-top: 36px;
     width: 100%;
-    overflow-y: visible;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
 }
 
 @media (max-width: 1024px) {
@@ -310,8 +324,9 @@
     height: fit-content;
     position: sticky;
     top: 100px;
-    overflow-y: visible;
-    max-height: none;
+    overflow: visible !important;
+    max-height: none !important;
+    align-self: start;
 }
 
 .info-section {
@@ -351,7 +366,8 @@
     padding: 28px;
     box-shadow: 0 18px 45px rgba(255, 146, 105, 0.2);
     min-width: 0;
-    overflow-y: visible;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
 }
 
 .question-header {
@@ -385,7 +401,8 @@
     padding: 22px;
     margin-bottom: 24px;
     position: relative;
-    overflow-y: visible;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
 }
 
 .prompt-card::before {
@@ -422,7 +439,8 @@
     border: 1px solid rgba(52, 152, 219, 0.2);
     border-radius: 20px;
     padding: 20px;
-    overflow-y: visible;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
 }
 
 .answer-label {
@@ -611,6 +629,49 @@
     margin-top: 14px;
     color: #5f6f7d;
     line-height: 1.6;
+    font-size: 15px;
+}
+
+/* Kid-friendly feedback formatting */
+.result-text .feedback-paragraph {
+    margin: 8px 0;
+    line-height: 1.7;
+}
+
+.result-text .feedback-heading {
+    margin: 12px 0 8px 0;
+    font-size: 16px;
+    color: #2e2f4b;
+}
+
+.result-text .feedback-heading strong {
+    color: #6b2c90;
+    font-weight: 600;
+}
+
+.result-text .feedback-list-item {
+    margin: 6px 0;
+    padding-left: 8px;
+    line-height: 1.6;
+}
+
+.result-text strong {
+    color: #2e2f4b;
+    font-weight: 600;
+}
+
+.result-text em {
+    font-style: italic;
+    color: #6c757d;
+}
+
+.result-text code {
+    background: rgba(107, 44, 144, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #6b2c90;
 }
 .result-actions {
     margin-top: 18px;

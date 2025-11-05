@@ -68,7 +68,7 @@
             Bé vừa học vừa vui, tự tin chinh phục mọi kỹ năng tiếng Anh.
         </p>
         <div class="hero-actions">
-            <a class="cta-btn" href="/writing/question/1">Luyện viết ngay</a>
+            <a class="cta-btn" href="/writing">Luyện viết ngay</a>
             <a class="progress-cta" href="#contact">Tư vấn ngay</a>
         </div>
     </div>

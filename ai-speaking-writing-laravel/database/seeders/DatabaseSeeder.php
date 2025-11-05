@@ -91,10 +91,10 @@ class DatabaseSeeder extends Seeder
         //EXERCISES
         $exercises = collect([
             Exercise::create([
-                'type_id' => $types->where('code', 'SPW')->first()->id,
+                'type_id' => $types->where('code', 'WAQ')->first()->id,
                 'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
                 'title' => 'Bài tập 1',
-                'instruction' => 'Đọc to và rõ ràng các từ sau:',
+                'instruction' => 'Điền tên vào chỗ trống.',
                 'difficulty' => 'Dễ',
                 'img_url' => null,
                 'order_index' => 1
@@ -112,7 +112,7 @@ class DatabaseSeeder extends Seeder
                 'type_id' => $types->where('code', 'WCS')->first()->id,
                 'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
                 'title' => 'Bài tập 3',
-                'instruction' => 'Hoàn thành các câu sau:',
+                'instruction' => 'Hoàn thành các câu sau.',
                 'difficulty' => 'Dễ',
                 'img_url' => null,
                 'order_index' => 3
@@ -121,7 +121,7 @@ class DatabaseSeeder extends Seeder
                 'type_id' => $types->where('code', 'WAQ')->first()->id,
                 'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
                 'title' => 'Bài tập 4',
-                'instruction' => 'Trả lời các câu hỏi sau:',
+                'instruction' => 'Trả lời các câu hỏi sau.',
                 'difficulty' => 'Dễ',
                 'img_url' => null,
                 'order_index' => 4
@@ -130,7 +130,7 @@ class DatabaseSeeder extends Seeder
                 'type_id' => $types->where('code', 'WSG')->first()->id,
                 'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
                 'title' => 'Bài tập 5',
-                'instruction' => 'Sử dụng từ cho sẵn để đặt câu:',
+                'instruction' => 'Sử dụng từ cho sẵn để đặt câu.',
                 'difficulty' => 'Dễ',
                 'img_url' => null,
                 'order_index' => 5
@@ -308,7 +308,7 @@ class DatabaseSeeder extends Seeder
             'type_id' => $types->where('code', 'WAQ')->first()->id,
             'lesson_id' => $lesson2Id,
             'title' => 'Luyện viết về hoạt động hàng ngày',
-            'instruction' => 'Trả lời các câu hỏi về thói quen hàng ngày của bạn:',
+            'instruction' => 'Trả lời các câu hỏi về thói quen hàng ngày của bạn.',
             'difficulty' => 'Trung bình',
             'img_url' => null,
             'order_index' => 1
@@ -363,7 +363,7 @@ class DatabaseSeeder extends Seeder
             'type_id' => $types->where('code', 'WAQ')->first()->id,
             'lesson_id' => $lesson3Id,
             'title' => 'Luyện viết về môi trường',
-            'instruction' => 'Trả lời các câu hỏi về môi trường:',
+            'instruction' => 'Trả lời các câu hỏi về môi trường.',
             'difficulty' => 'Khó',
             'img_url' => null,
             'order_index' => 1

@@ -42,6 +42,32 @@ body {
     min-height: 100vh;
 }
 
+/* Prevent double scrollbar on writing question pages only */
+body:has(.question-page-wrapper) main {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+/* Remove scrollbar from question page containers only */
+body:has(.question-page-wrapper) main .question-page-wrapper,
+body:has(.question-page-wrapper) main .question-page-wrapper .container,
+body:has(.question-page-wrapper) main .layout,
+body:has(.question-page-wrapper) main .info-panel,
+body:has(.question-page-wrapper) main .question-panel,
+body:has(.question-page-wrapper) main .prompt-card,
+body:has(.question-page-wrapper) main .answer-wrapper,
+body:has(.question-page-wrapper) main .result-card,
+body:has(.question-page-wrapper) main .header-card {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+/* Exception for elements that need scrolling */
+body:has(.question-page-wrapper) textarea,
+body:has(.question-page-wrapper) .celebration-overlay {
+    overflow-y: auto !important;
+}
+
 a {
     text-decoration: none;
     color: inherit;

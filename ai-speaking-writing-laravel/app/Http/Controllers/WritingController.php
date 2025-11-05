@@ -250,4 +250,76 @@ class WritingController extends Controller
             abort(500, 'Unable to load question. Please try again later.');
         }
     }
+    
+    /**
+     * Display a specific writing question in embed mode (for iframe)
+     * 
+     * @param int $id Question ID or Exercise ID
+     * @return \Illuminate\View\View
+     */
+    public function embed($id)
+    {
+        try {
+            // Try to find by question ID first
+            $question = Question::with([
+                'exercise' => function ($query) {
+                    $query->with(['type', 'lesson']);
+                }
+            ])->find($id);
+            
+            // If not found, try treating as exercise ID
+            if (!$question) {
+                $exercise = Exercise::with(['type', 'lesson'])->find($id);
+                
+                if (!$exercise) {
+                    abort(404, 'Question or exercise not found');
+                }
+                
+                // Get first question for this exercise
+                $question = Question::where('exercise_id', $id)
+                    ->orderBy('order_index')
+                    ->with(['exercise' => function ($query) {
+                        $query->with(['type', 'lesson']);
+                    }])
+                    ->first();
+                
+                if (!$question) {
+                    abort(404, 'No questions found for this exercise');
+                }
+            }
+            
+            $exercise = $question->exercise;
+            $exerciseType = $exercise->type;
+            
+            // Get all questions for navigation (optional)
+            $allQuestions = Question::where('exercise_id', $exercise->id)
+                ->orderBy('order_index')
+                ->get(['id', 'order_index']);
+            
+            // Set headers to allow iframe embedding
+            $response = response()->view('writing.embed', compact(
+                'question',
+                'exercise',
+                'exerciseType',
+                'allQuestions'
+            ));
+            
+            // Remove X-Frame-Options to allow embedding from any origin
+            // Note: For production, consider using Content-Security-Policy instead
+            $response->headers->remove('X-Frame-Options');
+            
+            return $response;
+        } catch (\Throwable $e) {
+            Log::error('Writing embed error', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            
+            if ($e->getCode() === 404) {
+                abort(404, $e->getMessage());
+            }
+            
+            abort(500, 'Unable to load question. Please try again later.');
+        }
+    }
 }

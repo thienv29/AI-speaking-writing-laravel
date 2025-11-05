@@ -6,7 +6,6 @@
 
 @section('navigation')
     <a href="/">Trang chủ</a>
-    <a href="/#lessons">Bài học</a>
     <a href="/#contact">Liên hệ</a>
     <a class="cta-btn" href="/writing">
         Luyện viết

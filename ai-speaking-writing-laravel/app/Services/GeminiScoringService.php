@@ -146,8 +146,10 @@ class GeminiScoringService
         $questionType = $this->detectQuestionType($question);
         $exerciseTypeCode = $question->exercise->type->code ?? 'WAQ';
         
-        // Concise prompt - prioritize speed but ensure quality
-        $context = "Evaluate student's English answer. Give detailed Vietnamese feedback.\n\n";
+        // Kid-friendly prompt - simple feedback for children under 13
+        $context = "You are a friendly English teacher evaluating a child's answer (under 13 years old).\n";
+        $context .= "Give SIMPLE, SHORT, and ENCOURAGING feedback in Vietnamese that children can easily understand.\n";
+        $context .= "Use simple words, avoid complex grammar terms, and be positive and motivating.\n\n";
         $context .= "QUESTION: {$promptText}\n";
         if ($starterText) $context .= "STARTER: {$starterText}\n";
         if ($targetText) $context .= "EXPECTED: {$targetText}\n";
@@ -159,10 +161,51 @@ class GeminiScoringService
         $context .= "2. Capitalization: first letter uppercase → CORRECT\n";
         $context .= "3. Spelling: report REAL misspellings only\n";
         $context .= "4. Grammar: report REAL errors (e.g., 'I has'→'I have', 'sunny skin'→'sunny skin' OK)\n";
-        if ($questionType === 'time') $context .= "5. TIME: 'o'clock' only with whole hours\n\n";
         
+        // Special rule for greeting/name questions (e.g., "Hello, [name]")
+        if ($questionType === 'name' || $questionType === 'greeting' || 
+            (strtolower($promptText) === 'hello' && strtolower($targetText ?? '') === 'hello') ||
+            (strtolower($promptText) === 'name' && strtolower($targetText ?? '') === 'name')) {
+            $context .= "5. GREETING/NAME: For questions asking to fill in a name (e.g., 'Hello, [name]'), ANY valid name is acceptable.\n";
+            $context .= "   - Format: 'Hello, [any name]' or '[any name]' = CORRECT = 100 points\n";
+            $context .= "   - Do NOT penalize for different names - all names are equally valid\n";
+            $context .= "   - Only check: proper capitalization, punctuation, and that it's a name (not gibberish)\n";
+            $context .= "   - Examples: 'Hello, John' = 100, 'Hello, Mary' = 100, 'Hello, Nguyen' = 100\n";
+            $context .= "   - Score 100 if format is correct and contains a valid name\n\n";
+        }
+        
+        // Special rule for WSG (sentence building with given words)
+        if ($exerciseTypeCode === 'WSG') {
+            $context .= "5. WSG (Sentence Building): Student MUST write a COMPLETE SENTENCE using the given word(s).\n";
+            $context .= "   - Just writing the word alone (e.g., 'family') = INCOMPLETE = LOW SCORE (0-30)\n";
+            $context .= "   - Must be a full sentence with subject + verb + object/complement\n";
+            $context .= "   - Example: 'family' alone = WRONG, 'I love my family.' = CORRECT\n";
+            $context .= "   - Score 0-30 if only word(s) provided without sentence structure\n";
+            $context .= "   - Score 80-100 only if complete, grammatically correct sentence\n\n";
+        }
+        
+        if ($questionType === 'time') {
+            $context .= "5. TIME: 'o'clock' only with whole hours\n\n";
+        }
+        
+        $context .= "SCORING GUIDELINES:\n";
+        $context .= "- 90-100: Perfect or near-perfect answer with minor issues\n";
+        $context .= "- 70-89: Good answer with some errors but mostly correct\n";
+        $context .= "- 50-69: Partially correct but has significant errors\n";
+        $context .= "- 30-49: Many errors, answer is mostly incorrect\n";
+        $context .= "- 0-29: Completely wrong, incomplete, or just words without sentence structure\n\n";
+        
+        $context .= "FEEDBACK RULES FOR CHILDREN:\n";
+        $context .= "- Keep feedback SHORT (2-3 sentences maximum)\n";
+        $context .= "- Use SIMPLE Vietnamese words (e.g., 'tốt' not 'xuất sắc', 'sai' not 'không chính xác')\n";
+        $context .= "- Be POSITIVE and ENCOURAGING (always start with what they did well)\n";
+        $context .= "- Avoid technical grammar terms (don't say 'chủ ngữ', 'động từ', 'tân ngữ' - just say 'câu đúng' or 'câu sai')\n";
+        $context .= "- Use emojis sparingly (1-2 max) to make it fun\n";
+        $context .= "- If there are errors, explain simply what to fix (e.g., 'thiếu dấu chấm' not 'thiếu dấu chấm kết thúc câu')\n";
+        $context .= "- End with encouragement (e.g., 'Tiếp tục cố gắng nhé!' or 'Làm tốt lắm!')\n\n";
         $context .= "CRITICAL: Output ONLY valid JSON. No explanations before/after.\n";
-        $context .= "Feedback MUST be DETAILED Vietnamese - include strengths + errors + suggestions.\n\n";
+        $context .= "Example good feedback: 'Làm tốt lắm! 🌟 Câu của bạn đúng rồi. Tiếp tục phát huy nhé!'\n";
+        $context .= "Example bad feedback (too complex): 'Câu trả lời của bạn rất xuất sắc! Bạn đã sử dụng từ... để tạo thành một câu hoàn chỉnh và ngữ pháp chính xác...'\n\n";
         
         $context .= "JSON format:\n";
         $context .= "{\"score\":<0-100>,\"is_correct\":<true/false>,\"feedback\":\"<Vietnamese>\",\"spelling_errors\":[],\"grammar_errors\":[],\"highlight_segments\":[],\"template_used\":\"{$questionType}\"}\n";
@@ -194,10 +237,10 @@ class GeminiScoringService
                     'maxOutputTokens' => self::MAX_OUTPUT_TOKENS, // Balanced limit - enough for thoughts + JSON
                     'responseMimeType' => 'application/json', // Force JSON response
                 ],
-                // System instruction - guide model but allow thoughts for reasoning
+                // System instruction - guide model for kid-friendly feedback
                 'systemInstruction' => [
                     'parts' => [
-                        ['text' => 'You are an English grammar evaluator. Think carefully about the answer, then output ONLY valid JSON. The JSON must include: score (0-100), is_correct (true/false), feedback (detailed Vietnamese), spelling_errors (array), grammar_errors (array), highlight_segments (array), and template_used (string).']
+                        ['text' => 'You are a friendly English teacher for children under 13. Give simple, short, encouraging feedback in Vietnamese. Use simple words, avoid complex grammar terms, and be positive. Output ONLY valid JSON with: score (0-100), is_correct (true/false), feedback (simple Vietnamese, 2-3 sentences max), spelling_errors (array), grammar_errors (array), highlight_segments (array), and template_used (string).']
                     ]
                 ]
             ]);
@@ -267,9 +310,11 @@ class GeminiScoringService
      */
     private function formatResult(array $data, Question $question, string $userAnswer): array
     {
-        $score = isset($data['score']) ? (int)$data['score'] : 70;
+        $score = isset($data['score']) ? (int)$data['score'] : 30;
+        // Ensure score is valid (0-100)
+        $score = max(0, min(100, $score));
         $isCorrect = $data['is_correct'] ?? ($score >= 80);
-        $feedback = $data['feedback'] ?? 'Good effort! Keep practicing.';
+        $feedback = $data['feedback'] ?? 'Vui lòng kiểm tra lại câu trả lời của bạn.';
         $templateUsed = $data['template_used'] ?? $this->detectQuestionType($question);
         $extractedValue = $data['extracted_value'] ?? null;
         
@@ -358,6 +403,12 @@ class GeminiScoringService
     private function detectQuestionType(Question $question): string
     {
         $prompt = strtolower($question->prompt_text ?? '');
+        $target = strtolower($question->target_text ?? '');
+        
+        // Check for greeting/name pattern (Hello, [name] or Name)
+        if ($prompt === 'hello' && $target === 'hello') return 'greeting';
+        if ($prompt === 'name' && $target === 'name') return 'name';
+        if (strpos($prompt, 'hello') !== false && (strpos($prompt, 'name') !== false || strpos($target, 'name') !== false)) return 'greeting';
         
         if (strpos($prompt, 'name') !== false) return 'name';
         if (strpos($prompt, 'age') !== false || strpos($prompt, 'old') !== false) return 'age';
@@ -483,10 +534,11 @@ class GeminiScoringService
      */
     private function getDefaultResult(string $userAnswer): array
     {
+        // Return low score when API fails - indicates system error, not student success
         return [
             'valid' => true,
-            'score' => 70,
-            'feedback' => 'Good effort! Keep practicing. 💪',
+            'score' => 30,
+            'feedback' => 'Xin lỗi, hệ thống gặp sự cố khi chấm bài. Vui lòng thử lại sau.',
             'template_used' => 'general',
             'extracted_value' => null,
             'evaluation_meta' => [
