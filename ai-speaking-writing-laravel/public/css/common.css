@@ -40,6 +40,7 @@ body {
     color: var(--navy);
     overflow-x: hidden;
     min-height: 100vh;
+    overflow-y: auto;
 }
 
 a {
