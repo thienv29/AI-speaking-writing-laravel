@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: php:8.1-cli
+    build: .
     container_name: iclc-app
     working_dir: /var/www/html
     ports:
@@ -12,13 +12,19 @@ services:
     networks:
       - iclc-network
     depends_on:
-      - mysql
-    command: php artisan serve --host=0.0.0.0 --port=8000
+      mysql:
+        condition: service_healthy
+    command: ["/usr/local/bin/docker-entrypoint.sh"]
     environment:
       - DB_HOST=mysql
       - DB_DATABASE=iclc_db
       - DB_USERNAME=iclc_user
       - DB_PASSWORD=password
+    healthcheck:
+      test: ["CMD", "php", "-r", "file_get_contents('http://localhost:8000') ? exit(0) : exit(1);"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   mysql:
     image: mysql:8.0
@@ -35,6 +41,11 @@ services:
       - mysql_data:/var/lib/mysql
     networks:
       - iclc-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 networks:
   iclc-network:
