@@ -14,6 +14,12 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    # Entrypoint tự động chạy:
+    # 1. Đợi MySQL ready
+    # 2. Cài Composer dependencies (nếu chưa có)
+    # 3. Generate APP_KEY (nếu chưa có)
+    # 4. Chạy migrations (fresh --seed nếu lần đầu, migrate nếu đã có data)
+    # 5. Start Laravel server
     command: ["/usr/local/bin/docker-entrypoint.sh"]
     environment:
       - DB_HOST=mysql
