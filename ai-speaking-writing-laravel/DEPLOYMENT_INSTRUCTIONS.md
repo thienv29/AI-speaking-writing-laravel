@@ -12,17 +12,12 @@ git clone -b writing https://github.com/thienv29/AI-speaking-writing-laravel.git
 cd AI-speaking-writing-laravel/ai-speaking-writing-laravel
 ```
 
-### 2. Cài đặt Composer dependencies
-```bash
-docker run --rm -v $(pwd):/app composer install
-```
-
-### 3. Tạo file .env
+### 2. Tạo file .env
 ```bash
 cp .env.example .env
 ```
 
-### 4. Chỉnh sửa file .env - Thêm GEMINI_API_KEY
+### 3. Chỉnh sửa file .env - Thêm GEMINI_API_KEY
 Mở file `.env` và thêm API key Gemini vào:
 ```bash
 nano .env
@@ -32,12 +27,13 @@ vi .env
 
 Tìm dòng `GEMINI_API_KEY=your_gemini_api_key_here` và thay thế `your_gemini_api_key_here` bằng API key thực tế (sẽ được gửi riêng).
 
-### 5. Chạy Docker Compose (tự động setup)
+### 4. Chạy Docker Compose (tự động setup)
 ```bash
 docker-compose up -d
 ```
 
 Hệ thống sẽ tự động:
+- Cài đặt Composer dependencies
 - Đợi MySQL khởi động
 - Generate application key
 - Chạy migrations và seeders
