@@ -3,13 +3,75 @@
 namespace App\Http\Controllers;
 
 use App\Models\Question;
+use App\Models\Attempt;
+use App\Models\Exercise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class QuestionController extends Controller
 {
+    /**
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response | \Illuminate\Http\JsonResponse
+     */
+    public function checkResult(Question $question, Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'user_answer' => ['required', 'string'],
+                'user_audio'  => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg,webm'],
+            ], [
+                'user_answer.required' => 'The user answer is required.',
+                'user_answer.string'   => 'The user answer must be a string.',
+                'user_audio.file'      => 'Invalid audio file.',
+                'user_audio.mimes'     => 'Audio must be mp3, wav, m4a, ogg, or webm.',
+            ]);
+
+            $audioUrl = null;
+
+            if ($request->hasFile('user_audio')) {
+                $file = $request->file('user_audio');
+                $filename = uniqid('audio_') . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('public/user_audio_url', $filename);
+                $audioUrl = Storage::url('user_audio_url/' . $filename);
+            }
+
+            $userAnswerClean = rtrim($validated['user_answer'], " .!?,;:");
+            $targetTextClean = rtrim($question->target_text, " .!?,;:");
+
+            $isCorrect = strtolower($userAnswerClean) === strtolower($targetTextClean);
+
+            $attempt = Attempt::create([
+                'question_id'   => $question->id,
+                'user_id'       => 2,   // Thay thế bằng ID người dùng thực tế nếu có hệ thống xác thực
+                'user_answer'   => $validated['user_answer'],
+                'user_audio_url'=> $audioUrl ? $audioUrl : null,
+                'is_correct'    => $isCorrect,
+                'feedback'      => $isCorrect ? 'Câu trả lời đúng!' : 'Câu trả lời sai!',
+            ])->load(['question:id,exercise_id,order_index','question.exercise:id,title','user:id,name,email']);
+
+            return response()->json([
+                'status'  => 'success',
+                'is_correct' => $isCorrect,
+                'attempt' => $attempt,
+                'message' => $isCorrect ? 'Câu trả lời đúng!' : 'Câu trả lời sai!',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Question checkResult error', [
+                'id' => $question->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Cannot check result: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     /**
      * Display a listing of the resource.
      *
@@ -123,7 +185,57 @@ class QuestionController extends Controller
     public function show(Question $question)
     {
         try {
-            $question->load('exercise:id,title');
+            $question->load('exercise:id,title,order_index,lesson_id,instruction')
+                     ->loadCount('attempts');
+            $question->exercise->loadCount('questions');
+
+            $lessonId = $question->exercise->lesson_id;
+            $exerciseOrder = $question->exercise->order_index;
+
+            // ===== Previous question =====
+            // 1. Trong cùng exercise
+            $previous = Question::where('exercise_id', $question->exercise_id)
+                ->where('order_index', '<', $question->order_index)
+                ->orderBy('order_index', 'desc')
+                ->first();
+
+            // 2. Nếu không có, lấy question cuối của exercise trước trong lesson
+            if (!$previous) {
+                $prevExercise = Exercise::where('lesson_id', $lessonId)
+                    ->where('order_index', '<', $exerciseOrder)
+                    ->orderBy('order_index', 'desc')
+                    ->first();
+
+                if ($prevExercise) {
+                    $previous = Question::where('exercise_id', $prevExercise->id)
+                        ->orderBy('order_index', 'desc')
+                        ->first();
+                }
+            }
+
+            // ===== Next question =====
+            // 1. Trong cùng exercise
+            $next = Question::where('exercise_id', $question->exercise_id)
+                ->where('order_index', '>', $question->order_index)
+                ->orderBy('order_index', 'asc')
+                ->first();
+
+            //2. Nếu không có, lấy question đầu của exercise tiếp theo trong lesson
+            if (!$next) {
+                $nextExercise = Exercise::where('lesson_id', $lessonId)
+                    ->where('order_index', '>', $exerciseOrder)
+                    ->orderBy('order_index', 'asc')
+                    ->first();
+
+                if ($nextExercise) {
+                    $next = Question::where('exercise_id', $nextExercise->id)
+                        ->orderBy('order_index', 'asc')
+                        ->first();
+                }
+            }
+
+            $question->prev_question_id = $previous ? $previous->id : null;
+            $question->next_question_id = $next ? $next->id : null;
 
             return response()->json([
                 'status' => 'success',

@@ -102,7 +102,7 @@ class LessonController extends Controller
     {
         try {
             $lesson->load([
-                'exercises',
+                'exercises.questions',
             ])->loadCount(['exercises']);
 
             return response()->json([

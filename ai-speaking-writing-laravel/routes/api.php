@@ -37,7 +37,7 @@ Route::post('/exercise-types/{id}/restore', [ExerciseTypeController::class, 'res
 
 Route::resource('questions', QuestionController::class);
 Route::post('/questions/{id}/restore', [QuestionController::class, 'restore']);
-
+Route::post('/questions/{question}/check-result', [QuestionController::class, 'checkResult']);
 
 Route::resource('attempts', AttemptController::class);
 Route::post('/attempts/{id}/restore', [AttemptController::class, 'restore']);

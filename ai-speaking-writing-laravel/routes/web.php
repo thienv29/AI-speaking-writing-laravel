@@ -14,5 +14,17 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('user.home');
+});;
+
+Route::get('/questions/{id}', function ($id) {
+    return view('user.question', ['id' => $id]);
+});
+
+Route::get('/lessons', function () {
+    return view('user.lessons');
+});
+
+Route::get('/lessons/{id}', function ($id) {
+    return view('user.lesson', ['id' => $id]);
 });

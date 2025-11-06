@@ -6,8 +6,17 @@ import speech_recognition as sr
 from pydub import AudioSegment
 import os
 import uuid
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # hoặc ["http://127.0.0.1:8000"] để an toàn hơn
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create output directories
 os.makedirs("outputs/audio", exist_ok=True)
