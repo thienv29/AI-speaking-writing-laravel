@@ -53,6 +53,12 @@ wait_for_mysql
 
 cd /var/www/html
 
+# Copy .env.example to .env if .env doesn't exist
+if [ ! -f ".env" ] && [ -f ".env.example" ]; then
+    log_info "Creating .env file from .env.example..."
+    cp .env.example .env
+fi
+
 # Install Composer dependencies
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
     log_info "Installing Composer dependencies..."
