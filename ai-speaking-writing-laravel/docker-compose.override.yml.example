@@ -1,0 +1,22 @@
+# Copy this file to docker-compose.override.yml and customize for your environment
+# This file is gitignored and won't be committed
+
+version: '3.8'
+
+services:
+  app:
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_PORT=8000
+    volumes:
+      - .:/var/www/html
+      # Uncomment to enable Xdebug
+      # - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+
+  mysql:
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+    ports:
+      - "3307:3306"
+
