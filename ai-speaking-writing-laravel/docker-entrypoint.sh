@@ -60,14 +60,23 @@ if [ ! -f ".env" ] && [ -f ".env.example" ]; then
 fi
 
 # Install Composer dependencies
+# Check if vendor exists and composer.lock is newer than vendor (indicating dependencies changed)
+NEED_COMPOSER_INSTALL=false
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
-    log_info "Installing Composer dependencies..."
+    NEED_COMPOSER_INSTALL=true
+elif [ -f "composer.lock" ] && [ "composer.lock" -nt "vendor/autoload.php" ]; then
+    NEED_COMPOSER_INSTALL=true
+    log_info "composer.lock is newer than vendor, dependencies may have changed"
+fi
+
+if [ "$NEED_COMPOSER_INSTALL" = true ]; then
+    log_info "Installing/Updating Composer dependencies..."
     composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev || {
         log_error "Composer install failed, trying with dev dependencies..."
         composer install --no-interaction --prefer-dist --optimize-autoloader
     }
 else
-    log_info "Composer dependencies already installed"
+    log_info "Composer dependencies up to date"
 fi
 
 # Generate application key if not set
@@ -139,14 +148,18 @@ chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || {
     log_warn "Could not change ownership to www-data, continuing with current permissions..."
 }
 
-# Clear and rebuild cache (only if not in production optimization mode)
-if [ "${APP_ENV:-production}" = "local" ] || [ "${APP_DEBUG:-false}" = "true" ]; then
-    log_info "Clearing cache (development mode)..."
-    php artisan config:clear || true
-    php artisan cache:clear || true
-    php artisan view:clear || true
-else
-    log_info "Cache already optimized for production"
+# Clear and rebuild cache (always clear on restart to ensure fresh state after git pull)
+log_info "Clearing cache to ensure fresh state..."
+php artisan config:clear || true
+php artisan cache:clear || true
+php artisan view:clear || true
+
+# Rebuild cache if in production mode
+if [ "${APP_ENV:-production}" != "local" ] && [ "${APP_DEBUG:-false}" != "true" ]; then
+    log_info "Rebuilding cache for production..."
+    php artisan config:cache || log_warn "Config cache failed, continuing..."
+    php artisan route:cache || log_warn "Route cache failed, continuing..."
+    php artisan view:cache || log_warn "View cache failed, continuing..."
 fi
 
 # Start Laravel server
