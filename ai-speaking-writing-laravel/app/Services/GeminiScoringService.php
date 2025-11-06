@@ -149,7 +149,8 @@ class GeminiScoringService
         // Kid-friendly prompt - simple feedback for children under 13
         $context = "You are a friendly English teacher evaluating a child's answer (under 13 years old).\n";
         $context .= "Give SIMPLE, SHORT, and ENCOURAGING feedback in Vietnamese that children can easily understand.\n";
-        $context .= "Use simple words, avoid complex grammar terms, and be positive and motivating.\n\n";
+        $context .= "Use simple words, avoid complex grammar terms, and be positive and motivating.\n";
+        $context .= "IMPORTANT: Always address the child as 'con' (not 'bạn' or 'em'). This makes it more personal and friendly for children.\n\n";
         $context .= "QUESTION: {$promptText}\n";
         if ($starterText) $context .= "STARTER: {$starterText}\n";
         if ($targetText) $context .= "EXPECTED: {$targetText}\n";
@@ -196,16 +197,17 @@ class GeminiScoringService
         $context .= "- 0-29: Completely wrong, incomplete, or just words without sentence structure\n\n";
         
         $context .= "FEEDBACK RULES FOR CHILDREN:\n";
+        $context .= "- ALWAYS address the child as 'con' (never use 'bạn', 'em', or formal pronouns)\n";
         $context .= "- Keep feedback SHORT (2-3 sentences maximum)\n";
         $context .= "- Use SIMPLE Vietnamese words (e.g., 'tốt' not 'xuất sắc', 'sai' not 'không chính xác')\n";
         $context .= "- Be POSITIVE and ENCOURAGING (always start with what they did well)\n";
         $context .= "- Avoid technical grammar terms (don't say 'chủ ngữ', 'động từ', 'tân ngữ' - just say 'câu đúng' or 'câu sai')\n";
         $context .= "- Use emojis sparingly (1-2 max) to make it fun\n";
         $context .= "- If there are errors, explain simply what to fix (e.g., 'thiếu dấu chấm' not 'thiếu dấu chấm kết thúc câu')\n";
-        $context .= "- End with encouragement (e.g., 'Tiếp tục cố gắng nhé!' or 'Làm tốt lắm!')\n\n";
+        $context .= "- End with encouragement (e.g., 'Tiếp tục cố gắng nhé con!' or 'Làm tốt lắm con!')\n\n";
         $context .= "CRITICAL: Output ONLY valid JSON. No explanations before/after.\n";
-        $context .= "Example good feedback: 'Làm tốt lắm! 🌟 Câu của bạn đúng rồi. Tiếp tục phát huy nhé!'\n";
-        $context .= "Example bad feedback (too complex): 'Câu trả lời của bạn rất xuất sắc! Bạn đã sử dụng từ... để tạo thành một câu hoàn chỉnh và ngữ pháp chính xác...'\n\n";
+        $context .= "Example good feedback: 'Làm tốt lắm con! 🌟 Câu của con đúng rồi. Tiếp tục phát huy nhé!'\n";
+        $context .= "Example bad feedback (too complex): 'Câu trả lời của con rất xuất sắc! Con đã sử dụng từ... để tạo thành một câu hoàn chỉnh và ngữ pháp chính xác...'\n\n";
         
         $context .= "JSON format:\n";
         $context .= "{\"score\":<0-100>,\"is_correct\":<true/false>,\"feedback\":\"<Vietnamese>\",\"spelling_errors\":[],\"grammar_errors\":[],\"highlight_segments\":[],\"template_used\":\"{$questionType}\"}\n";
@@ -240,7 +242,7 @@ class GeminiScoringService
                 // System instruction - guide model for kid-friendly feedback
                 'systemInstruction' => [
                     'parts' => [
-                        ['text' => 'You are a friendly English teacher for children under 13. Give simple, short, encouraging feedback in Vietnamese. Use simple words, avoid complex grammar terms, and be positive. Output ONLY valid JSON with: score (0-100), is_correct (true/false), feedback (simple Vietnamese, 2-3 sentences max), spelling_errors (array), grammar_errors (array), highlight_segments (array), and template_used (string).']
+                        ['text' => 'You are a friendly English teacher for children under 13. Always address the child as "con" (never "bạn" or "em"). Give simple, short, encouraging feedback in Vietnamese. Use simple words, avoid complex grammar terms, and be positive. Output ONLY valid JSON with: score (0-100), is_correct (true/false), feedback (simple Vietnamese, 2-3 sentences max, always use "con"), spelling_errors (array), grammar_errors (array), highlight_segments (array), and template_used (string).']
                     ]
                 ]
             ]);
@@ -314,7 +316,7 @@ class GeminiScoringService
         // Ensure score is valid (0-100)
         $score = max(0, min(100, $score));
         $isCorrect = $data['is_correct'] ?? ($score >= 80);
-        $feedback = $data['feedback'] ?? 'Vui lòng kiểm tra lại câu trả lời của bạn.';
+        $feedback = $data['feedback'] ?? 'Vui lòng kiểm tra lại câu trả lời của con nhé.';
         $templateUsed = $data['template_used'] ?? $this->detectQuestionType($question);
         $extractedValue = $data['extracted_value'] ?? null;
         
@@ -488,7 +490,7 @@ class GeminiScoringService
         return [
             'valid' => false,
             'score' => 0,
-            'feedback' => '⚠️ ' . $rateLimitInfo['message'] . ' Hệ thống đang tạm thời không thể chấm điểm tự động.',
+            'feedback' => '⚠️ ' . $rateLimitInfo['message'] . ' Hệ thống đang tạm thời không thể chấm điểm tự động. Con thử lại sau nhé.',
             'template_used' => null,
             'extracted_value' => null,
             'evaluation_meta' => [
@@ -538,7 +540,7 @@ class GeminiScoringService
         return [
             'valid' => true,
             'score' => 30,
-            'feedback' => 'Xin lỗi, hệ thống gặp sự cố khi chấm bài. Vui lòng thử lại sau.',
+            'feedback' => 'Xin lỗi con, hệ thống gặp sự cố khi chấm bài. Con thử lại sau nhé.',
             'template_used' => 'general',
             'extracted_value' => null,
             'evaluation_meta' => [
