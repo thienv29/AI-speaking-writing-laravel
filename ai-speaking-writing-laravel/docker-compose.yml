@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iclc-app
+    ports:
+      - "8050:8050"
+    volumes:
+      - .:/var/www/html
+    networks:
+      - iclc-network
+    depends_on:
+      - mysql
+    environment:
+      - DB_HOST=mysql
+      - DB_DATABASE=iclc_db
+      - DB_USERNAME=iclc_user
+      - DB_PASSWORD=password
+    command: php artisan serve --host=0.0.0.0 --port=8050
+
+  mysql:
+    image: mysql:8.0
+    container_name: iclc-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: iclc_db
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_PASSWORD: password
+      MYSQL_USER: iclc_user
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - iclc-network
+
+networks:
+  iclc-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+
