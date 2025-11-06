@@ -182,20 +182,6 @@ php artisan test
 
 Proprietary - I-CLC Learning Platform
 
-## Docker Deployment
-
-Xem file `DEPLOY.md` để biết cách deploy với Docker Compose.
-
-**Quick start:**
-```bash
-git clone https://github.com/thienv29/AI-speaking-writing-laravel.git
-cd ai-speaking-writing-laravel
-git checkout writing
-docker-compose up -d
-```
-
-**Port mặc định:** 8050
-
 ## Support
 
 For issues and questions, please contact the development team.
