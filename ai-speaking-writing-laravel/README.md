@@ -92,7 +92,7 @@ The app uses Google Gemini API for intelligent scoring and feedback.
 
 ```env
 GEMINI_API_KEY=your_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### 3. API Limits (Free Tier)
