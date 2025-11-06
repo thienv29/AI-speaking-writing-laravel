@@ -18,6 +18,8 @@ class Attempt extends Model
         'user_audio_url',
         'is_correct',
         'feedback',
+        'score',
+        'evaluation_meta',
         'created_at'
     ];
 
@@ -26,6 +28,14 @@ class Attempt extends Model
         'user_audio_url' => null,
         'is_correct'     => false,
         'feedback'      => null,
+        'score'          => null,
+        'evaluation_meta' => null,
+    ];
+    
+    protected $casts = [
+        'evaluation_meta' => 'array',
+        'is_correct' => 'boolean',
+        'score' => 'integer',
     ];
 
     public function user()
