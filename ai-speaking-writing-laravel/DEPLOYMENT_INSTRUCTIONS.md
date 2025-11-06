@@ -29,8 +29,10 @@ Tìm dòng `GEMINI_API_KEY=your_gemini_api_key_here` và thay thế `your_gemini
 
 ### 4. Chạy Docker Compose (tự động setup)
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
+
+**Lưu ý:** Docker Compose v2 sử dụng `docker compose` (không có dấu gạch ngang). Nếu bạn dùng v1, hãy dùng `docker-compose`.
 
 Hệ thống sẽ tự động:
 - Cài đặt Composer dependencies
