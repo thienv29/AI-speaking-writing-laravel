@@ -27,7 +27,7 @@ class ReviewController extends Controller
 
         // Filters
         if ($request->filled('user_id')) {
-            $query->where('user_id', $request->integer('user_id'));
+            $query->where('user_id', (int) $request->input('user_id'));
         }
 
         // Handle lesson_id or exercise_id from combined select
@@ -47,7 +47,7 @@ class ReviewController extends Controller
         }
 
         if ($request->filled('question_id')) {
-            $query->where('question_id', $request->integer('question_id'));
+            $query->where('question_id', (int) $request->input('question_id'));
         }
 
         if ($request->filled('is_correct')) {

@@ -30,7 +30,7 @@ class QuestionController extends Controller
                 ->orderBy('order_index');
 
             if ($request->filled('exercise_id')) {
-                $query->where('exercise_id', $request->integer('exercise_id'));
+                $query->where('exercise_id', (int) $request->input('exercise_id'));
             }
 
             return response()->json([

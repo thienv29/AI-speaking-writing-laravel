@@ -34,10 +34,10 @@ class AttemptController extends Controller
                 ->orderByDesc('id');
 
             if ($request->filled('question_id')) {
-                $q->where('question_id', $request->integer('question_id'));
+                $q->where('question_id', (int) $request->input('question_id'));
             }
             if ($request->filled('user_id')) {
-                $q->where('user_id', $request->integer('user_id'));
+                $q->where('user_id', (int) $request->input('user_id'));
             }
 
             return response()->json([

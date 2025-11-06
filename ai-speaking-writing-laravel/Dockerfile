@@ -5,6 +5,7 @@ LABEL maintainer="I-CLC Development Team"
 LABEL description="I-CLC Learning Platform - Laravel Application"
 
 # Install system dependencies
+# Note: Using mariadb-client instead of mysql-client (compatible with Debian Trixie+)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
@@ -14,8 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzip-dev \
     zip \
     unzip \
-    default-mysql-client \
-    && rm -rf /var/lib/apt/lists/*
+    mariadb-client \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Install PHP extensions
 RUN docker-php-ext-install -j$(nproc) \
@@ -44,9 +47,9 @@ WORKDIR /var/www/html
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create non-root user for security
-RUN groupadd -g 1000 www-data && \
-    useradd -u 1000 -g www-data -s /bin/bash -m www-data
+# Create non-root user for security (if not exists)
+RUN (getent group www-data || groupadd -g 1000 www-data) && \
+    (id -u www-data >/dev/null 2>&1 || useradd -u 1000 -g www-data -s /bin/bash -m www-data)
 
 # Entrypoint tự động:
 # 1. Đợi MySQL ready (với retry logic)

@@ -56,22 +56,35 @@ cd /var/www/html
 # Install Composer dependencies
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
     log_info "Installing Composer dependencies..."
-    composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+    composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev || {
+        log_error "Composer install failed, trying with dev dependencies..."
+        composer install --no-interaction --prefer-dist --optimize-autoloader
+    }
 else
     log_info "Composer dependencies already installed"
 fi
 
 # Generate application key if not set
-if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ]; then
+if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ] || [ "$APP_KEY" = "base64:" ]; then
     log_info "Generating application key..."
-    php artisan key:generate --force || true
+    php artisan key:generate --force || {
+        log_warn "Failed to generate key, checking .env file..."
+        if [ ! -f ".env" ]; then
+            log_error ".env file not found! Please create it from .env.example"
+            exit 1
+        fi
+    }
 fi
 
-# Optimize Laravel for production
-log_info "Optimizing Laravel..."
-php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
+# Optimize Laravel for production (only if not in debug mode)
+if [ "${APP_ENV:-production}" != "local" ] && [ "${APP_DEBUG:-false}" != "true" ]; then
+    log_info "Optimizing Laravel for production..."
+    php artisan config:cache || log_warn "Config cache failed, continuing..."
+    php artisan route:cache || log_warn "Route cache failed, continuing..."
+    php artisan view:cache || log_warn "View cache failed, continuing..."
+else
+    log_info "Skipping optimization (development mode)"
+fi
 
 # Check if database has tables
 DB_HAS_TABLES=false
@@ -90,12 +103,17 @@ fi
 # Run migrations
 if [ "$DB_HAS_TABLES" = false ]; then
     log_info "First time setup: Running fresh migrations with seeders..."
-    php artisan migrate:fresh --seed --force
+    php artisan migrate:fresh --seed --force || {
+        log_error "Initial migration failed!"
+        exit 1
+    }
 else
     log_info "Database exists: Running migrations only..."
     php artisan migrate --force || {
-        log_warn "Migration failed, trying fresh..."
-        php artisan migrate:fresh --seed --force
+        log_warn "Migration failed. This might be due to schema conflicts."
+        log_warn "To reset database, run: docker compose exec app php artisan migrate:fresh --seed"
+        # Don't fail completely, let the app start anyway
+        log_warn "Continuing with existing database state..."
     }
 fi
 
@@ -107,14 +125,23 @@ fi
 
 # Set proper permissions
 log_info "Setting permissions..."
-chmod -R 775 storage bootstrap/cache || true
-chown -R www-data:www-data storage bootstrap/cache || true
+# Create directories if they don't exist
+mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+# Try to change ownership, but don't fail if it doesn't work (for different user IDs)
+chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || {
+    log_warn "Could not change ownership to www-data, continuing with current permissions..."
+}
 
-# Clear and rebuild cache
-log_info "Rebuilding cache..."
-php artisan config:clear || true
-php artisan cache:clear || true
-php artisan view:clear || true
+# Clear and rebuild cache (only if not in production optimization mode)
+if [ "${APP_ENV:-production}" = "local" ] || [ "${APP_DEBUG:-false}" = "true" ]; then
+    log_info "Clearing cache (development mode)..."
+    php artisan config:clear || true
+    php artisan cache:clear || true
+    php artisan view:clear || true
+else
+    log_info "Cache already optimized for production"
+fi
 
 # Start Laravel server
 log_info "Starting Laravel server on port 8000..."
