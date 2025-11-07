@@ -108,6 +108,18 @@
 
                 <div class="answer-wrapper">
                     <div class="answer-label">✍️ Bé hãy viết câu trả lời</div>
+                    <div class="answer-input-group" id="wcsInputGroup" style="display: none;">
+                        <div class="answer-prefix" id="wcsPrefix"></div>
+                        <div class="answer-suffix-container">
+                            <textarea
+                                id="answerSuffix"
+                                class="answer-suffix-input"
+                                rows="2"
+                                placeholder="..."
+                                autocomplete="off"
+                            ></textarea>
+                        </div>
+                    </div>
                     <textarea 
                         id="userAnswer" 
                         placeholder="Viết câu trả lời của con tại đây..."
@@ -140,5 +152,7 @@
 @endsection
 
 @push('scripts')
+<script src="/js/writing-effects.js"></script>
+<script src="/js/writing-feedback.js"></script>
 <script src="/js/writing-question.js"></script>
 @endpush

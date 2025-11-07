@@ -5,26 +5,21 @@ let allQuestionsList = []; // Store all questions for navigation
 let currentQuestionIndex = 0;
 let questionEffects = {};
 let exerciseEffects = {};
-let audioContext = null;
-let audioUnlocked = false;
-let audioCache = {};
+let currentExerciseTypeCode = null;
+let currentStarterText = '';
 
-const fallbackToneMap = {
-    success: 880,
-    failure: 330,
-    button: 520,
-};
-
-const animationClassMap = {
-    confetti: 'anim-confetti',
-    shake: 'anim-shake',
-    wobble: 'anim-shake',
-    bounce: 'anim-bounce',
-    sparkle: 'anim-sparkle',
-    wave: 'anim-wave',
-    pulse: 'anim-pulse',
-    rainbow: 'anim-rainbow',
-    tick: 'anim-pulse'
+const Effects = window.WritingEffects || {};
+const Feedback = window.WritingFeedback || {};
+const escapeHtml = (str) => {
+    if (Feedback.escapeHtml) {
+        return Feedback.escapeHtml(str);
+    }
+    return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 };
 
 // Load question data
@@ -58,6 +53,8 @@ async function loadQuestion() {
             const exerciseType = exercise.type || {};
             const lesson = exercise.lesson || {};
             const lessonTitle = lesson.title || 'I-CLC Lesson';
+            currentExerciseTypeCode = exerciseType.code || null;
+            currentStarterText = question.starter_text || '';
             
             // Update currentQuestionId and currentExerciseId to match loaded question
             currentQuestionId = question.id;
@@ -82,6 +79,40 @@ async function loadQuestion() {
             safeSetText('questionPrompt', promptText);
             safeSetText('exerciseSubtitle', buildSubtitle(question));
 
+            const answerField = document.getElementById('userAnswer');
+            const wcsGroup = document.getElementById('wcsInputGroup');
+            const wcsPrefixEl = document.getElementById('wcsPrefix');
+            const answerSuffixEl = document.getElementById('answerSuffix');
+
+            const isWcs = currentExerciseTypeCode === 'WCS' && currentStarterText;
+
+            if (isWcs && wcsGroup && wcsPrefixEl && answerSuffixEl) {
+                wcsGroup.style.display = 'flex';
+                const prefixText = currentStarterText.trim();
+                wcsPrefixEl.textContent = prefixText;
+                wcsPrefixEl.setAttribute('aria-label', 'Gợi ý cố định');
+                answerSuffixEl.value = '';
+                answerSuffixEl.placeholder = '...';
+                answerSuffixEl.focus();
+
+                if (answerField) {
+                    answerField.style.display = 'none';
+                    answerField.value = prefixText ? `${prefixText} ` : '';
+                }
+            } else {
+                if (wcsGroup) {
+                    wcsGroup.style.display = 'none';
+                }
+                if (answerField) {
+                    answerField.style.display = 'block';
+                    answerField.value = '';
+                    answerField.placeholder = currentStarterText
+                        ? `${currentStarterText.trim()} ...`
+                        : 'Viết câu trả lời của con tại đây...';
+                    answerField.focus();
+                }
+            }
+
             // Load all questions for navigation
             if (exercise.id) {
                 await loadAllQuestions(exercise.id, question.id);
@@ -99,11 +130,12 @@ async function loadQuestion() {
             const hintSection = document.getElementById('hintSection');
             const hintText = document.getElementById('hintText');
             if (hintSection && hintText) {
-                const template = (question.effect && question.effect.template) || '';
-                const hint = getTemplateHint(template, question);
+                const hint = buildHintMessage(currentExerciseTypeCode, question);
                 if (hint) {
                     hintText.textContent = hint;
                     hintSection.style.display = 'block';
+                } else {
+                    hintSection.style.display = 'none';
                 }
             }
 
@@ -124,26 +156,60 @@ async function loadQuestion() {
 
 // Submit answer
 async function submitAnswer() {
-    const answer = document.getElementById('userAnswer').value.trim();
-    
-    if (!answer) {
-        showError('Vui lòng viết câu trả lời trước khi gửi.');
-        return;
+    let answer = '';
+    const answerField = document.getElementById('userAnswer');
+    const answerSuffixEl = document.getElementById('answerSuffix');
+
+    if (currentExerciseTypeCode === 'WCS') {
+        if (answerSuffixEl) {
+            const suffix = answerSuffixEl.value.trim();
+            if (!suffix) {
+                showError('Con hãy hoàn thành câu trước khi gửi nhé!');
+                return;
+            }
+            const prefix = currentStarterText ? currentStarterText.trim() : '';
+            answer = prefix ? `${prefix}${prefix.endsWith(' ') ? '' : ' '}${suffix}` : suffix;
+            if (answerField) {
+                answerField.value = answer;
+            }
+        } else if (answerField) {
+            // Fallback nếu ô suffix không tồn tại (ví dụ trên trang chưa được cập nhật)
+            answer = answerField.value.trim();
+            if (!answer) {
+                showError('Con hãy hoàn thành câu trước khi gửi nhé!');
+                return;
+            }
+        } else {
+            showError('Không tìm thấy ô trả lời.');
+            return;
+        }
+    } else {
+        if (!answerField) {
+            showError('Không tìm thấy ô trả lời.');
+            return;
+        }
+        answer = answerField.value.trim();
+        if (!answer) {
+            showError('Vui lòng viết câu trả lời trước khi gửi.');
+            return;
+        }
     }
-    
+
     if (!currentQuestionId) {
         showError('ID câu hỏi không tìm thấy.');
         return;
     }
-    
-    unlockAudio();
-    playSound(exerciseEffects.button_sound, 'button');
+
+    if (Effects.unlockAudio) Effects.unlockAudio();
+    if (Effects.playSound) {
+        Effects.playSound(exerciseEffects.button_sound, 'button');
+    }
 
     const submitBtn = document.getElementById('submitBtn');
     const loadingEl = document.getElementById('loading');
     const errorEl = document.getElementById('error');
     const resultCard = document.getElementById('resultCard');
-    
+
     submitBtn.disabled = true;
     loadingEl.style.display = 'flex';
     errorEl.style.display = 'none';
@@ -179,37 +245,53 @@ async function submitAnswer() {
 }
 
 function buildSubtitle(question) {
-    const template = (question.effect && question.effect.template) || '';
-    if (question.starter_text) {
-        return `Bé hãy viết tiếp câu bắt đầu bằng "${question.starter_text}…" nhé!`;
+    const exerciseTypeCode = question.exercise && question.exercise.type ? question.exercise.type.code : null;
+
+    if (exerciseTypeCode === 'WCS' && question.starter_text) {
+        return `Hoàn thành câu bắt đầu bằng "${question.starter_text.trim()}" nhé!`;
     }
-    const subtitles = {
-        name: 'Giới thiệu tên của con bằng câu "My name is …".',
-        age: 'Nói tuổi của con bằng câu "I am [number] years old."',
-        location: 'Hãy kể con đang sống ở đâu bằng câu "I live in …".',
-        time: 'Dùng câu "It is [number] o\'clock." để nói giờ hiện tại nhé.',
-        weather: 'Mô tả thời tiết bằng câu "Today is …".',
-        hobby: 'Chia sẻ sở thích của con bằng câu "My favorite hobby is …".'
-    };
-    return subtitles[template] || 'Viết câu trả lời đầy đủ, nhớ viết hoa chữ cái đầu và kết thúc bằng dấu chấm nhé!';
+
+    if (exerciseTypeCode === 'WAQ') {
+        return 'Trả lời theo ý của con, nhớ viết thành câu đầy đủ nhé!';
+    }
+
+    if (exerciseTypeCode === 'WSG') {
+        const keyword = question.prompt_text || question.target_text || '';
+        if (keyword) {
+            return `Đặt một câu hoàn chỉnh có từ "${keyword}" nhé!`;
+        }
+        return 'Đặt một câu hoàn chỉnh bằng cách dùng từ được cho nhé!';
+    }
+
+    if (question.starter_text) {
+        return `Bé hãy viết tiếp câu bắt đầu bằng "${question.starter_text.trim()}" nhé!`;
+    }
+
+    return 'Viết câu trả lời đầy đủ, nhớ viết hoa chữ cái đầu và kết thúc bằng dấu chấm nhé!';
 }
 
-function getTemplateHint(template, question) {
-    if (question.starter_text) {
-        return `Viết tiếp câu: "${question.starter_text} [phần còn lại của câu]"`;
+function buildHintMessage(exerciseTypeCode, question) {
+    if (exerciseTypeCode === 'WCS' && question.starter_text) {
+        return `Hoàn thành câu: "${question.starter_text.trim()} ..."`;
     }
-    
-    const hints = {
-        name: 'Format: Hello, [tên của bạn] hoặc My name is [tên của bạn].',
-        greeting: 'Format: Hello, [tên của bạn].',
-        age: 'Format: I am [số tuổi] years old.',
-        location: 'Format: I live in [nơi bạn sống].',
-        time: 'Format: It is [số giờ] o\'clock (chỉ dùng với giờ tròn, không dùng phút).',
-        weather: 'Format: Today is [sunny/rainy/cloudy/windy/snowy].',
-        hobby: 'Format: My favorite hobby is [sở thích của bạn].'
-    };
-    
-    return hints[template] || null;
+
+    if (exerciseTypeCode === 'WAQ') {
+        return 'Con trả lời theo ý của mình, miễn là đúng chủ đề và viết thành câu hoàn chỉnh nhé!';
+    }
+
+    if (exerciseTypeCode === 'WSG') {
+        const keyword = question.prompt_text || question.target_text || '';
+        if (keyword) {
+            return `Dùng từ "${keyword}" để đặt một câu đầy đủ nhé con!`;
+        }
+        return 'Dùng từ được cho để đặt một câu hoàn chỉnh nhé con!';
+    }
+
+    if (question.starter_text) {
+        return `Bắt đầu với: "${question.starter_text.trim()}" và hoàn thành câu nhé!`;
+    }
+
+    return 'Viết câu trả lời đầy đủ, nhớ viết hoa chữ cái đầu và kết thúc bằng dấu chấm nhé!';
 }
 
 async function loadTemplateHint(questionId) {
@@ -222,7 +304,7 @@ async function loadTemplateHint(questionId) {
         if (data.status === 'success' && data.data && data.data.hint) {
             hintBox.textContent = `💡 ${data.data.hint}`;
         } else {
-            hintBox.textContent = '💡 Hãy cố gắng viết đúng cấu trúc đã học nhé!';
+            hintBox.textContent = '💡 Viết câu trả lời đầy đủ và đúng chủ đề nhé con!';
         }
     } catch (error) {
         hintBox.textContent = '💡 Không lấy được gợi ý, con hãy thử dựa vào đề bài nhé!';
@@ -231,8 +313,25 @@ async function loadTemplateHint(questionId) {
 
 function resetAnswer() {
     const answerField = document.getElementById('userAnswer');
-    answerField.value = '';
-    answerField.focus();
+    const answerSuffixEl = document.getElementById('answerSuffix');
+
+    if (currentExerciseTypeCode === 'WCS') {
+        if (answerSuffixEl) {
+            answerSuffixEl.value = '';
+            answerSuffixEl.placeholder = '...';
+            answerSuffixEl.focus();
+        }
+        if (answerField) {
+            answerField.value = currentStarterText ? `${currentStarterText.trim()} ` : '';
+        }
+    } else if (answerField) {
+        answerField.value = '';
+        answerField.placeholder = currentStarterText
+            ? `${currentStarterText.trim()} ...`
+            : 'Viết câu trả lời của con tại đây...';
+        answerField.focus();
+    }
+
     document.getElementById('error').style.display = 'none';
     document.getElementById('resultCard').style.display = 'none';
 }
@@ -242,17 +341,23 @@ function showResult(data) {
     const resultFeedback = document.getElementById('resultFeedback');
     const effectData = data.effect || {};
     const stage = data.is_correct ? 'success' : 'failure';
-    const stageEffect = getStageEffect(effectData, stage);
+    let stageEffect = Effects.getStageEffect ? Effects.getStageEffect(effectData, stage) : null;
+    if (!stageEffect && effectData && effectData[stage]) {
+        stageEffect = effectData[stage];
+    }
+    if (!stageEffect && questionEffects && questionEffects.effects && questionEffects.effects[stage]) {
+        stageEffect = questionEffects.effects[stage];
+    }
     const effectMessage = stageEffect && stageEffect.message ? stageEffect.message : '';
 
     const statusText = data.is_correct ? 'Làm tốt lắm!' : 'Cùng thử lại nhé';
     const statusClass = data.is_correct ? 'success' : 'failure';
     const score = data.score ? `${data.score}/100` : (data.feedback.includes('Điểm:') ? data.feedback.split('Điểm:')[1].split('/')[0] + '/100' : 'N/A');
 
-    const highlightHtml = renderHighlights(data);
-    const notesHtml = renderNotes(data);
+    const highlightHtml = Feedback.renderHighlights ? Feedback.renderHighlights(data) : '';
+    const notesHtml = Feedback.renderNotes ? Feedback.renderNotes(data) : '';
     // Format markdown feedback to kid-friendly HTML
-    const feedbackText = formatFeedbackForKids(data.feedback);
+    const feedbackText = Feedback.formatFeedbackForKids ? Feedback.formatFeedbackForKids(data.feedback) : (data.feedback || '');
 
     resultFeedback.innerHTML = `
         <div class="status-row">
@@ -260,7 +365,7 @@ function showResult(data) {
             <span class="score-pill">Điểm: ${score}</span>
         </div>
         <div class="result-text">${feedbackText}</div>
-        ${effectMessage ? `<div class="effect-message">${formatFeedbackForKids(effectMessage)}</div>` : ''}
+        ${effectMessage ? `<div class="effect-message">${Feedback.formatFeedbackForKids ? Feedback.formatFeedbackForKids(effectMessage) : effectMessage}</div>` : ''}
         ${notesHtml ? `<div class="hl-container">${notesHtml}</div>` : ''}
         <div class="result-actions">
             <button class="btn-primary" type="button" onclick="resetAnswer()">Làm thêm lần nữa</button>
@@ -270,147 +375,7 @@ function showResult(data) {
 
     resultCard.style.display = 'block';
     resultCard.scrollIntoView({ behavior: 'smooth' });
-    applyEffect(stageEffect, stage);
-    
-    if (stageEffect && stageEffect.sound) {
-        playSound(stageEffect.sound, stage);
-    } else {
-        playFallbackTone(stage);
-    }
-}
-
-function getStageEffect(effectData, stage) {
-    if (effectData && effectData[stage]) {
-        return effectData[stage];
-    }
-    if (questionEffects && questionEffects.effects && questionEffects.effects[stage]) {
-        return questionEffects.effects[stage];
-    }
-    return null;
-}
-
-function playSound(url, stage) {
-    if (!url) {
-        playFallbackTone(stage);
-        return;
-    }
-    
-    unlockAudio();
-    
-    try {
-        let audio = audioCache[url];
-        if (!audio) {
-            audio = new Audio(url);
-            audioCache[url] = audio;
-            audio.addEventListener('error', () => playFallbackTone(stage));
-            audio.load();
-        }
-        
-        audio.currentTime = 0;
-        const playPromise = audio.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.catch(() => playFallbackTone(stage));
-        } else {
-            playFallbackTone(stage);
-        }
-    } catch (error) {
-        playFallbackTone(stage);
-    }
-}
-
-function ensureAudioContext() {
-    if (audioContext) return audioContext;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return null;
-    audioContext = new AudioCtx();
-    
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().catch(() => {});
-    }
-    
-    return audioContext;
-}
-
-function unlockAudio() {
-    if (audioUnlocked) {
-        const ctx = ensureAudioContext();
-        if (ctx && ctx.state === 'suspended') {
-            ctx.resume().catch(() => {});
-        }
-        return;
-    }
-    
-    const ctx = ensureAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-        ctx.resume().then(() => {
-            audioUnlocked = true;
-        }).catch(() => {});
-    } else if (ctx) {
-        audioUnlocked = true;
-    }
-    
-    try {
-        const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
-        silentAudio.volume = 0.01;
-        silentAudio.play().then(() => {
-            audioUnlocked = true;
-        }).catch(() => {});
-    } catch (e) {}
-}
-
-function playFallbackTone(stage) {
-    unlockAudio();
-    
-    let attempts = 0;
-    const maxAttempts = 3;
-    
-    const tryPlayTone = () => {
-        attempts++;
-        const ctx = ensureAudioContext();
-        if (!ctx) return;
-
-        if (ctx.state === 'suspended') {
-            ctx.resume().then(() => {
-                playTone(ctx, stage);
-            }).catch(() => {
-                if (attempts < maxAttempts) {
-                    setTimeout(tryPlayTone, 100 * attempts);
-                } else {
-                    playTone(ctx, stage);
-                }
-            });
-        } else {
-            playTone(ctx, stage);
-        }
-    };
-    
-    setTimeout(tryPlayTone, 50);
-}
-
-function playTone(ctx, stage) {
-    const freq = fallbackToneMap[stage] || 440;
-    const duration = stage === 'failure' ? 0.35 : 0.18;
-
-    try {
-        const oscillator = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-
-        oscillator.type = stage === 'failure' ? 'sawtooth' : 'sine';
-        oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
-
-        gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-
-        oscillator.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + duration + 0.05);
-    } catch (error) {
-        console.error('Error playing fallback tone:', error);
-    }
+    if (Effects.applyEffect) Effects.applyEffect(stageEffect, stage);
 }
 
 function applyExerciseBackground() {
@@ -512,96 +477,6 @@ function triggerCelebration() {
     }
 
     setTimeout(() => overlay.remove(), 3100);
-}
-
-function renderHighlights(data) {
-    const meta = data.evaluation_meta || {};
-    const segments = meta.highlight_segments || [];
-    if (!segments.length) return '';
-
-    return segments.map(segment => {
-        const status = segment.status || 'correct';
-        let className = 'hl-correct';
-        if (status === 'wrong') className = 'hl-wrong';
-        else if (status === 'neutral') className = 'hl-neutral';
-
-        const title = segment.message ? ` title="${escapeHtml(segment.message)}"` : '';
-        const text = segment.text || '';
-        const safeText = escapeHtml(text).replace(/ /g, '&nbsp;');
-
-        return `<span class="${className}"${title}>${safeText}</span>`;
-    }).join('');
-}
-
-function renderNotes(data) {
-    const meta = data.evaluation_meta || {};
-    const notes = meta.notes || [];
-    if (!notes.length) return '';
-    return `<ul class="hl-notes">${notes.map(note => `<li>${escapeHtml(note)}</li>`).join('')}</ul>`;
-}
-
-function escapeHtml(str) {
-    return (str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-/**
- * Format markdown feedback to simple, kid-friendly HTML
- * Converts markdown syntax to readable format for children
- */
-function formatFeedbackForKids(markdownText) {
-    if (!markdownText) return '';
-    
-    let text = markdownText;
-    
-    // Escape HTML first to prevent XSS
-    text = escapeHtml(text);
-    
-    // Convert markdown headings to simple bold text
-    text = text.replace(/^### (.*$)/gim, '<p class="feedback-heading"><strong>$1</strong></p>');
-    text = text.replace(/^## (.*$)/gim, '<p class="feedback-heading"><strong>$1</strong></p>');
-    text = text.replace(/^# (.*$)/gim, '<p class="feedback-heading"><strong>$1</strong></p>');
-    
-    // Convert bold (**text** or __text__) to <strong>
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
-    
-    // Convert italic (*text* or _text_) to <em>
-    text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    text = text.replace(/_(.+?)_/g, '<em>$1</em>');
-    
-    // Convert unordered lists (-, *, +) to simple bullet points
-    text = text.replace(/^[\s]*[-*+]\s+(.+)$/gim, '<p class="feedback-list-item">• $1</p>');
-    
-    // Convert numbered lists (1. 2. 3.) to simple numbered items
-    text = text.replace(/^[\s]*\d+\.\s+(.+)$/gim, '<p class="feedback-list-item">$1</p>');
-    
-    // Convert line breaks (\n\n) to paragraph breaks
-    text = text.split(/\n\s*\n/).map(para => {
-        para = para.trim();
-        if (!para) return '';
-        // If not already wrapped in a tag, wrap in <p>
-        if (!para.match(/^<[a-z]/i)) {
-            return '<p class="feedback-paragraph">' + para + '</p>';
-        }
-        return para;
-    }).join('');
-    
-    // Convert single line breaks to <br>
-    text = text.replace(/\n/g, '<br>');
-    
-    // Remove code blocks (```code```)
-    text = text.replace(/```[\s\S]*?```/g, '');
-    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-    
-    // Clean up empty paragraphs
-    text = text.replace(/<p[^>]*>\s*<\/p>/g, '');
-    
-    return text.trim();
 }
 
 function showError(message) {

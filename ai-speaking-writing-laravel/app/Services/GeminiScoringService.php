@@ -140,78 +140,85 @@ class GeminiScoringService
      */
     private function buildPrompt(Question $question, string $userAnswer): string
     {
-        $promptText = $question->prompt_text ?? '';
-        $starterText = $question->starter_text ?? '';
-        $targetText = $question->target_text ?? '';
-        $questionType = $this->detectQuestionType($question);
-        $exerciseTypeCode = $question->exercise->type->code ?? 'WAQ';
-        
-        // Kid-friendly prompt - simple feedback for children under 13
-        $context = "You are a friendly English teacher evaluating a child's answer (under 13 years old).\n";
-        $context .= "Give SIMPLE, SHORT, and ENCOURAGING feedback in Vietnamese that children can easily understand.\n";
-        $context .= "Use simple words, avoid complex grammar terms, and be positive and motivating.\n";
-        $context .= "IMPORTANT: Always address the child as 'con' (not 'bạn' or 'em'). This makes it more personal and friendly for children.\n\n";
-        $context .= "QUESTION: {$promptText}\n";
-        if ($starterText) $context .= "STARTER: {$starterText}\n";
-        if ($targetText) $context .= "EXPECTED: {$targetText}\n";
-        $context .= "TYPE: {$questionType} ({$exerciseTypeCode})\n";
-        $context .= "ANSWER: {$userAnswer}\n\n";
-        
-        $context .= "RULES:\n";
-        $context .= "1. Punctuation: ends with '.', '!', '?' → CORRECT\n";
-        $context .= "2. Capitalization: first letter uppercase → CORRECT\n";
-        $context .= "3. Spelling: report REAL misspellings only\n";
-        $context .= "4. Grammar: report REAL errors (e.g., 'I has'→'I have', 'sunny skin'→'sunny skin' OK)\n";
-        
-        // Special rule for greeting/name questions (e.g., "Hello, [name]")
-        if ($questionType === 'name' || $questionType === 'greeting' || 
-            (strtolower($promptText) === 'hello' && strtolower($targetText ?? '') === 'hello') ||
-            (strtolower($promptText) === 'name' && strtolower($targetText ?? '') === 'name')) {
-            $context .= "5. GREETING/NAME: For questions asking to fill in a name (e.g., 'Hello, [name]'), ANY valid name is acceptable.\n";
-            $context .= "   - Format: 'Hello, [any name]' or '[any name]' = CORRECT = 100 points\n";
-            $context .= "   - Do NOT penalize for different names - all names are equally valid\n";
-            $context .= "   - Only check: proper capitalization, punctuation, and that it's a name (not gibberish)\n";
-            $context .= "   - Examples: 'Hello, John' = 100, 'Hello, Mary' = 100, 'Hello, Nguyen' = 100\n";
-            $context .= "   - Score 100 if format is correct and contains a valid name\n\n";
+        $exercise = $question->relationLoaded('exercise')
+            ? $question->exercise
+            : $question->exercise()->with('type', 'lesson')->first();
+
+        $exerciseType = $exercise && $exercise->relationLoaded('type')
+            ? $exercise->type
+            : ($exercise ? $exercise->type : null);
+
+        $exerciseTypeCode = strtoupper($exerciseType->code ?? 'WAQ');
+        $lessonTitle = '';
+        if ($exercise) {
+            $lesson = $exercise->relationLoaded('lesson') ? $exercise->lesson : $exercise->lesson()->first();
+            $lessonTitle = $lesson->title ?? '';
         }
-        
-        // Special rule for WSG (sentence building with given words)
-        if ($exerciseTypeCode === 'WSG') {
-            $context .= "5. WSG (Sentence Building): Student MUST write a COMPLETE SENTENCE using the given word(s).\n";
-            $context .= "   - Just writing the word alone (e.g., 'family') = INCOMPLETE = LOW SCORE (0-30)\n";
-            $context .= "   - Must be a full sentence with subject + verb + object/complement\n";
-            $context .= "   - Example: 'family' alone = WRONG, 'I love my family.' = CORRECT\n";
-            $context .= "   - Score 0-30 if only word(s) provided without sentence structure\n";
-            $context .= "   - Score 80-100 only if complete, grammatically correct sentence\n\n";
+
+        $promptText = trim((string) $question->prompt_text);
+        $starterText = trim((string) $question->starter_text);
+        $targetText = trim((string) $question->target_text);
+
+        $context = "You are a friendly English teacher evaluating the answer of a child (under 13 years old).\n";
+        $context .= "Always respond in Vietnamese and always address the child as 'con'. Keep feedback short (2-3 sentences), simple, positive, and encouraging. Do not use complex linguistic terminology.\n\n";
+
+        if (!empty($lessonTitle)) {
+            $context .= "LESSON: {$lessonTitle}\n";
         }
-        
-        if ($questionType === 'time') {
-            $context .= "5. TIME: 'o'clock' only with whole hours\n\n";
+
+        $context .= "QUESTION: " . ($promptText !== '' ? $promptText : '[Không có nội dung câu hỏi]') . "\n";
+
+        if ($starterText !== '') {
+            $context .= "STARTER_HINT_SHOWN_TO_CHILD: {$starterText}\n";
         }
-        
-        $context .= "SCORING GUIDELINES:\n";
-        $context .= "- 90-100: Perfect or near-perfect answer with minor issues\n";
-        $context .= "- 70-89: Good answer with some errors but mostly correct\n";
-        $context .= "- 50-69: Partially correct but has significant errors\n";
-        $context .= "- 30-49: Many errors, answer is mostly incorrect\n";
-        $context .= "- 0-29: Completely wrong, incomplete, or just words without sentence structure\n\n";
-        
-        $context .= "FEEDBACK RULES FOR CHILDREN:\n";
-        $context .= "- ALWAYS address the child as 'con' (never use 'bạn', 'em', or formal pronouns)\n";
-        $context .= "- Keep feedback SHORT (2-3 sentences maximum)\n";
-        $context .= "- Use SIMPLE Vietnamese words (e.g., 'tốt' not 'xuất sắc', 'sai' not 'không chính xác')\n";
-        $context .= "- Be POSITIVE and ENCOURAGING (always start with what they did well)\n";
-        $context .= "- Avoid technical grammar terms (don't say 'chủ ngữ', 'động từ', 'tân ngữ' - just say 'câu đúng' or 'câu sai')\n";
-        $context .= "- Use emojis sparingly (1-2 max) to make it fun\n";
-        $context .= "- If there are errors, explain simply what to fix (e.g., 'thiếu dấu chấm' not 'thiếu dấu chấm kết thúc câu')\n";
-        $context .= "- End with encouragement (e.g., 'Tiếp tục cố gắng nhé con!' or 'Làm tốt lắm con!')\n\n";
-        $context .= "CRITICAL: Output ONLY valid JSON. No explanations before/after.\n";
-        $context .= "Example good feedback: 'Làm tốt lắm con! 🌟 Câu của con đúng rồi. Tiếp tục phát huy nhé!'\n";
-        $context .= "Example bad feedback (too complex): 'Câu trả lời của con rất xuất sắc! Con đã sử dụng từ... để tạo thành một câu hoàn chỉnh và ngữ pháp chính xác...'\n\n";
-        
-        $context .= "JSON format:\n";
-        $context .= "{\"score\":<0-100>,\"is_correct\":<true/false>,\"feedback\":\"<Vietnamese>\",\"spelling_errors\":[],\"grammar_errors\":[],\"highlight_segments\":[],\"template_used\":\"{$questionType}\"}\n";
-        
+
+        if ($targetText !== '') {
+            $context .= "EXAMPLE_ANSWER (optional, chỉ là ví dụ tham khảo, không phải đáp án duy nhất): {$targetText}\n";
+        }
+
+        $context .= "CHILD_ANSWER: {$userAnswer}\n";
+        $context .= "EXERCISE_TYPE: {$exerciseTypeCode}\n\n";
+
+        switch ($exerciseTypeCode) {
+            case 'WCS':
+                $context .= "TASK: Sentence completion. The child sees the starter hint above and will finish the sentence in their own words. Accept any natural continuation that keeps the meaning and forms a complete sentence.\n";
+                break;
+            case 'WSG':
+                $context .= "TASK: Sentence building with a required word. The child must write a COMPLETE sentence that includes the given word(s). Mark incorrect if the word is missing or the result is not a full sentence.\n";
+                break;
+            case 'WAQ':
+            default:
+                $context .= "TASK: Open question. There is no single correct answer. Judge if the answer is relevant, polite, and meaningful for the question.\n";
+                break;
+        }
+
+        if (stripos($promptText, 'your name') !== false || stripos($promptText, 'your name?') !== false || stripos($promptText, 'what is your name') !== false) {
+            $context .= "This question is about the child's name. Accept any natural response that clearly states the child's name, even if the child explains how they got the name (e.g. 'My parents named me Tony.').\n";
+        }
+
+        $context .= "GENERAL EVALUATION GUIDELINES:\n";
+        $context .= "- Reward answers that match the topic, make sense, and are written as simple sentences.\n";
+        $context .= "- Encourage proper capitalization and ending punctuation, but be gentle: mention it only if missing.\n";
+        $context .= "- Mark incorrect if the answer is unrelated, empty, or impossible to understand.\n\n";
+
+        $context .= "SCORING (0-100):\n";
+        $context .= "- 90-100: Rất tốt – câu trả lời đầy đủ, ít hoặc không có lỗi.\n";
+        $context .= "- 70-89: Tốt – hợp lý, có thể có lỗi nhỏ.\n";
+        $context .= "- 50-69: Tạm được – còn lỗi rõ ràng nhưng vẫn hiểu được.\n";
+        $context .= "- 30-49: Yếu – nhiều lỗi hoặc thiếu thông tin.\n";
+        $context .= "- 0-29: Sai – không đúng chủ đề, quá thiếu, hoặc không phải câu.\n\n";
+
+        $context .= "FEEDBACK STYLE:\n";
+        $context .= "- Luôn bắt đầu bằng lời khen tích cực (ví dụ: 'Con làm tốt lắm!').\n";
+        $context .= "- Giải thích ngắn gọn điều cần sửa bằng từ ngữ đơn giản (ví dụ: 'Con nhớ viết hoa chữ cái đầu nhé').\n";
+        $context .= "- Kết thúc bằng lời động viên (ví dụ: 'Tiếp tục cố gắng nhé con!').\n";
+        $context .= "- Có thể dùng tối đa 1-2 emoji thân thiện.\n";
+        $context .= "- Feedback phải hoàn toàn bằng tiếng Việt, không dùng câu tiếng Anh như 'Try saying ...'.\n\n";
+
+        $context .= "OUTPUT REQUIREMENTS:\n";
+        $context .= "- Chỉ trả về JSON hợp lệ, không thêm lời giải thích trước hoặc sau.\n";
+        $context .= "- Cấu trúc JSON: {\"score\":<0-100>,\"is_correct\":<true/false>,\"feedback\":\"<Vietnamese>\",\"spelling_errors\":[],\"grammar_errors\":[],\"highlight_segments\":[],\"template_used\":\"" . strtolower($exerciseTypeCode) . "\"}.\n";
+
         return $context;
     }
 
@@ -312,12 +319,18 @@ class GeminiScoringService
      */
     private function formatResult(array $data, Question $question, string $userAnswer): array
     {
-        $score = isset($data['score']) ? (int)$data['score'] : 30;
+        $score = isset($data['score']) ? (int) $data['score'] : 30;
         // Ensure score is valid (0-100)
         $score = max(0, min(100, $score));
         $isCorrect = $data['is_correct'] ?? ($score >= 80);
         $feedback = $data['feedback'] ?? 'Vui lòng kiểm tra lại câu trả lời của con nhé.';
-        $templateUsed = $data['template_used'] ?? $this->detectQuestionType($question);
+
+        $exercise = $question->relationLoaded('exercise')
+            ? $question->exercise
+            : $question->exercise()->with('type')->first();
+
+        $exerciseTypeCode = strtoupper(optional(optional($exercise)->type)->code ?? 'GENERAL');
+        $templateUsed = strtolower($data['template_used'] ?? $exerciseTypeCode);
         $extractedValue = $data['extracted_value'] ?? null;
         
         // Build evaluation meta
@@ -397,30 +410,6 @@ class GeminiScoringService
         }
         
         return $segments;
-    }
-
-    /**
-     * Detect question type
-     */
-    private function detectQuestionType(Question $question): string
-    {
-        $prompt = strtolower($question->prompt_text ?? '');
-        $target = strtolower($question->target_text ?? '');
-        
-        // Check for greeting/name pattern (Hello, [name] or Name)
-        if ($prompt === 'hello' && $target === 'hello') return 'greeting';
-        if ($prompt === 'name' && $target === 'name') return 'name';
-        if (strpos($prompt, 'hello') !== false && (strpos($prompt, 'name') !== false || strpos($target, 'name') !== false)) return 'greeting';
-        
-        if (strpos($prompt, 'name') !== false) return 'name';
-        if (strpos($prompt, 'age') !== false || strpos($prompt, 'old') !== false) return 'age';
-        if (strpos($prompt, 'hobby') !== false) return 'hobby';
-        if (strpos($prompt, 'live') !== false || strpos($prompt, 'location') !== false) return 'location';
-        if (strpos($prompt, 'weather') !== false) return 'weather';
-        if (strpos($prompt, 'time') !== false || strpos($prompt, 'clock') !== false) return 'time';
-        if ($question->starter_text) return 'word_usage';
-        
-        return 'general';
     }
 
     /**
