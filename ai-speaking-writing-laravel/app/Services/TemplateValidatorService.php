@@ -39,12 +39,21 @@ class TemplateValidatorService
             return sprintf('Hoàn thành câu: "%s ..."', trim($question->starter_text));
         }
 
-        return match ($code) {
-            'WCS' => 'Hoàn thành câu theo gợi ý đã cho, viết thành câu đầy đủ nhé con!',
-            'WAQ' => 'Con trả lời theo ý của mình, miễn là đúng chủ đề và viết thành câu hoàn chỉnh.',
-            'WSG' => 'Dùng từ được cho để đặt một câu hoàn chỉnh.',
-            default => null,
-        };
+        $hint = null;
+
+        switch ($code) {
+            case 'WCS':
+                $hint = 'Hoàn thành câu theo gợi ý đã cho, viết thành câu đầy đủ nhé con!';
+                break;
+            case 'WAQ':
+                $hint = 'Con trả lời theo ý của mình, miễn là đúng chủ đề và viết thành câu hoàn chỉnh.';
+                break;
+            case 'WSG':
+                $hint = 'Dùng từ được cho để đặt một câu hoàn chỉnh.';
+                break;
+        }
+
+        return $hint;
     }
 
     /**
