@@ -54,9 +54,9 @@
     </a>
 @endsection
 
-@push('styles')
+{{-- @push('styles')
 <link rel="stylesheet" href="/css/home.css">
-@endpush
+@endpush --}}
 
 @section('content')
 <section class="hero">

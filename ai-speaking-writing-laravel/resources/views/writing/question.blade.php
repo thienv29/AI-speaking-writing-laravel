@@ -15,12 +15,12 @@
     </a>
 @endsection
 
-@push('styles')
+{{-- @push('styles')
 <link rel="stylesheet" href="/css/writing-question.css">
-@endpush
+@endpush --}}
 
 @section('content')
-<div class="question-page-wrapper">
+<div id="question-page-content" class="question-page-wrapper">
     <div class="bg-shape one"></div>
     <div class="bg-shape two"></div>
 
@@ -44,12 +44,12 @@
                 @if(isset($allQuestions) && $allQuestions->count() > 1)
                 <div class="question-navigation">
                     <div class="question-nav-controls">
-                        <button id="prevQuestionBtn" class="nav-btn" onclick="navigateToPrevious()" title="Câu trước">
+                        <button id="prevQuestionBtn" class="nav-btn" title="Câu trước">
                             ← Trước
                         </button>
                         <div class="question-selector">
                             <label for="questionSelect" class="question-selector-label">Câu hỏi:</label>
-                            <select id="questionSelect" class="question-select" onchange="navigateToQuestion(this.value)">
+                            <select id="questionSelect" class="question-select">
                                 @foreach($allQuestions as $q)
                                     <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
                                         Câu {{ $q->order_index }}
@@ -58,7 +58,7 @@
                             </select>
                             <span class="question-counter" id="questionCounter"></span>
                         </div>
-                        <button id="nextQuestionBtn" class="nav-btn" onclick="navigateToNext()" title="Câu sau">
+                        <button id="nextQuestionBtn" class="nav-btn" title="Câu sau">
                             Sau →
                         </button>
                     </div>
@@ -126,10 +126,10 @@
                         rows="5"
                     ></textarea>
                     <div class="btn-area">
-                        <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">
+                        <button class="btn-primary" id="submitBtn">
                             Gửi câu trả lời
                         </button>
-                        <button class="btn-secondary" type="button" onclick="resetAnswer()">
+                        <button class="btn-secondary" type="button">
                             Làm lại
                         </button>
                     </div>
@@ -151,8 +151,8 @@
 </div>
 @endsection
 
-@push('scripts')
+{{-- @push('scripts')
 <script src="/js/writing-effects.js"></script>
 <script src="/js/writing-feedback.js"></script>
 <script src="/js/writing-question.js"></script>
-@endpush
+@endpush --}}

@@ -16,10 +16,10 @@
     </a>
 @endsection
 
-@push('styles')
+{{-- @push('styles')
 <link rel="stylesheet" href="/css/writing.css">
 <link rel="stylesheet" href="/css/course-content.css">
-@endpush
+@endpush --}}
 
 @section('content')
 <section class="course-content-section">

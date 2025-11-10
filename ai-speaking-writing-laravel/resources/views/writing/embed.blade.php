@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luyện Viết - I-CLC</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/writing-question.css">
+    {{-- <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/writing-question.css"> --}}
     <style>
         /* Reset body for iframe */
         body {
@@ -56,9 +56,19 @@
             }
         }
     </style>
+
+    @if (app()->environment('local'))
+        <!-- Khi dev, load từ server Vite -->
+        <link rel="stylesheet" href="http://localhost:5173/resources/css/app.css">
+        <script type="module" src="http://localhost:5173/resources/js/app.js"></script>
+    @else
+        <!-- Khi build, load file đã compile -->
+        <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
+        <script type="module" src="{{ asset('build/assets/app.js') }}"></script>
+    @endif
 </head>
 <body>
-    <div class="question-page-wrapper">
+    <div id="question-page-content" class="question-page-wrapper">
         <div class="container">
             <div class="header-card">
                 <div class="header-content">
@@ -70,7 +80,7 @@
                     @if(isset($allExercises) && $allExercises->count() > 1)
                     <div class="exercise-selector-wrapper">
                         <label for="exerciseSelect" class="exercise-selector-label">Bài tập:</label>
-                        <select id="exerciseSelect" class="exercise-select" onchange="navigateToExercise(this.value)">
+                        <select id="exerciseSelect" class="exercise-select">
                             @foreach($allExercises as $ex)
                                 <option value="{{ $ex->id }}" {{ $ex->id == $exercise->id ? 'selected' : '' }}>
                                     {{ $ex->title }}
@@ -82,12 +92,12 @@
                     @if(isset($allQuestions) && $allQuestions->count() > 1)
                     <div class="question-navigation">
                         <div class="question-nav-controls">
-                            <button id="prevQuestionBtn" class="nav-btn" onclick="navigateToPrevious()" title="Câu trước">
+                            <button id="prevQuestionBtn" class="nav-btn" title="Câu trước">
                                 ← Trước
                             </button>
                             <div class="question-selector">
                                 <label for="questionSelect" class="question-selector-label">Câu hỏi:</label>
-                                <select id="questionSelect" class="question-select" onchange="navigateToQuestion(this.value)">
+                                <select id="questionSelect" class="question-select">
                                     @foreach($allQuestions as $q)
                                         <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
                                             Câu {{ $q->order_index }}
@@ -96,7 +106,7 @@
                                 </select>
                                 <span class="question-counter" id="questionCounter"></span>
                             </div>
-                            <button id="nextQuestionBtn" class="nav-btn" onclick="navigateToNext()" title="Câu sau">
+                            <button id="nextQuestionBtn" class="nav-btn" title="Câu sau">
                                 Sau →
                             </button>
                         </div>
@@ -144,10 +154,10 @@
                         rows="5"
                     ></textarea>
                     <div class="btn-area">
-                        <button class="btn-primary" id="submitBtn" onclick="submitAnswer()">
+                        <button class="btn-primary" id="submitBtn">
                             Gửi câu trả lời
                         </button>
-                        <button class="btn-secondary" type="button" onclick="resetAnswer()">
+                        <button class="btn-secondary" type="button">
                             Làm lại
                         </button>
                     </div>
@@ -167,15 +177,15 @@
         </div>
     </div>
 
-    <script src="/js/writing-effects.js"></script>
+    {{-- <script src="/js/writing-effects.js"></script>
     <script src="/js/writing-feedback.js"></script>
-    <script src="/js/writing-question.js"></script>
-    <script>
+    <script src="/js/writing-question.js"></script> --}}
+    {{-- <script>
         // Initialize when page loads (works in both iframe and standalone)
         document.addEventListener('DOMContentLoaded', function() {
             loadQuestion();
         });
-    </script>
+    </script> --}}
 </body>
 </html>
 

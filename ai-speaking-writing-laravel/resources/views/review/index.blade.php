@@ -10,9 +10,9 @@
     <a href="/#contact">Liên hệ</a>
 @endsection
 
-@push('styles')
+{{-- @push('styles')
 <link rel="stylesheet" href="/css/review.css">
-@endpush
+@endpush --}}
 
 @section('content')
 <div class="review-page-wrapper">

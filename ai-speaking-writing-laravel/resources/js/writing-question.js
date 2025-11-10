@@ -738,13 +738,49 @@ function hideTranslationPopup() {
     }
 }
 
-// Initialize when page loads
-window.addEventListener('DOMContentLoaded', () => {
+function initQuestionNavigationElements() {
+    const prevBtn = document.getElementById('prevQuestionBtn');
+    const nextBtn = document.getElementById('nextQuestionBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const resetBtn = document.querySelector('.btn-secondary');
+    const questionSelect = document.getElementById('questionSelect');
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', navigateToPrevious);
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', navigateToNext);
+    }
+
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitAnswer);
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', resetAnswer);
+    }
+
+    if (questionSelect) {
+        questionSelect.addEventListener('change', (e) => {
+            navigateToQuestion(e.target.value);
+        });
+    }
+}
+
+function initWritingQuestionPage() {
     loadQuestion();
     initTranslationFeature();
-    
+    initQuestionNavigationElements();
+
     ['click', 'keydown', 'touchstart'].forEach(eventType => {
-        document.addEventListener(eventType, unlockAudio, { once: true, passive: true });
+        document.addEventListener(eventType, Effects.unlockAudio, { once: true, passive: true });
     });
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWritingQuestion);
+} else {
+    initWritingQuestionPage();
+}
 

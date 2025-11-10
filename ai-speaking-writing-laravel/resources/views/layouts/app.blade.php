@@ -22,22 +22,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Common CSS - Shared styles (variables, global, header, topbar) -->
-    <link rel="stylesheet" href="/css/common.css">
-    
-    <!-- Header CSS - Header-specific styles -->
-    <link rel="stylesheet" href="/css/header.css">
+    @if (app()->environment('local'))
+        <!-- Khi dev, load từ server Vite -->
+        <link rel="stylesheet" href="http://localhost:5173/resources/css/app.css">
+        <script type="module" src="http://localhost:5173/resources/js/app.js"></script>
+    @else
+        <!-- Khi build, load file đã compile -->
+        <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
+        <script type="module" src="{{ asset('build/assets/app.js') }}"></script>
+    @endif
     
     <!-- Page-specific CSS -->
-    @stack('styles')
+    {{-- @stack('styles') --}}
 </head>
 <body>
-    <div class="floating-bubbles">
-        <span class="bubble one"></span>
-        <span class="bubble two"></span>
-        <span class="bubble three"></span>
-    </div>
-
     @hasSection('topbar')
         @yield('topbar')
     @endif
