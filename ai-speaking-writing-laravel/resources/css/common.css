@@ -63,8 +63,7 @@ body:has(.question-page-wrapper) main .header-card {
 }
 
 /* Exception for elements that need scrolling */
-body:has(.question-page-wrapper) textarea,
-body:has(.question-page-wrapper) .celebration-overlay {
+body:has(.question-page-wrapper) textarea {
     overflow-y: auto !important;
 }
 

@@ -177,8 +177,7 @@
         </div>
     </div>
 
-    {{-- <script src="/js/writing-effects.js"></script>
-    <script src="/js/writing-feedback.js"></script>
+    {{-- <script src="/js/writing-feedback.js"></script>
     <script src="/js/writing-question.js"></script> --}}
     {{-- <script>
         // Initialize when page loads (works in both iframe and standalone)
