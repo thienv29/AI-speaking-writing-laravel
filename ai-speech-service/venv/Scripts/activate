@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\xampp\htdocs\AI-speaking-writing-laravel\ai-speech-service\venv"
+VIRTUAL_ENV="C:\laragon\www\AI-speaking-writing-laravel\ai-speech-service\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
