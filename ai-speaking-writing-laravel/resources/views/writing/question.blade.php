@@ -152,7 +152,6 @@
 @endsection
 
 {{-- @push('scripts')
-<script src="/js/writing-effects.js"></script>
 <script src="/js/writing-feedback.js"></script>
 <script src="/js/writing-question.js"></script>
 @endpush --}}

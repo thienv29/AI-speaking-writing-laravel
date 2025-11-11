@@ -6,7 +6,6 @@ use App\Models\Question;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
-use App\Support\Effects;
 
 /**
  * Service for scoring using Gemini API
@@ -377,7 +376,6 @@ class GeminiScoringService
             'template_used' => $templateUsed,
             'extracted_value' => $extractedValue,
             'evaluation_meta' => $evaluationMeta,
-            'effect' => Effects::forTemplate($templateUsed),
         ];
     }
 
@@ -489,7 +487,6 @@ class GeminiScoringService
                     "Current: {$rateLimitInfo['current']}/{$rateLimitInfo['limit']} ({$rateLimitInfo['type']})"
                 ]
             ],
-            'effect' => Effects::forTemplate('generic'),
         ];
     }
 
@@ -536,7 +533,6 @@ class GeminiScoringService
                 'highlight_segments' => [],
                 'notes' => []
             ],
-            'effect' => Effects::forTemplate('general'),
         ];
     }
 }

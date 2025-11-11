@@ -50,7 +50,6 @@ class AttemptService
             'template_used' => $result['template_used'] ?? null,
             'extracted_value' => $result['extracted_value'] ?? null,
             'evaluation_meta' => $result['evaluation_meta'] ?? null,
-            'effect' => $result['effect'] ?? null,
         ];
 
         $this->loadAttemptRelations($attempt);
@@ -84,7 +83,6 @@ class AttemptService
             'template_used' => $geminiResult['template_used'] ?? null,
             'extracted_value' => $geminiResult['extracted_value'] ?? null,
             'evaluation_meta' => $geminiResult['evaluation_meta'] ?? null,
-            'effect' => $geminiResult['effect'] ?? null,
         ];
     }
 

@@ -3,13 +3,39 @@ let currentQuestionId = null;
 let currentExerciseId = null;
 let allQuestionsList = []; // Store all questions for navigation
 let currentQuestionIndex = 0;
-let questionEffects = {};
-let exerciseEffects = {};
 let currentExerciseTypeCode = null;
 let currentStarterText = '';
 
-const Effects = window.WritingEffects || {};
 const Feedback = window.WritingFeedback || {};
+const SOUND_BASE_PATH = '/assets/sounds';
+const SOUND_MAP = {
+    button: `${SOUND_BASE_PATH}/click-soft.mp3`,
+    success: `${SOUND_BASE_PATH}/success.mp3`,
+    failure: `${SOUND_BASE_PATH}/try-again.mp3`,
+};
+
+const audioCache = {};
+
+function playUiSound(type) {
+    const src = SOUND_MAP[type];
+    if (!src) {
+        return;
+    }
+
+    if (!audioCache[type]) {
+        const audio = new Audio(src);
+        audio.load();
+        audioCache[type] = audio;
+    }
+
+    const audio = audioCache[type];
+    try {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+    } catch (error) {
+        console.warn('[writing-question] Failed to play sound', type, error);
+    }
+}
 const escapeHtml = (str) => {
     if (Feedback.escapeHtml) {
         return Feedback.escapeHtml(str);
@@ -73,7 +99,7 @@ async function loadQuestion() {
             safeSetText('infoLesson', lessonTitle);
             safeSetText('infoExercise', exerciseType.name || 'Writing Practice');
             safeSetText('typeTag', exerciseType.code || exerciseType.name || '—');
-            safeSetText('templateTag', ((question.effect && question.effect.template) || 'general').toUpperCase());
+            safeSetText('templateTag', '—');
             safeSetText('orderTag', `#${question.order_index ?? '?'}`);
             const promptText = question.prompt_text || (question.starter_text ? `${question.starter_text} ...` : '—');
             safeSetText('questionPrompt', promptText);
@@ -139,9 +165,6 @@ async function loadQuestion() {
                 }
             }
 
-            questionEffects = question.effect || {};
-            exerciseEffects = questionEffects.exercise || {};
-            applyExerciseBackground();
             loadTemplateHint(currentQuestionId);
         } else {
             const errorMsg = data.message || 'Failed to load question';
@@ -200,10 +223,7 @@ async function submitAnswer() {
         return;
     }
 
-    if (Effects.unlockAudio) Effects.unlockAudio();
-    if (Effects.playSound) {
-        Effects.playSound(exerciseEffects.button_sound, 'button');
-    }
+    playUiSound('button');
 
     const submitBtn = document.getElementById('submitBtn');
     const loadingEl = document.getElementById('loading');
@@ -339,16 +359,7 @@ function resetAnswer() {
 function showResult(data) {
     const resultCard = document.getElementById('resultCard');
     const resultFeedback = document.getElementById('resultFeedback');
-    const effectData = data.effect || {};
     const stage = data.is_correct ? 'success' : 'failure';
-    let stageEffect = Effects.getStageEffect ? Effects.getStageEffect(effectData, stage) : null;
-    if (!stageEffect && effectData && effectData[stage]) {
-        stageEffect = effectData[stage];
-    }
-    if (!stageEffect && questionEffects && questionEffects.effects && questionEffects.effects[stage]) {
-        stageEffect = questionEffects.effects[stage];
-    }
-    const effectMessage = stageEffect && stageEffect.message ? stageEffect.message : '';
 
     const statusText = data.is_correct ? 'Làm tốt lắm!' : 'Cùng thử lại nhé';
     const statusClass = data.is_correct ? 'success' : 'failure';
@@ -365,7 +376,6 @@ function showResult(data) {
             <span class="score-pill">Điểm: ${score}</span>
         </div>
         <div class="result-text">${feedbackText}</div>
-        ${effectMessage ? `<div class="effect-message">${Feedback.formatFeedbackForKids ? Feedback.formatFeedbackForKids(effectMessage) : effectMessage}</div>` : ''}
         ${notesHtml ? `<div class="hl-container">${notesHtml}</div>` : ''}
         <div class="result-actions">
             <button class="btn-primary" type="button" onclick="resetAnswer()">Làm thêm lần nữa</button>
@@ -375,108 +385,7 @@ function showResult(data) {
 
     resultCard.style.display = 'block';
     resultCard.scrollIntoView({ behavior: 'smooth' });
-    if (Effects.applyEffect) Effects.applyEffect(stageEffect, stage);
-}
-
-function applyExerciseBackground() {
-    const panel = document.querySelector('.question-panel');
-    const infoPanel = document.querySelector('.info-panel');
-    
-    if (!panel || !infoPanel) return;
-    
-    if (!exerciseEffects || !exerciseEffects.background) {
-        panel.style.background = '';
-        panel.style.backgroundSize = '';
-        infoPanel.style.background = '';
-        return;
-    }
-
-    const backgrounds = {
-        stars: {
-            panel: 'linear-gradient(135deg, rgba(107, 44, 144, 0.08), rgba(245, 193, 44, 0.12))',
-            info: 'rgba(255,255,255,0.92)'
-        },
-        notebook: {
-            panel: 'linear-gradient(#ffffff 25%, rgba(60, 105, 231, 0.08) 26%)',
-            panelSize: '100% 22px',
-            info: 'rgba(255,255,255,0.95)'
-        },
-        'word-cloud': {
-            panel: 'radial-gradient(circle at top left, rgba(60, 105, 231, 0.12), transparent 42%), radial-gradient(circle at bottom right, rgba(107, 44, 144, 0.15), transparent 45%)',
-            info: 'rgba(255,255,255,0.95)'
-        }
-    };
-
-    const bg = backgrounds[exerciseEffects.background];
-    if (bg) {
-        panel.style.background = bg.panel;
-        panel.style.backgroundSize = bg.panelSize || '';
-        infoPanel.style.background = bg.info;
-    } else {
-        panel.style.background = '';
-        panel.style.backgroundSize = '';
-        infoPanel.style.background = '';
-    }
-}
-
-function applyEffect(stageEffect, stage) {
-    const resultCard = document.getElementById('resultCard');
-    const animationClasses = Object.values(animationClassMap);
-    resultCard.classList.remove(...animationClasses);
-
-    const bgSuccess = 'linear-gradient(135deg, rgba(107, 44, 144, 0.04), rgba(46, 204, 113, 0.14))';
-    const bgFail = 'linear-gradient(135deg, rgba(255, 206, 214, 0.18), rgba(255, 240, 240, 0.96))';
-
-    if (stage === 'success') {
-        resultCard.style.background = bgSuccess;
-        resultCard.style.borderColor = 'rgba(46, 204, 113, 0.45)';
-    } else {
-        resultCard.style.background = bgFail;
-        resultCard.style.borderColor = 'rgba(231, 76, 60, 0.35)';
-    }
-
-    if (!stageEffect) return;
-
-    const animationKey = (stageEffect.animation || '').toLowerCase();
-    const className = animationClassMap[animationKey];
-    if (className) {
-        resultCard.classList.add(className);
-    }
-
-    if (stage === 'success') {
-        triggerCelebration();
-    }
-}
-
-function triggerCelebration() {
-    const overlay = document.createElement('div');
-    overlay.className = 'celebration-overlay';
-    document.body.appendChild(overlay);
-
-    const colors = ['#6b2c90', '#f5c12c', '#f89b1c', '#3c69e7', '#ff7bb7'];
-    const starEmojis = ['✨', '🌟', '💫', '🎉'];
-
-    for (let i = 0; i < 32; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti-piece';
-        confetti.style.left = `${Math.random() * 100}%`;
-        confetti.style.top = `${Math.random() * 30 - 10}%`;
-        confetti.style.backgroundColor = colors[i % colors.length];
-        confetti.style.animationDelay = `${Math.random() * 0.6}s`;
-        overlay.appendChild(confetti);
-    }
-
-    for (let i = 0; i < 8; i++) {
-        const star = document.createElement('div');
-        star.className = 'star-burst';
-        star.textContent = starEmojis[i % starEmojis.length];
-        star.style.left = `${10 + i * 10}%`;
-        star.style.top = `${20 + Math.random() * 20}%`;
-        star.style.animationDelay = `${0.1 * i}s`;
-        overlay.appendChild(star);
-    }
-
-    setTimeout(() => overlay.remove(), 3100);
+    playUiSound(stage);
 }
 
 function showError(message) {
