@@ -3,13 +3,12 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\ExerciseTypeController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\AttemptController;
-use App\Http\Controllers\ProgressController;
-use App\Http\Controllers\VocabularyController;
 use App\Http\Controllers\TranslationController;
 
 Route::post('/translate', [TranslationController::class, 'translate']);
