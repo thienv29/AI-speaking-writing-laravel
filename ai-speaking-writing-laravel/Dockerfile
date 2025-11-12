@@ -20,6 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+# Install Node.js (for asset builds)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g npm@latest \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
 # Install PHP extensions
 RUN docker-php-ext-install -j$(nproc) \
     pdo_mysql \

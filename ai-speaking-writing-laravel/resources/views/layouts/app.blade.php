@@ -22,18 +22,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
-    @if (app()->environment('local'))
-        <!-- Khi dev, load từ server Vite -->
-        <link rel="stylesheet" href="http://localhost:5173/resources/css/app.css">
-        <script type="module" src="http://localhost:5173/resources/js/app.js"></script>
-    @else
-        <!-- Khi build, load file đã compile -->
-        <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
-        <script type="module" src="{{ asset('build/assets/app.js') }}"></script>
+    <!-- Assets -->
+    @php
+        $manifest = null;
+        $manifestPath = public_path('build/manifest.json');
+        if (file_exists($manifestPath)) {
+            $json = file_get_contents($manifestPath);
+            $manifest = $json ? json_decode($json, true) : null;
+        }
+    @endphp
+    @if (!empty($manifest['resources/css/app.css']['file']))
+        <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/app.css']['file']) }}">
     @endif
-    
-    <!-- Page-specific CSS -->
-    {{-- @stack('styles') --}}
+    @if (!empty($manifest['resources/js/app.js']['file']))
+        <script type="module" src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
+    @endif
 </head>
 <body>
     @hasSection('topbar')

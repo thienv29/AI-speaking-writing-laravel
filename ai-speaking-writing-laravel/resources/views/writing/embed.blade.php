@@ -57,14 +57,19 @@
         }
     </style>
 
-    @if (app()->environment('local'))
-        <!-- Khi dev, load từ server Vite -->
-        <link rel="stylesheet" href="http://localhost:5173/resources/css/app.css">
-        <script type="module" src="http://localhost:5173/resources/js/app.js"></script>
-    @else
-        <!-- Khi build, load file đã compile -->
-        <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
-        <script type="module" src="{{ asset('build/assets/app.js') }}"></script>
+    @php
+        $manifest = null;
+        $manifestPath = public_path('build/manifest.json');
+        if (file_exists($manifestPath)) {
+            $json = file_get_contents($manifestPath);
+            $manifest = $json ? json_decode($json, true) : null;
+        }
+    @endphp
+    @if (!empty($manifest['resources/css/app.css']['file']))
+        <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/app.css']['file']) }}">
+    @endif
+    @if (!empty($manifest['resources/js/app.js']['file']))
+        <script type="module" src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
     @endif
 </head>
 <body>

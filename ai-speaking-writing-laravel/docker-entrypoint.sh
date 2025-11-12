@@ -79,16 +79,56 @@ else
     log_info "Composer dependencies up to date"
 fi
 
-# Generate application key if not set
-if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "" ] || [ "$APP_KEY" = "base64:" ]; then
+# Install Node dependencies and build assets
+if [ -f "package.json" ]; then
+    NEED_NPM_INSTALL=false
+    if [ ! -d "node_modules" ]; then
+        NEED_NPM_INSTALL=true
+    elif [ -f "package-lock.json" ] && [ "package-lock.json" -nt "node_modules" ]; then
+        NEED_NPM_INSTALL=true
+        log_info "package-lock.json changed, reinstalling npm dependencies"
+    fi
+
+    if [ "$NEED_NPM_INSTALL" = true ]; then
+        log_info "Installing Node dependencies (including dev packages)..."
+        if command -v npm >/dev/null 2>&1; then
+            if [ -f "package-lock.json" ]; then
+                npm ci --include=dev || npm install --include=dev
+            else
+                npm install --include=dev
+            fi
+        else
+            log_warn "npm not found, skipping frontend dependency installation"
+        fi
+    else
+        log_info "Node dependencies up to date"
+    fi
+
+    if command -v npm >/dev/null 2>&1; then
+        if [ ! -f "public/build/manifest.json" ] || find resources -type f -newer public/build/manifest.json | grep -q .; then
+            log_info "Building frontend assets with Vite..."
+            npm run build || log_warn "npm build failed, continuing..."
+        else
+            log_info "Frontend assets already built"
+        fi
+    fi
+fi
+
+# Generate application key if not set in .env
+if [ -f ".env" ]; then
+    CURRENT_KEY=$(grep -E '^APP_KEY=' .env | cut -d '=' -f2- | tr -d '[:space:]')
+else
+    CURRENT_KEY=""
+fi
+
+if [ -z "$CURRENT_KEY" ] || [ "$CURRENT_KEY" = "base64:" ]; then
     log_info "Generating application key..."
     php artisan key:generate --force || {
-        log_warn "Failed to generate key, checking .env file..."
-        if [ ! -f ".env" ]; then
-            log_error ".env file not found! Please create it from .env.example"
-            exit 1
-        fi
+        log_error "Failed to generate application key. Please ensure .env exists and is writable."
+        exit 1
     }
+else
+    log_info "Application key already present."
 fi
 
 # Optimize Laravel for production (only if not in debug mode)
