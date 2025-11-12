@@ -18,17 +18,8 @@ class ExerciseTypeController extends Controller
      */
     public function index()
     {
-        return response()->json(ExerciseType::all());
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        $exercise_types = ExerciseType::get();
+        return response()->json($exercise_types);
     }
 
     /**
@@ -105,17 +96,6 @@ class ExerciseTypeController extends Controller
                 'message' => 'Cannot fetch exercise type: ' . $e->getMessage(),
             ], 500);
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\ExerciseType  $exerciseType
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(ExerciseType $exerciseType)
-    {
-        //
     }
 
     /**

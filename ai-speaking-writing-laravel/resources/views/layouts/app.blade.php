@@ -13,6 +13,8 @@
     
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/images/logo.png">
@@ -36,52 +38,16 @@
     {{-- @stack('styles') --}}
 </head>
 <body>
-    @hasSection('topbar')
-        @yield('topbar')
-    @endif
+    @include('components.user.topbar')
 
-    <header>
-        <div class="header-wrapper">
-            <div class="logo-area">
-                <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
-                    <img src="/assets/images/logo.png" alt="I-CLC Logo" class="logo-img">
-                    <div>
-                        <strong>I-CLC</strong><br>
-                    </div>
-                </a>
-            </div>
-            <nav>
-                @yield('navigation')
-            </nav>
-        </div>
-    </header>
+    @include('components.user.header')
 
     <main>
         @yield('content')
+        @include('components.user.scroll-to-top')
     </main>
 
-    @hasSection('footer')
-        @yield('footer')
-    @endif
-
-    @hasSection('scrollToTop')
-        @yield('scrollToTop')
-    @endif
-
-    <!-- Common JS -->
-    <script>
-        // Sticky header
-        const header = document.querySelector('header');
-        if (header) {
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 100) {
-                    header.classList.add('sticky');
-                } else {
-                    header.classList.remove('sticky');
-                }
-            });
-        }
-    </script>
+    @include('components.user.footer')
 
     @stack('scripts')
 </body>

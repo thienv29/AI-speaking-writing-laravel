@@ -4,17 +4,6 @@
 <title>Writing Adventure | I-CLC</title>
 @endsection
 
-@section('navigation')
-    <a href="/">Trang chủ</a>
-    <a href="/#contact">Liên hệ</a>
-    <a class="cta-btn" href="/writing">
-        Luyện viết
-        <span class="btn-kids-decoration">
-            <img src="/assets/images/home-kids-1.png" alt="Kids" class="btn-kids-image">
-        </span>
-    </a>
-@endsection
-
 {{-- @push('styles')
 <link rel="stylesheet" href="/css/writing-question.css">
 @endpush --}}
@@ -26,14 +15,14 @@
 
     <div class="container">
         <div class="back-link">
-            <a href="/" class="back-button">🏠 Trang chủ</a>
-            <a href="/writing" class="back-button">← Quay lại danh sách bài học</a>
+            <a href="{{ route('user.home') }}" class="back-button">🏠 Trang chủ</a>
+            <a href="{{ route('user.lessons') }}" class="back-button">← Quay lại danh sách bài học</a>
         </div>
 
         <div class="header-card">
             <div class="header-illustration">✍️</div>
             <div class="header-content">
-                <span class="tagline" id="lessonBadge">Sân chơi viết tiếng Anh</span>
+                <span class="tagline" id="lessonBadge">Sân chơi tiếng Anh</span>
                 <h1>Writing Adventure <span id="exerciseTitleHeading">...</span></h1>
                 <p class="header-sub" id="exerciseSubtitle">Mỗi câu trả lời đúng sẽ mang đến sticker và pháo bông dành riêng cho bé.</p>
                 <div class="tag-list">
@@ -41,7 +30,6 @@
                     <span class="tag">Loại bài: <strong id="typeTag">—</strong></span>
                     <span class="tag">Câu số <strong id="orderTag">#1</strong></span>
                 </div>
-                @if(isset($allQuestions) && $allQuestions->count() > 1)
                 <div class="question-navigation">
                     <div class="question-nav-controls">
                         <button id="prevQuestionBtn" class="nav-btn" title="Câu trước">
@@ -63,7 +51,6 @@
                         </button>
                     </div>
                 </div>
-                @endif
             </div>
         </div>
 

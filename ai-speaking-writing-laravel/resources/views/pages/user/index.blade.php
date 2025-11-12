@@ -4,21 +4,10 @@
 <title>Luyện Viết Tiếng Anh - I-CLC Learning Playground</title>
 @endsection
 
-@section('navigation')
-    <a href="/">Trang chủ</a>
-    <a href="/#contact">Liên hệ</a>
-    <a class="cta-btn" href="/writing">
-        Luyện viết
-        <span class="btn-kids-decoration">
-            <img src="/assets/images/home-kids-1.png" alt="Kids" class="btn-kids-image">
-        </span>
-    </a>
-@endsection
-
-@push('styles')
+{{-- @push('styles')
 <link rel="stylesheet" href="/css/writing.css">
 <link rel="stylesheet" href="/css/course-content.css">
-@endpush
+@endpush --}}
 
 @section('content')
 <section class="course-content-section">

@@ -7,39 +7,42 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\Builder;
 
 class LessonController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response | \Illuminate\Http\JsonResponse
      */
     public function index()
     {
-        $lessons = Lesson::with([
-            'exercises' => function($query) {
-                $query->select('id', 'lesson_id', 'title', 'order_index')
-                      ->orderBy('order_index');
-            },
-            'exercises.questions' => function($query) {
-                $query->select('id', 'exercise_id', 'order_index')
-                      ->orderBy('order_index')
-                      ->limit(1);
-            }
-        ])->get();
+        $lessons = Lesson::with(['exercises' => function ($q) {
+            $q->withCount('questions'); 
+        }])
+        ->get()
+        ->map(function ($lesson) {
+            $lesson->exercises_count = $lesson->exercises->count();
+            $lesson->questions_count = $lesson->exercises->sum('questions_count');
+            return $lesson;
+        });
         
         return response()->json($lessons);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response | \Illuminate\Http\JsonResponse
-     */
-    public function create(Request $request)
-    {
+    public function indexWeb() {
+        $lessons = Lesson::with(['exercises' => function ($q) {
+            $q->withCount('questions'); 
+        }])
+        ->get()
+        ->map(function ($lesson) {
+            $lesson->exercises_count = $lesson->exercises->count();
+            $lesson->questions_count = $lesson->exercises->sum('questions_count');
+            return $lesson;
+        });
         
+        return view('pages.user.lessons', compact('lessons'));
     }
 
     /**
@@ -114,8 +117,23 @@ class LessonController extends Controller
     {
         try {
             $lesson->load([
-                'exercises',
-            ])->loadCount(['exercises']);
+                'exercises' => function ($q) {
+                    $q->select('id', 'lesson_id','type_id', 'title', 'instruction', 'difficulty', 'order_index')
+                    ->orderBy('order_index')
+                    ->with([
+                        'type:id,name,code',
+                        'questions' => function ($q2) {
+                            $q2->select('id', 'exercise_id', 'prompt_text', 'order_index')
+                                ->orderBy('order_index');
+                        },
+                    ])
+                    ->withCount('questions'); 
+                },
+            ])
+            ->loadCount([
+                'exercises', 
+                'questions', 
+            ]);
 
             return response()->json([
                 'status' => 'success',
@@ -130,15 +148,34 @@ class LessonController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Lesson  $lesson
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Lesson $lesson)
-    {
-        //
+    public function showWeb($id) {
+        try {
+            $lesson = Lesson::with([
+                'exercises' => function ($q) {
+                    $q->select('id', 'lesson_id','type_id', 'title', 'instruction', 'difficulty', 'order_index')
+                    ->orderBy('order_index')
+                    ->with([
+                        'type:id,name,code',
+                        'questions' => function ($q2) {
+                            $q2->select('id', 'exercise_id', 'prompt_text', 'order_index')
+                                ->orderBy('order_index');
+                        },
+                    ])
+                    ->withCount('questions'); 
+                },
+            ])
+            ->findOrFail($id); 
+
+            $lesson->loadCount(['exercises','questions']);
+
+            return view('pages.user.lesson', compact('lesson'));
+        } catch (\Throwable $e) {
+            Log::error('Lesson show error', ['id' => $lesson->id ?? null, 'error' => $e]);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Cannot fetch lesson: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class AttemptController extends Controller
 {
@@ -28,7 +29,7 @@ class AttemptController extends Controller
             $q = Attempt::query()
                 ->with([
                     'question:id,exercise_id,order_index',
-                    'question.exercise:id,title',
+                    'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
                     'user:id,name,email'
                 ])
                 ->orderByDesc('id');
@@ -40,9 +41,11 @@ class AttemptController extends Controller
                 $q->where('user_id', (int) $request->input('user_id'));
             }
 
+            $attempts = $q->get();
+
             return response()->json([
                 'status' => 'success',
-                'data'   => $q->get(),
+                'data'   => $attempts,
             ]);
         } catch (\Throwable $e) {
             Log::error('Attempt index error', ['error' => $e]);
@@ -62,66 +65,49 @@ class AttemptController extends Controller
     public function store(Request $request)
     {
         try {
-            $input = $request->all();
+            $validated = $request->validate([
+                'user_id'       => ['nullable','integer', Rule::exists('users','id')],
+                'question_id'   => ['required','integer', Rule::exists('questions','id')],
+                'user_answer'   => ['nullable','string','max:255'],
+                'user_audio'    => ['nullable','file','mimes:mp3,wav,m4a,ogg,webm'],
+            ], [
+                'user_id.integer'      => 'User ID phải là số.',
+                'user_id.exists'       => 'Người dùng không tồn tại.',
+                'question_id.required' => 'Câu hỏi là bắt buộc.',
+                'question_id.integer'  => 'Question ID phải là số.',
+                'question_id.exists'   => 'Câu hỏi không tồn tại.',
+                'user_answer.string'   => 'Câu trả lời phải là chuỗi.',
+                'user_answer.max'      => 'Câu trả lời không được dài quá 255 ký tự.',
+                'user_audio.file'      => 'Tệp audio không hợp lệ.',
+                'user_audio.mimes'     => 'Tệp audio phải có định dạng mp3, wav, m4a, ogg hoặc webm.',
+            ]);
 
-            foreach (['user_answer','user_audio_url','feedback'] as $f) {
-                if (array_key_exists($f, $input)) {
-                    $input[$f] = trim((string) $input[$f]);
-                    if ($input[$f] === '') $input[$f] = null;
-                }
+            $userId      = $validated['user_id'];
+            $questionId  = $validated['question_id'];
+            $userAnswer  = $validated['user_answer'];
+            $userAudioUrl = null;
+
+            if ($request->hasFile('user_audio')) {
+                $file = $request->file('user_audio');
+                $filename = uniqid('audio_') . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/user_audio_url', $filename);
+                $userAudioUrl = Storage::url('user_audio_url/' . $filename);
             }
 
             // Check if this is a writing attempt (has user_answer but no user_audio_url)
-            $isWritingAttempt = !empty($input['user_answer']) && empty($input['user_audio_url']);
+            $isWritingAttempt = !empty($userAnswer) && empty($userAudioUrl);
             
             if ($isWritingAttempt) {
                 // Auto-evaluate writing using AttemptService
                 $attempt = $this->attemptService->evaluateWritingAttempt(
-                    (int) $input['question_id'],
-                    $input['user_id'] ?? null,
-                    (string) $input['user_answer']
+                    $questionId, $userId, $userAnswer
                 );
-                
-                return response()->json([
-                    'status'  => 'success',
-                    'message' => 'Writing attempt evaluated successfully.',
-                    'data'    => $attempt,
-                ], 201);
+            } 
+            else {
+                $attempt = $this->attemptService->evaluateSpeakingAttempt(
+                    $questionId, $userId, $userAnswer, $userAudioUrl
+                );
             }
-
-            // Original logic for speaking attempts (manual evaluation)
-            $validated = validator(
-                $input,
-                [
-                    'question_id' => ['required','integer', Rule::exists('questions','id')],
-                    'user_id'     => ['nullable','integer', Rule::exists('users','id')],
-
-                    'user_answer' => ['required_without:user_audio_url','nullable','string','max:255'],
-                    'user_audio_url'   => ['required_without:user_answer','nullable','url','max:2048'],
-                    'is_correct'  => ['required','boolean'],
-                    'feedback'    => ['required','string'],
-                ],
-                [
-                    'question_id.required' => 'The question is required.',
-                    'question_id.exists'   => 'The selected question is invalid.',
-                    
-                    'user_id.exists'       => 'The selected user is invalid.',
-
-                    'user_answer.string'   => 'The user answer must be a string.',
-                    'user_answer.max'      => 'The user answer may not be greater than 255 characters.',
-
-                    'user_audio_url.url'        => 'The audio URL must be a valid URL.',
-
-                    'is_correct.required' => 'is_correct is required.',
-                    'is_correct.boolean'   => 'is_correct must be true or false.',
-                    
-                    'feedback.required' => 'Feedback is required.',
-                    'feedback.string'   => 'Feedback must be a string.',
-                ]
-            )->validate();
-
-            $attempt = Attempt::create($validated)
-                ->load(['question:id,exercise_id,order_index','question.exercise:id,title','user:id,name,email']);
 
             return response()->json([
                 'status'  => 'success',
@@ -152,7 +138,9 @@ class AttemptController extends Controller
     public function show(Attempt $attempt)
     {
         try {
-            $attempt->load(['user:id,name,email', 'question:id,exercise_id,order_index']);
+            $attempt->load(['user:id,name,email', 
+            'question:id,exercise_id,order_index',
+            'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index']);
 
             return response()->json([
                 'status' => 'success',

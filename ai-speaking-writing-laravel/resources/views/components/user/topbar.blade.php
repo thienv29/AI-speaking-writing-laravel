@@ -1,5 +1,3 @@
-@extends('layouts.app')
-@section('topbar')
 <div class="topbar">
     <div class="topbar-wrapper">
         <div class="topbar-links">
@@ -13,4 +11,3 @@
         </div>
     </div>
 </div>
-@endsection

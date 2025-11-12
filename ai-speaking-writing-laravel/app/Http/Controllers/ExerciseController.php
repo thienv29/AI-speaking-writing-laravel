@@ -15,13 +15,25 @@ class ExerciseController extends Controller
      *
      * @return \Illuminate\Http\Response | \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(
-            Exercise::with(['lesson:id,title', 'type:id,name'])
-                ->withCount('questions')
-                ->get()
-        );
+        $query = Exercise::with([
+            'lesson:id,title,description,level', 
+            'type:id,name,code',
+            'questions' => function ($q) {
+                $q->orderBy('order_index');
+            },
+        ])
+        ->withCount('questions');
+        
+        if ($request->has('lesson_id')) {
+            $query->where('lesson_id', $request->lesson_id)
+            ->orderBy('order_index'); 
+        }
+
+        $exercises = $query->get();
+        
+        return response()->json($exercises);
     }
 
 
@@ -121,11 +133,10 @@ class ExerciseController extends Controller
     {
         try {
             $exercise->load([
-                'lesson:id,title',
+                'lesson:id,title,description,level',
                 'type:id,name,code',
-                'questions' => function ($questions) {
-                    $questions->select('id','exercise_id','order_index','prompt_text','target_text','starter_text','img_url','audio_url')
-                      ->orderBy('order_index');
+                'questions' => function ($q) {
+                    $q->orderBy('order_index');
                 }
             ])->loadCount('questions');
 

@@ -1,6 +1,6 @@
 import './bootstrap';
 
 if (document.getElementById('question-page-content')) {
-    import('./writing-feedback.js');
-    import('./writing-question.js');
+    import('./user/questionPage/writing-feedback.js');
+    import('./user/questionPage/writing-question.js');
 }

@@ -1,3 +1,5 @@
+//import './utils/translationBySelectText'
+
 // Writing Question Page JavaScript
 let currentQuestionId = null;
 let currentExerciseId = null;
@@ -401,7 +403,7 @@ async function loadAllQuestions(exerciseId, currentId) {
         }
         
         const response = await fetch(`/api/questions?exercise_id=${exerciseId}`);
-        const data = await response.json();
+        const data = response.json();
         
         if (data.status === 'success' && data.data && Array.isArray(data.data)) {
             // Sort by order_index
@@ -543,7 +545,7 @@ function navigateToQuestion(questionId) {
     }
 }
 
-// Translation Feature
+// TRANSLATION FEATURE
 let translationPopup = null;
 let translationTimeout = null;
 
@@ -681,10 +683,6 @@ function initWritingQuestionPage() {
     loadQuestion();
     initTranslationFeature();
     initQuestionNavigationElements();
-
-    ['click', 'keydown', 'touchstart'].forEach(eventType => {
-        document.addEventListener(eventType, Effects.unlockAudio, { once: true, passive: true });
-    });
 }
 
 if (document.readyState === 'loading') {

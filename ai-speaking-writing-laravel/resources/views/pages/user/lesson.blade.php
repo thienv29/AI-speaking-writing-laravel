@@ -4,18 +4,6 @@
 <title>{{ str_replace('Bài ', 'Unit ', $lesson->title) }} - I-CLC Learning Playground</title>
 @endsection
 
-@section('navigation')
-    <a href="/">Trang chủ</a>
-    <a href="/#lessons">Bài học</a>
-    <a href="/#contact">Liên hệ</a>
-    <a class="cta-btn" href="/writing">
-        Luyện viết
-        <span class="btn-kids-decoration">
-            <img src="/assets/images/home-kids-1.png" alt="Kids" class="btn-kids-image">
-        </span>
-    </a>
-@endsection
-
 {{-- @push('styles')
 <link rel="stylesheet" href="/css/writing.css">
 <link rel="stylesheet" href="/css/course-content.css">
@@ -30,9 +18,9 @@
             <div class="course-section expanded">
                 <div class="section-header">
                     <div class="section-title-wrapper">
-                        <h2 class="section-title">{{ str_replace('Bài ', 'Unit ', $lesson->title) }}</h2>
+                        <h2 class="section-title">{{ $lesson->title}}</h2>
                         <span class="section-summary">
-                            {{ count($exercises) }} bài tập
+                            {{ $lesson->exercises_count }} bài tập
                         </span>
                     </div>
                     <div class="section-toggle">
@@ -41,23 +29,40 @@
                         </svg>
                     </div>
                 </div>
+
+                <div class="lesson-info flex flex-col md:flex-row gap-12 p-6">
+                    <div id="lesson-image w-full md:w-1/3 flex-1">
+                        <img src="{{ $lesson->img_url ?? '/assets/images/default-img.webp' }}" 
+                            alt="{{ $lesson->title }}" 
+                            class="max-h-[250px] rounded-lg shadow-md w-full object-cover border">
+                    </div>
+                    <div class="flex-1 flex flex-col gap-6 items-stretch">
+                        <p class="text-lg">{{ $lesson->description }}</p>
+                        <div>
+                            <a href="{{ route('user.question', ['id' => $lesson->exercises[0]->questions[0]->id]) }}"
+                                class="bg-orange-400 text-white font-semibold rounded-full hover:bg-orange-500 transition-colors px-6 py-4">
+                                Bắt đầu làm bài
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="section-content" style="max-height: none;">
-                    @foreach($exercises as $exercise)
+                    @foreach($lesson->exercises as $exercise)
                     <div class="exercise-item">
                         <div class="exercise-icon">
                             <span class="exercise-icon-emoji">📝</span>
                         </div>
                         <div class="exercise-info">
-                            <a href="/writing/question/{{ $exercise['first_question_id'] }}" class="exercise-title">
-                                {{ $exercise['title'] }}
+                            <a href="/questions/{{ $exercise->questions[0]->id }}" class="exercise-title">
+                                {{ $exercise->title }}
                             </a>
-                            @if(!empty($exercise['instruction']))
-                                <span class="exercise-subtitle">{{ $exercise['instruction'] }}</span>
+                            @if(!empty($exercise->instruction))
+                                <span class="exercise-subtitle">{{ $exercise->instruction }}</span>
                             @endif
                         </div>
                         <div class="exercise-meta">
-                            <span class="exercise-count">{{ $exercise['questions_count'] }} câu</span>
+                            <span class="exercise-count">{{ $exercise->questions_count}} câu</span>
                         </div>
                     </div>
                     @endforeach
@@ -66,21 +71,12 @@
         </div>
         
         <div style="text-align: center; margin-top: 32px;">
-            <a href="/writing" class="back-home-btn" style="background: #6c757d;">
+            <a href="{{ route('user.lessons') }}" class="back-home-btn" style="background: #6c757d;">
                 ← Quay lại danh sách bài học
             </a>
         </div>
     </div>
 </section>
-@endsection
-
-@section('footer')
-<footer class="writing-footer">
-    <div class="footer-content">
-        <p>&copy; 2024 I-CLC - Inter-Continental Language Center. All rights reserved.</p>
-        <a href="/writing">← Quay lại danh sách bài học</a>
-    </div>
-</footer>
 @endsection
 
 @push('scripts')

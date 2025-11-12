@@ -108,7 +108,7 @@ class WritingController extends Controller
             })
             ->values();
             
-            return view('writing.index', compact('lessons'));
+            return view('pages.user.index', compact('lessons'));
         } catch (\Throwable $e) {
             Log::error('Writing index error', ['error' => $e->getMessage()]);
             abort(500, 'Unable to load writing lessons. Please try again later.');
@@ -122,20 +122,20 @@ class WritingController extends Controller
      * @param int|null $id Lesson ID (ignored, shows all lessons)
      * @return \Illuminate\View\View
      */
-    public function showLesson($id = null)
-    {
-        try {
-            $writingTypes = $this->getWritingTypeIds();
-            $allLessons = $this->getLessonsWithWritingExercises($writingTypes)
-                ->sortBy(['level', 'title'])
-                ->values();
+    // public function showLesson($id = null)
+    // {
+    //     try {
+    //         $writingTypes = $this->getWritingTypeIds();
+    //         $allLessons = $this->getLessonsWithWritingExercises($writingTypes)
+    //             ->sortBy(['level', 'title'])
+    //             ->values();
             
-            return view('writing.lesson', compact('allLessons'));
-        } catch (\Throwable $e) {
-            Log::error('Writing lesson error', ['error' => $e->getMessage()]);
-            abort(500, 'Unable to load lesson exercises. Please try again later.');
-        }
-    }
+    //         return view('pages.user.lesson', compact('allLessons'));
+    //     } catch (\Throwable $e) {
+    //         Log::error('Writing lesson error', ['error' => $e->getMessage()]);
+    //         abort(500, 'Unable to load lesson exercises. Please try again later.');
+    //     }
+    // }
     
     /**
      * Display exercises detail for a specific lesson
@@ -143,38 +143,38 @@ class WritingController extends Controller
      * @param int $id Lesson ID
      * @return \Illuminate\View\View
      */
-    public function showLessonExercises($id)
-    {
-        try {
-            $writingTypes = $this->getWritingTypeIds();
-            $lesson = Lesson::with(['exercises' => function ($query) use ($writingTypes) {
-                $query->whereIn('type_id', $writingTypes)
-                    ->with(['type', 'questions' => function ($q) {
-                        $q->orderBy('order_index');
-                    }])
-                    ->orderBy('order_index');
-            }])->findOrFail($id);
+    // public function showLessonExercises($id)
+    // {
+    //     try {
+    //         $writingTypes = $this->getWritingTypeIds();
+    //         $lesson = Lesson::with(['exercises' => function ($query) use ($writingTypes) {
+    //             $query->whereIn('type_id', $writingTypes)
+    //                 ->with(['type', 'questions' => function ($q) {
+    //                     $q->orderBy('order_index');
+    //                 }])
+    //                 ->orderBy('order_index');
+    //         }])->findOrFail($id);
             
-            $exercises = $this->formatExercises($lesson->exercises, true);
+    //         $exercises = $this->formatExercises($lesson->exercises, true);
             
-            if ($exercises->isEmpty()) {
-                abort(404, 'No writing exercises found for this lesson');
-            }
+    //         if ($exercises->isEmpty()) {
+    //             abort(404, 'No writing exercises found for this lesson');
+    //         }
             
-            return view('writing.lesson-exercises', compact('lesson', 'exercises'));
-        } catch (\Throwable $e) {
-            Log::error('Writing lesson exercises error', [
-                'lesson_id' => $id,
-                'error' => $e->getMessage()
-            ]);
+    //         return view('pages.user.lesson-exercises', compact('lesson', 'exercises'));
+    //     } catch (\Throwable $e) {
+    //         Log::error('Writing lesson exercises error', [
+    //             'lesson_id' => $id,
+    //             'error' => $e->getMessage()
+    //         ]);
             
-            if ($e->getCode() === 404) {
-                abort(404, $e->getMessage());
-            }
+    //         if ($e->getCode() === 404) {
+    //             abort(404, $e->getMessage());
+    //         }
             
-            abort(500, 'Unable to load lesson exercises. Please try again later.');
-        }
-    }
+    //         abort(500, 'Unable to load lesson exercises. Please try again later.');
+    //     }
+    // }
     
     /**
      * Display a specific writing question
@@ -229,7 +229,7 @@ class WritingController extends Controller
             $previousQuestionId = $currentIndex > 0 ? $allQuestions[$currentIndex - 1]->id : null;
             $nextQuestionId = $currentIndex < count($allQuestions) - 1 ? $allQuestions[$currentIndex + 1]->id : null;
             
-            return view('writing.question', compact(
+            return view('pages.user.question', compact(
                 'question',
                 'exercise',
                 'exerciseType',
@@ -298,12 +298,12 @@ class WritingController extends Controller
                 ->get(['id', 'order_index']);
             
             // Get all exercises for the same lesson (for exercise selector)
-            $allExercises = \App\Models\Exercise::where('lesson_id', $lesson->id)
+            $allExercises = Exercise::where('lesson_id', $lesson->id)
                 ->orderBy('order_index')
                 ->get(['id', 'title', 'order_index']);
             
             // Set headers to allow iframe embedding
-            $response = response()->view('writing.embed', compact(
+            $response = response()->view('pages.user.embed', compact(
                 'question',
                 'exercise',
                 'exerciseType',

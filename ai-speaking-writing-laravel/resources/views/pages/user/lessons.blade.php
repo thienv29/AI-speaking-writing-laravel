@@ -4,32 +4,20 @@
 <title>Luyện Viết Tiếng Anh - I-CLC Learning Playground</title>
 @endsection
 
-@section('navigation')
-    <a href="/">Trang chủ</a>
-    <a href="/#lessons">Bài học</a>
-    <a href="/#contact">Liên hệ</a>
-    <a class="cta-btn" href="/writing">
-        Luyện viết
-        <span class="btn-kids-decoration">
-            <img src="/assets/images/home-kids-1.png" alt="Kids" class="btn-kids-image">
-        </span>
-    </a>
-@endsection
-
-@push('styles')
+{{-- @push('styles')
 <link rel="stylesheet" href="/css/writing.css">
-@endpush
+@endpush --}}
 
 @section('content')
 <section class="writing-hero">
     <div class="hero-content">
-        <span class="hero-tagline">📝 Sân chơi luyện viết tiếng Anh</span>
+        <span class="hero-tagline">📝 Sân chơi luyện  tiếng Anh</span>
         <h1 class="hero-title">
-            Luyện Viết Tiếng Anh<br>
+            Luyện Tiếng Anh<br>
             <span class="highlight">Cùng I-CLC</span>
         </h1>
         <p class="hero-description">
-            Mỗi bài học có nhiều dạng bài tập giúp bạn phát triển kỹ năng viết
+            Mỗi bài học có nhiều dạng bài tập giúp bạn phát triển kỹ năng viết và đọc tiếng Anh.
         </p>
     </div>
     <div class="hero-illustration">
@@ -44,33 +32,29 @@
         </div>
 
         <div class="exercises-grid">
-            @foreach($allLessons as $index => $l)
-                @php
-                    $lessonExercises = $l->exercises->filter(function ($ex) {
-                        return $ex->questions->isNotEmpty();
-                    });
-                    $exercisesCount = $lessonExercises->count();
-                @endphp
-                @if($exercisesCount > 0)
+            @foreach($lessons as $index => $lesson)
+                @if($lesson->exercises_count > 0)
                 <div class="exercise-card" data-animate>
                     <div class="card-image-wrapper">
-                        <img src="{{ $l->img_url ?? '/assets/images/home-kids-' . (($index % 3) + 1) . '.png' }}" alt="{{ $l->title }}" class="card-image">
+                        <img src="{{ $lesson->img_url ?? '/assets/images/home-kids-' . (($index % 3) + 1) . '.png' }}" alt="{{ $lesson->title }}" class="card-image">
                     </div>
                     <div class="card-icon">
                         📚
                     </div>
                     <div class="card-content">
-                        @if(!empty($l->level))
-                            <div class="difficulty-badge difficulty-{{ strtolower($l->level) }}">
-                                {{ strtoupper($l->level) }}
+                        @if(!empty($lesson->level))
+                            <div class="difficulty-badge difficulty-{{ strtolower($lesson->level) }}">
+                                {{ strtoupper($lesson->level) }}
                             </div>
                         @endif
-                        <h3 class="card-title">{{ str_replace('Bài ', 'Unit ', $l->title) }}</h3>
-                        @if(!empty($l->description))
-                            <p class="card-description">{{ $l->description }}</p>
+                        <h3 class="card-title">{{ $lesson->title }}</h3>
+                        @if(!empty($lesson->description))
+                            <p class="card-description">{{ $lesson->description }}</p>
                         @endif
-                        <p class="card-type">{{ $exercisesCount }} BÀI TẬP</p>
-                        <a href="/writing/lesson/{{ $l->id }}/exercises" class="card-btn">
+                        <p class="card-type">{{ $lesson->exercises_count }} BÀI TẬP | {{ $lesson->questions_count }} CÂU HỎI
+                        </p>
+                        <a href="{{ route('user.lesson', ['id' => $lesson->id]) }}" 
+                            class="card-btn">
                             Xem bài tập
                             <span class="btn-arrow">→</span>
                         </a>
@@ -82,15 +66,6 @@
         </div>
     </div>
 </section>
-@endsection
-
-@section('footer')
-<footer class="writing-footer">
-    <div class="footer-content">
-        <p>&copy; 2024 I-CLC - Inter-Continental Language Center. All rights reserved.</p>
-        <a href="/writing">← Quay lại danh sách bài học</a>
-    </div>
-</footer>
 @endsection
 
 @push('scripts')

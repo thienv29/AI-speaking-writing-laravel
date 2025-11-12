@@ -14,21 +14,13 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response | \Illuminate\Http\JsonResponse
      */
     public function index()
     {
-        return response()->json(User::all());
-    }
+        $users = User::whereNull('deleted_at')->get();
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
+        return response()->json($users);
     }
 
     /**
@@ -144,17 +136,6 @@ class UserController extends Controller
                 'message'=>'Cannot fetch user: '.$e->getMessage()
             ], 500);
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(User $user)
-    {
-        //
     }
 
     /**

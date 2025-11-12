@@ -62,6 +62,40 @@ class AttemptService
         return $attempt;
     }
 
+    public function evaluateSpeakingAttempt(int $questionId, int $userId, string $userAnswer, ?string $userAudioUrl=null): Attempt
+    {
+        $question = Question::findOrFail($questionId);
+
+        $isCorrect = null;
+        $feedback  = null;
+
+        if (!empty($userAnswer)) {
+            $cleanAnswer  = rtrim($userAnswer, " .!?,;:");
+            $targetText   = rtrim($question->target_text, " .!?,;:");
+            $isCorrect    = strtolower($cleanAnswer) === strtolower($targetText);
+            $feedback     = $isCorrect ? 'Câu trả lời đúng!' : 'Câu trả lời sai!';
+        }
+
+        $attempt = Attempt::create([
+            'user_id'        => $userId ?? 2,
+            'question_id'    => $question->id,
+            'user_answer'    => $userAnswer ?? null,
+            'user_audio_url' => $userAudioUrl ?? null,
+            'is_correct'     => $isCorrect,
+            'feedback'       => $feedback,
+            'created_at'     => now(),
+        ]);
+
+        // Load relations
+        $attempt->load([
+            'question:id,exercise_id,order_index',
+            'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
+            'user:id,name,email'
+        ]);
+
+        return $attempt;
+    }
+
     /**
      * Get template hint for a question
      */

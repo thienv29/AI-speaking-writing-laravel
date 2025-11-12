@@ -28,4 +28,16 @@ class Lesson extends Model
     {
         return $this->hasMany(Exercise::class, 'lesson_id');
     }
+
+    public function questions()
+    {
+        return $this->hasManyThrough(
+            Question::class,  
+            Exercise::class,  
+            'lesson_id',      
+            'exercise_id',    
+            'id',            
+            'id'             
+        );
+    }
 }
