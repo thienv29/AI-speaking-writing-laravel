@@ -68,7 +68,7 @@ class AttemptController extends Controller
             $validated = $request->validate([
                 'user_id'       => ['nullable','integer', Rule::exists('users','id')],
                 'question_id'   => ['required','integer', Rule::exists('questions','id')],
-                'user_answer'   => ['nullable','string','max:255'],
+                'user_answer'   => ['required','string','max:255'],
                 'user_audio'    => ['nullable','file','mimes:mp3,wav,m4a,ogg,webm'],
             ], [
                 'user_id.integer'      => 'User ID phải là số.',
@@ -78,6 +78,7 @@ class AttemptController extends Controller
                 'question_id.exists'   => 'Câu hỏi không tồn tại.',
                 'user_answer.string'   => 'Câu trả lời phải là chuỗi.',
                 'user_answer.max'      => 'Câu trả lời không được dài quá 255 ký tự.',
+                'user_answer.required' => 'Bạn phải nhập câu trả lời',
                 'user_audio.file'      => 'Tệp audio không hợp lệ.',
                 'user_audio.mimes'     => 'Tệp audio phải có định dạng mp3, wav, m4a, ogg hoặc webm.',
             ]);

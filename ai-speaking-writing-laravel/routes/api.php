@@ -24,10 +24,10 @@ Route::post('/exercise-types/{id}/restore', [ExerciseTypeController::class, 'res
 
 Route::resource('questions', QuestionController::class);
 Route::post('/questions/{id}/restore', [QuestionController::class, 'restore']);
+Route::get('/questions/{id}/template-hint', [AttemptController::class, 'getTemplateHint']);
 
 Route::resource('attempts', AttemptController::class);
 Route::post('/attempts/{id}/restore', [AttemptController::class, 'restore']);
-Route::get('/questions/{id}/template-hint', [AttemptController::class, 'getTemplateHint']);
 
 Route::resource('users', UserController::class);
 Route::post('/users/{id}/restore', [UserController::class, 'restore']);

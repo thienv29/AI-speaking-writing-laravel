@@ -122,20 +122,20 @@ class WritingController extends Controller
      * @param int|null $id Lesson ID (ignored, shows all lessons)
      * @return \Illuminate\View\View
      */
-    // public function showLesson($id = null)
-    // {
-    //     try {
-    //         $writingTypes = $this->getWritingTypeIds();
-    //         $allLessons = $this->getLessonsWithWritingExercises($writingTypes)
-    //             ->sortBy(['level', 'title'])
-    //             ->values();
+    public function showLesson($id = null)
+    {
+        try {
+            $writingTypes = $this->getWritingTypeIds();
+            $allLessons = $this->getLessonsWithWritingExercises($writingTypes)
+                ->sortBy(['level', 'title'])
+                ->values();
             
-    //         return view('pages.user.lesson', compact('allLessons'));
-    //     } catch (\Throwable $e) {
-    //         Log::error('Writing lesson error', ['error' => $e->getMessage()]);
-    //         abort(500, 'Unable to load lesson exercises. Please try again later.');
-    //     }
-    // }
+            return view('pages.user.lesson', compact('allLessons'));
+        } catch (\Throwable $e) {
+            Log::error('Writing lesson error', ['error' => $e->getMessage()]);
+            abort(500, 'Unable to load lesson exercises. Please try again later.');
+        }
+    }
     
     /**
      * Display exercises detail for a specific lesson
@@ -143,38 +143,38 @@ class WritingController extends Controller
      * @param int $id Lesson ID
      * @return \Illuminate\View\View
      */
-    // public function showLessonExercises($id)
-    // {
-    //     try {
-    //         $writingTypes = $this->getWritingTypeIds();
-    //         $lesson = Lesson::with(['exercises' => function ($query) use ($writingTypes) {
-    //             $query->whereIn('type_id', $writingTypes)
-    //                 ->with(['type', 'questions' => function ($q) {
-    //                     $q->orderBy('order_index');
-    //                 }])
-    //                 ->orderBy('order_index');
-    //         }])->findOrFail($id);
+    public function showLessonExercises($id)
+    {
+        try {
+            $writingTypes = $this->getWritingTypeIds();
+            $lesson = Lesson::with(['exercises' => function ($query) use ($writingTypes) {
+                $query->whereIn('type_id', $writingTypes)
+                    ->with(['type', 'questions' => function ($q) {
+                        $q->orderBy('order_index');
+                    }])
+                    ->orderBy('order_index');
+            }])->findOrFail($id);
             
-    //         $exercises = $this->formatExercises($lesson->exercises, true);
+            $exercises = $this->formatExercises($lesson->exercises, true);
             
-    //         if ($exercises->isEmpty()) {
-    //             abort(404, 'No writing exercises found for this lesson');
-    //         }
+            if ($exercises->isEmpty()) {
+                abort(404, 'No writing exercises found for this lesson');
+            }
             
-    //         return view('pages.user.lesson-exercises', compact('lesson', 'exercises'));
-    //     } catch (\Throwable $e) {
-    //         Log::error('Writing lesson exercises error', [
-    //             'lesson_id' => $id,
-    //             'error' => $e->getMessage()
-    //         ]);
+            return view('pages.user.lesson-exercises', compact('lesson', 'exercises'));
+        } catch (\Throwable $e) {
+            Log::error('Writing lesson exercises error', [
+                'lesson_id' => $id,
+                'error' => $e->getMessage()
+            ]);
             
-    //         if ($e->getCode() === 404) {
-    //             abort(404, $e->getMessage());
-    //         }
+            if ($e->getCode() === 404) {
+                abort(404, $e->getMessage());
+            }
             
-    //         abort(500, 'Unable to load lesson exercises. Please try again later.');
-    //     }
-    // }
+            abort(500, 'Unable to load lesson exercises. Please try again later.');
+        }
+    }
     
     /**
      * Display a specific writing question

@@ -1,14 +1,15 @@
-;(function (global) {
-    function escapeHtml(str) {
+const Feedback = {
+    escapeHtml(str) {
         return (str || '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
-    }
+    },
 
-    function renderHighlights(data) {
+    renderHighlights(data) {
+        const escapeHtml = this.escapeHtml; 
         const meta = data && data.evaluation_meta ? data.evaluation_meta : {};
         const segments = meta.highlight_segments || [];
         if (!segments.length) return '';
@@ -25,16 +26,18 @@
 
             return `<span class="${className}"${title}>${safeText}</span>`;
         }).join('');
-    }
+    },
 
-    function renderNotes(data) {
+    renderNotes(data) {
+        const escapeHtml = this.escapeHtml;
         const meta = data && data.evaluation_meta ? data.evaluation_meta : {};
         const notes = meta.notes || [];
         if (!notes.length) return '';
         return `<ul class="hl-notes">${notes.map(note => `<li>${escapeHtml(note)}</li>`).join('')}</ul>`;
-    }
+    },
 
-    function formatFeedbackForKids(markdownText) {
+    formatFeedbackForKids(markdownText) {
+        const escapeHtml=this.escapeHtml;
         if (!markdownText) return '';
 
         let text = markdownText;
@@ -70,13 +73,9 @@
         text = text.replace(/<p[^>]*>\s*<\/p>/g, '');
 
         return text.trim();
-    }
+    },
+}
 
-    global.WritingFeedback = {
-        renderHighlights,
-        renderNotes,
-        formatFeedbackForKids,
-        escapeHtml,
-    };
-})(window);
+export default Feedback;
+
 

@@ -11,7 +11,7 @@
             <nav>
                 <a href="/">Trang chủ</a>
                 <a href="/#contact">Liên hệ</a>
-                <a class="cta-btn" href="/writing">
+                <a class="cta-btn" href="{{ route('user.lessons') }}">
                     Luyện tiếng Anh
                     <span class="btn-kids-decoration">
                         <img src="/assets/images/home-kids-1.png" alt="Kids" class="btn-kids-image">

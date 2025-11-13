@@ -73,7 +73,7 @@ class AttemptService
             $cleanAnswer  = rtrim($userAnswer, " .!?,;:");
             $targetText   = rtrim($question->target_text, " .!?,;:");
             $isCorrect    = strtolower($cleanAnswer) === strtolower($targetText);
-            $feedback     = $isCorrect ? 'Câu trả lời đúng!' : 'Câu trả lời sai!';
+            $feedback     = $isCorrect ? 'Làm tốt lắm! Tiếp tục phát huy nhé.' : 'Hãy thử lại nào! Lần này đọc rõ ràng và chính xác hơn nhé.';
         }
 
         $attempt = Attempt::create([
