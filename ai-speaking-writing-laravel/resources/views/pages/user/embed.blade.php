@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luyện Viết - I-CLC</title>
+    @php
+        $typeCode = strtoupper($exerciseType->code ?? '');
+        $isWriting = str_starts_with($typeCode, 'W');
+        $isSpeaking = str_starts_with($typeCode, 'S');
+    @endphp
+    <title>{{ $isSpeaking ? 'Luyện Nói' : 'Luyện Viết' }} - I-CLC</title>
     {{-- <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/writing-question.css"> --}}
     <style>
@@ -45,6 +50,114 @@
             max-width: 100%;
         }
         
+        .answer-wrapper-container {
+            width: 100%;
+        }
+
+        .answer-wrapper-container.is-hidden {
+            display: none !important;
+        }
+
+        .answer-wrapper--speaking .speaking-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .speaking-illustration img {
+            width: 100%;
+            max-height: 260px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .speaking-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .speaking-prompt {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .speaking-prompt p {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .speaking-recorder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .speaking-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: none;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .speaking-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .speaking-btn--audio {
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+        }
+
+        .speaking-btn--mic {
+            background: linear-gradient(135deg, #f87171, #dc2626);
+        }
+
+        .speaking-indicator {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: 6px solid rgba(239, 68, 68, 0.3);
+            border-top-color: rgba(239, 68, 68, 0.9);
+            animation: speaking-spin 1s linear infinite;
+        }
+
+        .speaking-indicator.hidden {
+            display: none;
+        }
+
+        .speaking-audio.hidden {
+            display: none;
+        }
+
+        @keyframes speaking-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (min-width: 768px) {
+            .answer-wrapper--speaking .speaking-layout {
+                flex-direction: row;
+                align-items: stretch;
+            }
+
+            .speaking-illustration,
+            .speaking-content {
+                flex: 1;
+            }
+        }
+
         /* Responsive for iframe */
         @media (max-width: 768px) {
             .layout {
@@ -64,115 +177,163 @@
             $json = file_get_contents($manifestPath);
             $manifest = $json ? json_decode($json, true) : null;
         }
+        $cssFile = $manifest['resources/css/app.css']['file'] ?? null;
+        $jsFile = $manifest['resources/js/app.js']['file'] ?? null;
     @endphp
-    @if (!empty($manifest['resources/css/app.css']['file']))
-        <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/app.css']['file']) }}">
+    @if ($cssFile)
+        <link rel="stylesheet" href="{{ '/build/' . ltrim($cssFile, '/') }}">
     @endif
-    @if (!empty($manifest['resources/js/app.js']['file']))
-        <script type="module" src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
+    @if ($jsFile)
+        <script type="module" src="{{ '/build/' . ltrim($jsFile, '/') }}" defer></script>
     @endif
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
 <body>
-    <div id="question-page-content" class="question-page-wrapper">
+    <div id="question-page-content" class="question-page-wrapper embed-compact">
         <div class="container">
+@php
+    $navigationCollection = collect($navigationData ?? []);
+@endphp
             <div class="header-card">
                 <div class="header-content">
-                    <h1 id="exerciseTitleHeading">Writing Exercise</h1>
+                    <h1 id="exerciseTitleHeading">{{ $exercise->title ?? ($isSpeaking ? 'Speaking Exercise' : 'Writing Exercise') }}</h1>
                     <div class="tag-list">
-                        <span class="tag">Loại bài: <strong id="typeTag">—</strong></span>
-                        <span class="tag">Câu số <strong id="orderTag">#1</strong></span>
+                        <span class="tag">Loại bài: <strong id="typeTag">{{ $exerciseType->code ?? '—' }}</strong></span>
+                        <span class="tag">Câu số <strong id="orderTag">#{{ $question->order_index ?? '1' }}</strong></span>
                     </div>
-                    @if(isset($allExercises) && $allExercises->count() > 1)
-                    <div class="exercise-selector-wrapper">
-                        <label for="exerciseSelect" class="exercise-selector-label">Bài tập:</label>
-                        <select id="exerciseSelect" class="exercise-select">
-                            @foreach($allExercises as $ex)
-                                <option value="{{ $ex->id }}" {{ $ex->id == $exercise->id ? 'selected' : '' }}>
-                                    {{ $ex->title }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @endif
-                    @if(isset($allQuestions) && $allQuestions->count() > 1)
-                    <div class="question-navigation">
-                        <div class="question-nav-controls">
-                            <button id="prevQuestionBtn" class="nav-btn" title="Câu trước">
-                                ← Trước
+                    <div class="nav-card">
+                        <div class="nav-section nav-section--type">
+                            <span class="nav-label">Dạng bài</span>
+                            @if($navigationCollection->count() > 1)
+                                <div class="nav-select-wrapper">
+                                    <select id="typeSelect" class="nav-select">
+                                        @foreach($navigationCollection as $typeGroup)
+                                            <option value="{{ $typeGroup['code'] }}" {{ ($exerciseType->code ?? '') === $typeGroup['code'] ? 'selected' : '' }}>
+                                                {{ $typeGroup['name'] ?? $typeGroup['code'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @else
+                                <div class="nav-select-static">
+                                    {{ $exerciseType->name ?? $exerciseType->code ?? 'Dạng bài' }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="nav-divider"></div>
+
+                        <div class="nav-section nav-section--lesson">
+                            <span class="nav-label">Bài học</span>
+                            @php
+                                $lessonOptions = $navigationCollection
+                                    ->firstWhere('code', $exerciseType->code ?? '')['lessons'] ?? [];
+                            @endphp
+                            @if(count($lessonOptions) > 1)
+                                <div class="nav-select-wrapper">
+                                    <select id="lessonSelect" class="nav-select">
+                                        @foreach($navigationCollection as $typeGroup)
+                                            @foreach($typeGroup['lessons'] as $lessonGroup)
+                                                <option value="{{ $lessonGroup['id'] }}"
+                                                    data-type="{{ $typeGroup['code'] }}"
+                                                    {{ $lessonGroup['id'] == ($lesson->id ?? null) && $typeGroup['code'] === ($exerciseType->code ?? '') ? 'selected' : '' }}>
+                                                    {{ $lessonGroup['title'] }}
+                                                </option>
+                                            @endforeach
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @else
+                                <div class="nav-select-static">
+                                    {{ $lesson->title ?? 'Bài học' }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="nav-divider"></div>
+
+                        <div class="nav-section nav-section--exercise">
+                            <span class="nav-label">Bài tập</span>
+                            @if($allExercises->count() > 1)
+                                <div class="nav-select-wrapper">
+                                    <select id="exerciseSelect" class="nav-select">
+                                        @foreach($allExercises as $ex)
+                                            <option 
+                                                value="{{ $ex->first_question_id ?? '' }}" 
+                                                data-exercise-id="{{ $ex->id }}"
+                                                {{ $ex->id == $exercise->id ? 'selected' : '' }}
+                                                {{ empty($ex->first_question_id) ? 'disabled' : '' }}
+                                            >
+                                                {{ $ex->title }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @else
+                                <div class="nav-select-static">
+                                    {{ $exercise->title ?? 'Bài tập' }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="nav-divider"></div>
+
+                        <div class="nav-section nav-section--question">
+                            <button id="prevQuestionBtn" class="nav-arrow-btn" type="button" title="Câu trước">
+                                <span class="nav-arrow-icon">←</span>
+                                <span class="nav-arrow-text">Trước</span>
                             </button>
-                            <div class="question-selector">
-                                <label for="questionSelect" class="question-selector-label">Câu hỏi:</label>
-                                <select id="questionSelect" class="question-select">
-                                    @foreach($allQuestions as $q)
-                                        <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
-                                            Câu {{ $q->order_index }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="question-counter" id="questionCounter"></span>
+
+                            <div class="nav-question-group">
+                                <span class="nav-label">Câu hỏi</span>
+                                <div class="nav-select-wrapper">
+                                    <select id="questionSelect" class="nav-select">
+                                        @if(isset($allQuestions))
+                                            @foreach($allQuestions as $q)
+                                                <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
+                                                    Câu {{ $q->order_index }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                                <div class="nav-counter" id="questionCounter"></div>
                             </div>
-                            <button id="nextQuestionBtn" class="nav-btn" title="Câu sau">
-                                Sau →
+
+                            <button id="nextQuestionBtn" class="nav-arrow-btn" type="button" title="Câu sau">
+                                <span class="nav-arrow-text">Sau</span>
+                                <span class="nav-arrow-icon">→</span>
                             </button>
                         </div>
                     </div>
-                    @endif
                 </div>
             </div>
 
             <main class="question-panel">
                 <div class="question-header">
-                    <h2 class="question-title" id="exerciseTitle">Đang tải...</h2>
-                    <span class="lesson-pill" id="lessonPill">I-CLC</span>
+                    <h2 class="question-title" id="exerciseTitle">Câu {{ $question->order_index ?? '—' }}</h2>
+                    <span class="lesson-pill" id="lessonPill">{{ $lesson->title ?? 'I-CLC' }}</span>
                 </div>
 
                 <div class="prompt-card">
                     <h2>Đề bài</h2>
-                    <p id="questionPrompt">Please wait...</p>
-                    <div class="instruction-section" id="instructionSection" style="display: none;">
+                    <p id="questionPrompt">{{ $question->prompt_text ?? 'Please wait...' }}</p>
+                    <div class="instruction-section" id="instructionSection" style="display: {{ !empty($exercise->instruction) ? 'block' : 'none' }};">
                         <div class="instruction-label">📝 Hướng dẫn:</div>
-                        <div class="instruction-text" id="instructionText"></div>
+                        <div class="instruction-text" id="instructionText">{{ $exercise->instruction ?? '' }}</div>
                     </div>
-                    <div class="hint-section" id="hintSection" style="display: none;">
+                    <div class="hint-section" id="hintSection" style="display: {{ !empty($question->starter_text) ? 'block' : 'none' }};">
                         <div class="hint-label">💡 Gợi ý:</div>
-                        <div class="hint-text" id="hintText"></div>
+                        <div class="hint-text" id="hintText">{{ $question->starter_text ?? '' }}</div>
                     </div>
                 </div>
 
-                <div class="answer-wrapper">
-                    <div class="answer-label">✍️ Bé hãy viết câu trả lời</div>
-                    <div class="answer-input-group" id="wcsInputGroup" style="display: none;">
-                        <div class="answer-prefix" id="wcsPrefix"></div>
-                        <div class="answer-suffix-container">
-                            <textarea 
-                                id="answerSuffix" 
-                                class="answer-suffix-input" 
-                                rows="2"
-                                placeholder="..."
-                                autocomplete="off"
-                            ></textarea>
-                        </div>
-                    </div>
-                    <textarea 
-                        id="userAnswer" 
-                        placeholder="Viết câu trả lời của con tại đây..."
-                        rows="5"
-                    ></textarea>
-                    <div class="btn-area">
-                        <button class="btn-primary" id="submitBtn">
-                            Gửi câu trả lời
-                        </button>
-                        <button class="btn-secondary" type="button">
-                            Làm lại
-                        </button>
-                    </div>
-                    <div class="loading" id="loading" style="display: none;">
-                        <div class="spinner"></div>
-                        <span>đang chấm bài của bạn...</span>
-                    </div>
-                    <div class="error" id="error">
-                        ❌ Lỗi: <span id="errorMessage"></span>
-                    </div>
+                <div class="answer-wrapper-container" id="writingAnswerWrapper" style="{{ $isWriting ? '' : 'display:none;' }}">
+                    @include('components.user.writing-answer')
+                </div>
+
+                <div class="answer-wrapper-container" id="speakingAnswerWrapper" style="{{ $isWriting ? 'display:none;' : '' }}">
+                    @include('components.user.speaking-answer', ['question' => $question])
                 </div>
 
                 <div class="result-card" id="resultCard">
@@ -182,14 +343,13 @@
         </div>
     </div>
 
-    {{-- <script src="/js/writing-feedback.js"></script>
-    <script src="/js/writing-question.js"></script> --}}
-    {{-- <script>
-        // Initialize when page loads (works in both iframe and standalone)
-        document.addEventListener('DOMContentLoaded', function() {
-            loadQuestion();
-        });
-    </script> --}}
+    <script>
+        window.appData = {
+            question: @json($question),
+            navigation: @json($navigationData ?? []),
+            current: @json($currentContext ?? [])
+        };
+    </script>
 </body>
 </html>
 

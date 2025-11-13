@@ -6,7 +6,7 @@
             <a href="#">Ebook miễn phí</a>
         </div>
         <div class="topbar-phone">
-            <img src="/assets/images/Phone_fill-1.png" alt="Phone" class="topbar-phone-icon">
+            <img src="{{ asset('assets/images/Phone_fill-1.png') }}" alt="Phone" class="topbar-phone-icon">
             <span>091 772 9932</span>
         </div>
     </div>

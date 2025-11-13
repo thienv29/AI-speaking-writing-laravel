@@ -3,7 +3,7 @@ export const API_ROUTES = {
     base: "/questions",
     show: (id) => `/questions/${id}`,
     evaluateAnswer: `/attempts`,
-    speechToText: `http://127.0.0.1:5000/stt`,
-    textToSpeech: `http://127.0.0.1:5000/tts`,
+    speechToText: `http://127.0.0.1:5001/stt`,
+    textToSpeech: `http://127.0.0.1:5001/tts`,
   },
 };

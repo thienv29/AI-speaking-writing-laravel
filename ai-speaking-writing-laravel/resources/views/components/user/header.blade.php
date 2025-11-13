@@ -2,7 +2,7 @@
         <div class="header-wrapper">
             <div class="logo-area">
                 <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
-                    <img src="/assets/images/logo.png" alt="I-CLC Logo" class="logo-img">
+                    <img src="{{ asset('assets/images/logo.png') }}" alt="I-CLC Logo" class="logo-img">
                     <div>
                         <strong>I-CLC</strong><br>
                     </div>
@@ -14,7 +14,7 @@
                 <a class="cta-btn" href="{{ route('user.lessons') }}">
                     Luyện tiếng Anh
                     <span class="btn-kids-decoration">
-                        <img src="/assets/images/home-kids-1.png" alt="Kids" class="btn-kids-image">
+                        <img src="{{ asset('assets/images/home-kids-1.png') }}" alt="Kids" class="btn-kids-image">
                     </span>
                 </a>
             </nav>

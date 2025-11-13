@@ -18,7 +18,7 @@
         rows="5"
     ></textarea>
     <div class="btn-area">
-        <button class="btn-primary" id="submitBtn">
+        <button class="btn-primary" id="submitBtn" data-loading-text="Đang chấm bài...">
             Gửi câu trả lời
         </button>
         <button class="btn-secondary" type="button" id="resetBtn">

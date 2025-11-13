@@ -70,7 +70,7 @@
                         </div>
                         <div class="exercise-info">
                             <div class="exercise-header">
-                                <a href="/writing/question/{{ $exercise['first_question_id'] }}" class="exercise-title">
+                                <a href="{{ route('writing.embed', ['id' => $exercise['first_question_id']]) }}" class="exercise-title">
                                     {{ $exercise['title'] }}
                                 </a>
                                 <span class="exercise-type-badge exercise-type-badge-{{ strtolower($exercise['code']) }}">

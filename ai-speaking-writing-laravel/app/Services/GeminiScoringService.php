@@ -206,7 +206,7 @@ class GeminiScoringService
         $context .= "- 50-69: Tạm được – còn lỗi rõ ràng nhưng vẫn hiểu được.\n";
         $context .= "- 30-49: Yếu – nhiều lỗi hoặc thiếu thông tin.\n";
         $context .= "- 0-29: Sai – không đúng chủ đề, quá thiếu, hoặc không phải câu.\n\n";
-
+        
         $context .= "FEEDBACK STYLE:\n";
         $context .= "- Luôn bắt đầu bằng lời khen tích cực (ví dụ: 'Con làm tốt lắm!').\n";
         $context .= "- Giải thích ngắn gọn điều cần sửa bằng từ ngữ đơn giản (ví dụ: 'Con nhớ viết hoa chữ cái đầu nhé').\n";
@@ -217,7 +217,7 @@ class GeminiScoringService
         $context .= "OUTPUT REQUIREMENTS:\n";
         $context .= "- Chỉ trả về JSON hợp lệ, không thêm lời giải thích trước hoặc sau.\n";
         $context .= "- Cấu trúc JSON: {\"score\":<0-100>,\"is_correct\":<true/false>,\"feedback\":\"<Vietnamese>\",\"spelling_errors\":[],\"grammar_errors\":[],\"highlight_segments\":[],\"template_used\":\"" . strtolower($exerciseTypeCode) . "\"}.\n";
-
+        
         return $context;
     }
 

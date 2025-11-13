@@ -70,12 +70,18 @@ class AttemptService
         $feedback  = null;
 
         if (!empty($userAnswer)) {
-            $cleanAnswer = preg_replace('/[[:punct:]]+/u', '', $userAnswer);
-            $targetText  = preg_replace('/[[:punct:]]+/u', '', $question->target_text);
-            $cleanAnswer = trim($cleanAnswer);
-            $targetText  = trim($targetText);
-            $isCorrect    = strtolower($cleanAnswer) === strtolower($targetText);
-            $feedback     = $isCorrect ? 'Làm tốt lắm! Tiếp tục phát huy nhé.' : 'Hãy thử lại nào! Lần này đọc rõ ràng và chính xác hơn nhé.';
+            $normalizedAnswer = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $userAnswer)));
+            $normalizedTarget = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $question->target_text ?? '')));
+
+            $isCorrect = $this->matchesTarget($normalizedAnswer, $normalizedTarget);
+            if (!$isCorrect && !empty($question->target_text_alt)) {
+                $normalizedAlt = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $question->target_text_alt)));
+                $isCorrect = $this->matchesTarget($normalizedAnswer, $normalizedAlt);
+            }
+
+            $feedback = $isCorrect
+                ? 'Làm tốt lắm! Tiếp tục phát huy nhé.'
+                : 'Hãy thử lại nào! Lần này đọc rõ ràng và chính xác hơn nhé.';
         }
 
         $attempt = Attempt::create([
@@ -120,6 +126,19 @@ class AttemptService
             'extracted_value' => $geminiResult['extracted_value'] ?? null,
             'evaluation_meta' => $geminiResult['evaluation_meta'] ?? null,
         ];
+    }
+
+    private function matchesTarget(string $normalizedAnswer, string $normalizedTarget): bool
+    {
+        if ($normalizedTarget === '') {
+            return false;
+        }
+
+        if ($normalizedAnswer === $normalizedTarget) {
+            return true;
+        }
+
+        return str_starts_with($normalizedAnswer, $normalizedTarget . ' ');
     }
 
     /**

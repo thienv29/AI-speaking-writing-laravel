@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Question;
 use App\Models\Exercise;
+use App\Services\TemplateValidatorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -11,6 +12,13 @@ use Illuminate\Validation\ValidationException;
 
 class QuestionController extends Controller
 {
+    protected TemplateValidatorService $templateValidator;
+
+    public function __construct(TemplateValidatorService $templateValidator)
+    {
+        $this->templateValidator = $templateValidator;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -110,8 +118,12 @@ class QuestionController extends Controller
     public function show(Question $question)
     {
         try {
-            $question->load('exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index')
-                     ->loadCount('attempts');
+            $question->load([
+                'exercise' => function ($query) {
+                    $query->with(['type:id,code,name', 'lesson:id,title'])
+                          ->select('id', 'lesson_id', 'type_id', 'title', 'instruction', 'difficulty', 'order_index');
+                },
+            ])->loadCount('attempts');
             $question->exercise->loadCount('questions');
 
             $lessonId = $question->exercise->lesson_id;
@@ -162,9 +174,19 @@ class QuestionController extends Controller
             $question->prev_question_id = $previous ? $previous->id : null;
             $question->next_question_id = $next ? $next->id : null;
 
+            $allQuestions = Question::where('exercise_id', $question->exercise_id)
+                ->orderBy('order_index')
+                ->get(['id', 'order_index']);
+
+            $templateHint = $this->templateValidator->getTemplateHint($question);
+
             return response()->json([
                 'status' => 'success',
-                'data'   => $question,
+                'data'   => [
+                    'question'       => $question,
+                    'all_questions'  => $allQuestions,
+                    'template_hint'  => $templateHint,
+                ],
             ]);
         } catch (\Throwable $e) {
             Log::error('Question show error', ['error' => $e]);
@@ -251,7 +273,6 @@ class QuestionController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * Update the specified resource in storage.

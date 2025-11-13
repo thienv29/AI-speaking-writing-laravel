@@ -14,8 +14,6 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/assets/images/logo.png">
     
@@ -35,10 +33,10 @@
         }
     @endphp
     @if (!empty($manifest['resources/css/app.css']['file']))
-        <link rel="stylesheet" href="{{ asset('build/' . $manifest['resources/css/app.css']['file']) }}">
+        <link rel="stylesheet" href="{{ '/build/' . ltrim($manifest['resources/css/app.css']['file'], '/') }}">
     @endif
     @if (!empty($manifest['resources/js/app.js']['file']))
-        <script type="module" src="{{ asset('build/' . $manifest['resources/js/app.js']['file']) }}" defer></script>
+        <script type="module" src="{{ '/build/' . ltrim($manifest['resources/js/app.js']['file'], '/') }}" defer></script>
     @endif
 </head>
 <body>

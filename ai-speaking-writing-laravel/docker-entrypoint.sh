@@ -93,9 +93,9 @@ if [ -f "package.json" ]; then
         log_info "Installing Node dependencies (including dev packages)..."
         if command -v npm >/dev/null 2>&1; then
             if [ -f "package-lock.json" ]; then
-                npm ci --include=dev || npm install --include=dev
+                npm ci --include=dev --omit=optional || npm install --include=dev --omit=optional
             else
-                npm install --include=dev
+                npm install --include=dev --omit=optional
             fi
         else
             log_warn "npm not found, skipping frontend dependency installation"
@@ -125,7 +125,7 @@ if [ -z "$CURRENT_KEY" ] || [ "$CURRENT_KEY" = "base64:" ]; then
     log_info "Generating application key..."
     php artisan key:generate --force || {
         log_error "Failed to generate application key. Please ensure .env exists and is writable."
-        exit 1
+            exit 1
     }
 else
     log_info "Application key already present."

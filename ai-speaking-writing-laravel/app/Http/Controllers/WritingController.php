@@ -177,81 +177,6 @@ class WritingController extends Controller
     }
     
     /**
-     * Display a specific writing question
-     * Supports both question ID and exercise ID
-     * 
-     * @param int $id Question ID or Exercise ID
-     * @return \Illuminate\View\View
-     */
-    public function show($id)
-    {
-        try {
-            // Try to find by question ID first
-            $question = Question::with([
-                'exercise' => function ($query) {
-                    $query->with(['type', 'lesson']);
-                }
-            ])->find($id);
-            
-            // If not found, try treating as exercise ID
-            if (!$question) {
-                $exercise = Exercise::with(['type', 'lesson'])->find($id);
-                
-                if (!$exercise) {
-                    abort(404, 'Question or exercise not found');
-                }
-                
-                // Get first question for this exercise
-                $question = Question::where('exercise_id', $id)
-                    ->orderBy('order_index')
-                    ->with(['exercise' => function ($query) {
-                        $query->with(['type', 'lesson']);
-                    }])
-                    ->first();
-                
-                if (!$question) {
-                    abort(404, 'No questions found for this exercise');
-                }
-            }
-            
-            $exercise = $question->exercise;
-            $exerciseType = $exercise->type;
-            
-            // Get all questions for navigation (optional)
-            $allQuestions = Question::where('exercise_id', $exercise->id)
-                ->orderBy('order_index')
-                ->get(['id', 'order_index']);
-            
-            $currentIndex = $allQuestions->search(function ($q) use ($question) {
-                return $q->id === $question->id;
-            });
-            
-            $previousQuestionId = $currentIndex > 0 ? $allQuestions[$currentIndex - 1]->id : null;
-            $nextQuestionId = $currentIndex < count($allQuestions) - 1 ? $allQuestions[$currentIndex + 1]->id : null;
-            
-            return view('pages.user.question', compact(
-                'question',
-                'exercise',
-                'exerciseType',
-                'previousQuestionId',
-                'nextQuestionId',
-                'allQuestions'
-            ));
-        } catch (\Throwable $e) {
-            Log::error('Writing show error', [
-                'id' => $id,
-                'error' => $e->getMessage()
-            ]);
-            
-            if ($e->getCode() === 404) {
-                abort(404, $e->getMessage());
-            }
-            
-            abort(500, 'Unable to load question. Please try again later.');
-        }
-    }
-    
-    /**
      * Display a specific writing question in embed mode (for iframe)
      * 
      * @param int $id Question ID or Exercise ID
@@ -297,10 +222,171 @@ class WritingController extends Controller
                 ->orderBy('order_index')
                 ->get(['id', 'order_index']);
             
-            // Get all exercises for the same lesson (for exercise selector)
-            $allExercises = Exercise::where('lesson_id', $lesson->id)
+            $supportedTypeCodes = array_unique(array_merge(ExerciseTypes::writingTypes(), ['SPS']));
+            $supportedTypeIds = ExerciseType::whereIn('code', $supportedTypeCodes)
+                ->pluck('id', 'code');
+            
+            $navigationExercises = Exercise::whereIn('type_id', $supportedTypeIds->values())
+                ->with([
+                    'type:id,code,name',
+                    'lesson:id,title',
+                    'questions' => function ($q) {
+                        $q->orderBy('order_index')->select('id', 'exercise_id', 'order_index');
+                    }
+                ])
                 ->orderBy('order_index')
-                ->get(['id', 'title', 'order_index']);
+                ->get(['id', 'lesson_id', 'type_id', 'title', 'instruction', 'order_index']);
+            
+            $navigationData = $navigationExercises
+                ->groupBy(function ($exerciseItem) {
+                    return optional($exerciseItem->type)->code ?? 'UNKNOWN';
+                })
+                ->map(function ($exercisesByType) {
+                    $type = $exercisesByType->first()->type ?? null;
+                    if (!$type) {
+                        return null;
+                    }
+                    
+                    $lessons = $exercisesByType->groupBy('lesson_id')
+                        ->map(function ($lessonExercises) {
+                            $lesson = $lessonExercises->first()->lesson ?? null;
+                            if (!$lesson) {
+                                return null;
+                            }
+                            
+                            $exercises = $lessonExercises->map(function ($exerciseItem) {
+                                $firstQuestion = $exerciseItem->questions->first();
+                                return [
+                                    'id' => $exerciseItem->id,
+                                    'title' => $exerciseItem->title,
+                                    'instruction' => $exerciseItem->instruction,
+                                    'first_question_id' => optional($firstQuestion)->id,
+                                    'order_index' => $exerciseItem->order_index,
+                                ];
+                            })
+                            ->filter(function ($exerciseData) {
+                                return !is_null($exerciseData['first_question_id']);
+                            })
+                            ->values();
+                            
+                            if ($exercises->isEmpty()) {
+                                return null;
+                            }
+                            
+                            return [
+                                'id' => $lesson->id,
+                                'title' => $lesson->title,
+                                'exercises' => $exercises,
+                            ];
+                        })
+                        ->filter()
+                        ->values();
+                    
+                    if ($lessons->isEmpty()) {
+                        return null;
+                    }
+                    
+                    return [
+                        'code' => $type->code,
+                        'name' => $type->name,
+                        'lessons' => $lessons,
+                    ];
+                })
+                ->filter()
+                ->values();
+            
+            $currentLessonExercises = collect();
+            if ($exerciseType && $lesson) {
+                $typeEntry = $navigationData->firstWhere('code', $exerciseType->code ?? '');
+                if ($typeEntry) {
+                    $lessonEntry = collect($typeEntry['lessons'])->firstWhere('id', $lesson->id);
+                    if ($lessonEntry) {
+                        $currentLessonExercises = collect($lessonEntry['exercises']);
+                    }
+                }
+            }
+            
+            $allExercises = $currentLessonExercises->map(function ($exerciseItem) {
+                return (object) [
+                    'id' => $exerciseItem['id'],
+                    'title' => $exerciseItem['title'],
+                    'first_question_id' => $exerciseItem['first_question_id'],
+                ];
+            });
+            
+            // Determine previous/next question ids
+            $previous = Question::where('exercise_id', $question->exercise_id)
+                ->where('order_index', '<', $question->order_index)
+                ->orderBy('order_index', 'desc')
+                ->first();
+
+            if (!$previous) {
+                $previousExercise = Exercise::where('lesson_id', $lesson->id)
+                    ->where('order_index', '<', $exercise->order_index)
+                    ->orderBy('order_index', 'desc')
+                    ->first();
+
+                if ($previousExercise) {
+                    $previous = Question::where('exercise_id', $previousExercise->id)
+                        ->orderBy('order_index', 'desc')
+                        ->first();
+                }
+            }
+
+            $next = Question::where('exercise_id', $question->exercise_id)
+                ->where('order_index', '>', $question->order_index)
+                ->orderBy('order_index', 'asc')
+                ->first();
+
+            if (!$next) {
+                $nextExercise = Exercise::where('lesson_id', $lesson->id)
+                    ->where('order_index', '>', $exercise->order_index)
+                    ->orderBy('order_index', 'asc')
+                    ->first();
+
+                if ($nextExercise) {
+                    $next = Question::where('exercise_id', $nextExercise->id)
+                        ->orderBy('order_index', 'asc')
+                        ->first();
+                }
+            }
+
+            $question->setAttribute('prev_question_id', $previous ? $previous->id : null);
+            $question->setAttribute('next_question_id', $next ? $next->id : null);
+            $question->exercise->setRelation('questions', $allQuestions);
+
+            $navigationPayload = $navigationData
+                ->map(function ($typeEntry) {
+                    return [
+                        'code' => $typeEntry['code'],
+                        'name' => $typeEntry['name'],
+                        'lessons' => collect($typeEntry['lessons'])->map(function ($lessonEntry) {
+                            return [
+                                'id' => $lessonEntry['id'],
+                                'title' => $lessonEntry['title'],
+                                'exercises' => collect($lessonEntry['exercises'])->map(function ($exerciseEntry) {
+                                    return [
+                                        'id' => $exerciseEntry['id'],
+                                        'title' => $exerciseEntry['title'],
+                                        'first_question_id' => $exerciseEntry['first_question_id'],
+                                        'order_index' => $exerciseEntry['order_index'],
+                                        'instruction' => $exerciseEntry['instruction'],
+                                    ];
+                                })->values()->toArray(),
+                            ];
+                        })->values()->toArray(),
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            $currentContext = [
+                'type' => $exerciseType->code ?? null,
+                'lesson_id' => $lesson->id ?? null,
+                'exercise_id' => $exercise->id ?? null,
+            ];
+            
+            $navigationData = $navigationPayload;
             
             // Set headers to allow iframe embedding
             $response = response()->view('pages.user.embed', compact(
@@ -309,10 +395,12 @@ class WritingController extends Controller
                 'exerciseType',
                 'lesson',
                 'allQuestions',
-                'allExercises'
+                'allExercises',
+                'navigationData',
+                'currentContext'
             ));
             
-            // Remove X-Frame-Options to allow embedding from any origin
+            // Remove X-Frame-Options to allow embedding
             $response->headers->remove('X-Frame-Options');
             
             // Set Content-Security-Policy to allow embedding

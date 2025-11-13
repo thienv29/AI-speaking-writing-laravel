@@ -39,7 +39,7 @@
                     <div class="flex-1 flex flex-col gap-6 items-stretch">
                         <p class="text-lg">{{ $lesson->description }}</p>
                         <div>
-                            <a href="{{ route('user.question', ['id' => $lesson->exercises[0]->questions[0]->id]) }}"
+                            <a href="{{ route('writing.embed', ['id' => $lesson->exercises[0]->questions[0]->id]) }}"
                                 class="bg-orange-400 text-white font-semibold rounded-full hover:bg-orange-500 transition-colors px-6 py-4">
                                 Bắt đầu làm bài
                             </a>
@@ -54,7 +54,7 @@
                             <span class="exercise-icon-emoji">📝</span>
                         </div>
                         <div class="exercise-info">
-                            <a href="/questions/{{ $exercise->questions[0]->id }}" class="exercise-title">
+                            <a href="{{ route('writing.embed', ['id' => $exercise->questions[0]->id]) }}" class="exercise-title">
                                 {{ $exercise->title }}
                             </a>
                             @if(!empty($exercise->instruction))

@@ -67,19 +67,19 @@
                 <div class="contact-info-footer">
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Message_fill-1.png" alt="Email" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Message_fill-1.png') }}" alt="Email" class="contact-icon-img-footer">
                         </span>
                         <span>info@i-clc.edu.vn</span>
                     </div>
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Phone_fill-1.png" alt="Phone" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Phone_fill-1.png') }}" alt="Phone" class="contact-icon-img-footer">
                         </span>
                         <span>091 772 9932</span>
                     </div>
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Pin_alt_fill-2.png" alt="Location" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Pin_alt_fill-2.png') }}" alt="Location" class="contact-icon-img-footer">
                         </span>
                         <span>64 đường 85, Phường Tân Hưng, TP. HCM</span>
                     </div>
@@ -89,19 +89,19 @@
                 <div class="contact-info-footer">
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Message_fill-1.png" alt="Email" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Message_fill-1.png') }}" alt="Email" class="contact-icon-img-footer">
                         </span>
                         <span>info@i-clc.edu.vn</span>
                     </div>
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Phone_fill-1.png" alt="Phone" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Phone_fill-1.png') }}" alt="Phone" class="contact-icon-img-footer">
                         </span>
                         <span>(028) 38303012/ 13</span>
                     </div>
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Pin_alt_fill-2.png" alt="Location" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Pin_alt_fill-2.png') }}" alt="Location" class="contact-icon-img-footer">
                         </span>
                         <span>438 Điện Biên Phủ, Phường Vườn Lài, TP. HCM</span>
                     </div>
@@ -111,13 +111,13 @@
                 <div class="branch-list">
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Pin_alt_fill-2.png" alt="Location" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Pin_alt_fill-2.png') }}" alt="Location" class="contact-icon-img-footer">
                         </span>
                         <span>64 đường 85, Phường Tân Hưng, TP. HCM</span>
                     </div>
                     <div class="contact-item-footer">
                         <span class="contact-icon-footer">
-                            <img src="/assets/images/Pin_alt_fill-2.png" alt="Location" class="contact-icon-img-footer">
+                            <img src="{{ asset('assets/images/Pin_alt_fill-2.png') }}" alt="Location" class="contact-icon-img-footer">
                         </span>
                         <span>Lô số 12, Đường B2, KĐT Vĩnh Điềm Trung, Phường Tây Nha Trang, Khánh Hòa</span>
                     </div>

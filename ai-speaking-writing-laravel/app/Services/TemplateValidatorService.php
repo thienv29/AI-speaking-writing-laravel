@@ -52,7 +52,7 @@ class TemplateValidatorService
                 $hint = 'Dùng từ được cho để đặt một câu hoàn chỉnh.';
                 break;
         }
-
+        
         return $hint;
     }
 

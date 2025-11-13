@@ -32,25 +32,40 @@
                     <span class="tag">Loại bài: <strong id="typeTag">{{ $question->exercise->type->code }}</strong></span>
                     <span class="tag">Câu số <strong id="orderTag"># {{ $question->order_index . '' }}</strong></span>
                 </div>
-                <div class="question-navigation">
-                    <div class="question-nav-controls">
-                        <a id="prevQuestionBtn" class="nav-btn opacity-0 pointer-events-none" title="Câu trước">
-                            ← Trước
-                        </a>
-                        <div class="question-selector">
-                            <label for="questionSelect" class="question-selector-label">Câu hỏi:</label>
-                            <select id="questionSelect" class="question-select">
-                                @foreach($question->exercise->questions as $q)
+                <div class="nav-card">
+                    <div class="nav-section nav-section--exercise">
+                        <span class="nav-label">Bài tập</span>
+                        <div class="nav-select-static">
+                            {{ $question->exercise->title }}
+                        </div>
+                    </div>
+
+                    <div class="nav-divider"></div>
+
+                    <div class="nav-section nav-section--question">
+                        <button id="prevQuestionBtn" class="nav-arrow-btn" type="button" title="Câu trước">
+                            <span class="nav-arrow-icon">←</span>
+                            <span class="nav-arrow-text">Trước</span>
+                        </button>
+
+                        <div class="nav-question-group">
+                            <span class="nav-label">Câu hỏi</span>
+                            <div class="nav-select-wrapper">
+                                <select id="questionSelect" class="nav-select">
+                                    @foreach($question->exercise->questions as $q)
                                     <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
                                         Câu {{ $q->order_index }}
                                     </option>
                                 @endforeach
                             </select>
-                            <span class="question-counter" id="questionCounter"></span>
+                            </div>
+                            <div class="nav-counter" id="questionCounter"></div>
                         </div>
-                        <a id="nextQuestionBtn" class="nav-btn opacity-0 pointer-events-none" title="Câu sau">
-                            Sau →
-                        </a>
+
+                        <button id="nextQuestionBtn" class="nav-arrow-btn" type="button" title="Câu sau">
+                            <span class="nav-arrow-text">Sau</span>
+                            <span class="nav-arrow-icon">→</span>
+                        </button>
                     </div>
                 </div>
             </div>
