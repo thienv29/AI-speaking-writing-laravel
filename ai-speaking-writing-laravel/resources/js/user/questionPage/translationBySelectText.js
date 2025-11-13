@@ -1,8 +1,22 @@
+import Feedback from "./writing-feedback";
+
 // TRANSLATION FEATURE
 let translationPopup = null;
 let translationTimeout = null;
 
-function initTranslationFeature() {
+const escapeHtml = (str) => {
+    if (Feedback.escapeHtml) {
+        return Feedback.escapeHtml(str);
+    }
+    return (str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
+export function initTranslationFeature() {
     translationPopup = document.createElement('div');
     translationPopup.id = 'translation-popup';
     translationPopup.className = 'translation-popup';
@@ -18,7 +32,7 @@ function initTranslationFeature() {
     });
 }
 
-function handleTextSelection(e) {
+export function handleTextSelection(e) {
     const selection = window.getSelection();
     const selectedText = selection.toString().trim();
     
@@ -45,7 +59,7 @@ function handleTextSelection(e) {
     }, 300);
 }
 
-function translateText(text, event) {
+export function translateText(text, event) {
     if (!text || text.length === 0) return;
     
     showTranslationPopup('Đang dịch...', event);
@@ -78,7 +92,7 @@ function translateText(text, event) {
     });
 }
 
-function showTranslationPopup(translation, event, originalText = '') {
+export function showTranslationPopup(translation, event, originalText = '') {
     if (!translationPopup) return;
     
     translationPopup.innerHTML = `
@@ -96,7 +110,7 @@ function showTranslationPopup(translation, event, originalText = '') {
     setTimeout(() => hideTranslationPopup(), 5000);
 }
 
-function hideTranslationPopup() {
+export function hideTranslationPopup() {
     if (translationPopup) {
         translationPopup.style.display = 'none';
     }

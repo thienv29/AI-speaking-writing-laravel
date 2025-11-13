@@ -180,9 +180,19 @@ class QuestionController extends Controller
         try {
             $question = Question::findOrFail($id);
 
-            $question->load('exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index')
-                    ->loadCount('attempts');
-            $question->exercise->loadCount('questions');
+            // Load tất cả dữ liệu cần thiết
+            $question->load([
+                'attempts', // danh sách các attempts của question
+                'exercise' => function ($query) {
+                    $query->select('id', 'lesson_id', 'type_id', 'title', 'instruction', 'difficulty', 'order_index')
+                        ->with([
+                            'questions:id,exercise_id,order_index', 
+                            'lesson:id,title,description,level',
+                            'type:id,name,code'
+                        ])
+                        ->withCount('questions'); 
+                },
+            ])->loadCount('attempts'); 
 
             $lessonId = $question->exercise->lesson_id;
             $exerciseOrder = $question->exercise->order_index;
@@ -215,7 +225,7 @@ class QuestionController extends Controller
                 ->orderBy('order_index', 'asc')
                 ->first();
 
-            //2. Nếu không có, lấy question đầu của exercise tiếp theo trong lesson
+            // 2. Nếu không có, lấy question đầu của exercise tiếp theo trong lesson
             if (!$next) {
                 $nextExercise = Exercise::where('lesson_id', $lessonId)
                     ->where('order_index', '>', $exerciseOrder)
@@ -232,9 +242,7 @@ class QuestionController extends Controller
             $question->prev_question_id = $previous ? $previous->id : null;
             $question->next_question_id = $next ? $next->id : null;
 
-            return view('pages.user.question', 
-            compact('question',
-            ));
+            return view('pages.user.question',compact('question'));
         } catch (\Throwable $e) {
             Log::error('Question show error', ['error' => $e]);
             return response()->json([
@@ -353,7 +361,10 @@ class QuestionController extends Controller
         }
     }
 
-    public function restore($id)
+    /**
+     * @param string $id
+     */
+    public function restore(string $id)
     {
         try {
             $question = Question::withTrashed()->findOrFail($id);
