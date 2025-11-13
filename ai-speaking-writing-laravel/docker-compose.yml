@@ -78,6 +78,31 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  ai-speech-service:
+    build:
+      context: ../ai-speech-service
+      dockerfile: Dockerfile
+    container_name: iclc-ai-speech-service
+    restart: unless-stopped
+    ports:
+      - "${SPEECH_SERVICE_PORT:-8001}:8000"
+    volumes:
+      - ../ai-speech-service:/app
+      - ../ai-speech-service/outputs:/app/outputs
+    networks:
+      - iclc-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 networks:
   iclc-network:
     driver: bridge
