@@ -70,8 +70,10 @@ class AttemptService
         $feedback  = null;
 
         if (!empty($userAnswer)) {
-            $cleanAnswer  = rtrim($userAnswer, " .!?,;:");
-            $targetText   = rtrim($question->target_text, " .!?,;:");
+            $cleanAnswer = preg_replace('/[[:punct:]]+/u', '', $userAnswer);
+            $targetText  = preg_replace('/[[:punct:]]+/u', '', $question->target_text);
+            $cleanAnswer = trim($cleanAnswer);
+            $targetText  = trim($targetText);
             $isCorrect    = strtolower($cleanAnswer) === strtolower($targetText);
             $feedback     = $isCorrect ? 'Làm tốt lắm! Tiếp tục phát huy nhé.' : 'Hãy thử lại nào! Lần này đọc rõ ràng và chính xác hơn nhé.';
         }
