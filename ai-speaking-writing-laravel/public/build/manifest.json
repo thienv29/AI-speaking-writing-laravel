@@ -9,7 +9,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B74zGgWT.js",
+    "file": "assets/app-mZxqGV17.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -19,7 +19,7 @@
     ]
   },
   "resources/js/user/questionPage/main.js": {
-    "file": "assets/main-MzJ97VuY.js",
+    "file": "assets/main-DQJ7Kew3.js",
     "name": "main",
     "src": "resources/js/user/questionPage/main.js",
     "isDynamicEntry": true,

@@ -64,10 +64,21 @@
             gap: 16px;
         }
 
+        .speaking-illustration {
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
         .speaking-illustration img {
             width: 100%;
+            max-width: 100%;
+            height: auto;
             max-height: 260px;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center;
+            display: block;
             border-radius: 12px;
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
         }

@@ -39,10 +39,22 @@
                     <div class="flex-1 flex flex-col gap-6 items-stretch">
                         <p class="text-lg">{{ $lesson->description }}</p>
                         <div>
-                            <a href="{{ route('writing.embed', ['id' => $lesson->exercises[0]->questions[0]->id]) }}"
-                                class="bg-orange-400 text-white font-semibold rounded-full hover:bg-orange-500 transition-colors px-6 py-4">
-                                Bắt đầu làm bài
-                            </a>
+                            @php
+                                $firstQuestionId = null;
+                                if ($lesson->exercises->isNotEmpty() && $lesson->exercises->first()->questions->isNotEmpty()) {
+                                    $firstQuestionId = $lesson->exercises->first()->questions->first()->id;
+                                }
+                            @endphp
+                            @if($firstQuestionId)
+                                <a href="{{ route('writing.embed', ['id' => $firstQuestionId]) }}"
+                                    class="bg-orange-400 text-white font-semibold rounded-full hover:bg-orange-500 transition-colors px-6 py-4">
+                                    Bắt đầu làm bài
+                                </a>
+                            @else
+                                <span class="bg-gray-400 text-white font-semibold rounded-full px-6 py-4 inline-block cursor-not-allowed">
+                                    Chưa có câu hỏi
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -54,9 +66,18 @@
                             <span class="exercise-icon-emoji">📝</span>
                         </div>
                         <div class="exercise-info">
-                            <a href="{{ route('writing.embed', ['id' => $exercise->questions[0]->id]) }}" class="exercise-title">
-                                {{ $exercise->title }}
-                            </a>
+                            @php
+                                $firstQuestionId = $exercise->questions->isNotEmpty() ? $exercise->questions->first()->id : null;
+                            @endphp
+                            @if($firstQuestionId)
+                                <a href="{{ route('writing.embed', ['id' => $firstQuestionId]) }}" class="exercise-title">
+                                    {{ $exercise->title }}
+                                </a>
+                            @else
+                                <span class="exercise-title" style="color: #999; cursor: not-allowed;">
+                                    {{ $exercise->title }} (Chưa có câu hỏi)
+                                </span>
+                            @endif
                             @if(!empty($exercise->instruction))
                                 <span class="exercise-subtitle">{{ $exercise->instruction }}</span>
                             @endif

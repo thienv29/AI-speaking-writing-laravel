@@ -102,6 +102,153 @@
         </div>
     </div>
 
+    <!-- Performance Stats -->
+    <div class="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Tỷ lệ đúng</p>
+                        <p class="mt-1 text-3xl font-semibold text-gray-900">{{ $correctRate }}%</p>
+                        <p class="mt-1 text-xs text-gray-500">
+                            {{ $correctAttempts }} đúng / {{ $stats['attempts'] }} tổng
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0 bg-green-100 rounded-full p-3">
+                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Điểm trung bình</p>
+                        <p class="mt-1 text-3xl font-semibold text-gray-900">{{ $avgScore }}/100</p>
+                        <p class="mt-1 text-xs text-gray-500">Chỉ tính bài Writing có điểm</p>
+                    </div>
+                    <div class="flex-shrink-0 bg-blue-100 rounded-full p-3">
+                        <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Hôm nay</p>
+                        <p class="mt-1 text-3xl font-semibold text-gray-900">{{ $todayAttempts }}</p>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Tuần: {{ $weekAttempts }} | Tháng: {{ $monthAttempts }}
+                        </p>
+                    </div>
+                    <div class="flex-shrink-0 bg-purple-100 rounded-full p-3">
+                        <svg class="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attempts by Type -->
+    @if($attemptsByType->isNotEmpty())
+    <div class="mt-8 bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Lần làm bài theo loại</h2>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            @foreach($attemptsByType as $typeStat)
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="text-sm font-medium text-gray-500">{{ $typeStat['name'] }}</div>
+                <div class="mt-1 text-2xl font-semibold text-gray-900">{{ $typeStat['count'] }}</div>
+                <div class="mt-1 text-xs text-gray-500">
+                    Đúng: {{ $typeStat['correct'] }} ({{ $typeStat['count'] > 0 ? round(($typeStat['correct'] / $typeStat['count']) * 100, 1) : 0 }}%)
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    <!-- Recent Attempts -->
+    @if($recentAttempts->isNotEmpty())
+    <div class="mt-8 bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Lần làm bài gần đây</h2>
+            <a href="{{ route('admin.attempts.index') }}" class="text-sm text-blue-600 hover:text-blue-800">Xem tất cả →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Người dùng</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Câu hỏi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loại</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kết quả</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Điểm</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($recentAttempts as $attempt)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {{ $attempt->user->name ?? 'N/A' }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            {{ Str::limit($attempt->question->prompt_text ?? 'N/A', 30) }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            {{ $attempt->question->exercise->type->code ?? 'N/A' }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            @if($attempt->is_correct)
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Đúng</span>
+                            @else
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Sai</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            @if($attempt->score !== null)
+                                {{ $attempt->score }}/100
+                            @else
+                                <span class="text-gray-400">—</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            {{ $attempt->created_at ? $attempt->created_at->diffForHumans() : 'N/A' }}
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    <!-- Warnings -->
+    @if($exercisesWithoutQuestions > 0 || $speakingQuestionsWithoutImg > 0)
+    <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <h2 class="text-lg font-bold text-yellow-900 mb-3">⚠️ Cần chú ý</h2>
+        <ul class="space-y-2 text-sm text-yellow-800">
+            @if($exercisesWithoutQuestions > 0)
+            <li>• Có <strong>{{ $exercisesWithoutQuestions }}</strong> bài tập chưa có câu hỏi</li>
+            @endif
+            @if($speakingQuestionsWithoutImg > 0)
+            <li>• Có <strong>{{ $speakingQuestionsWithoutImg }}</strong> câu hỏi Speaking chưa có hình ảnh</li>
+            @endif
+        </ul>
+    </div>
+    @endif
+
     <!-- Quick Actions -->
     <div class="mt-8 bg-white shadow rounded-lg p-6">
         <h2 class="text-xl font-bold text-gray-900 mb-4">Thao tác nhanh</h2>

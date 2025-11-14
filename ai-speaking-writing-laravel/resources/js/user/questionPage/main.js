@@ -1,9 +1,18 @@
 //import './utils/translationBySelectText'
 import { isEmpty } from 'lodash';
-import confetti from 'canvas-confetti';
 import questionApi from '../../api/questionApi';
 import { initTranslationFeature } from './translationBySelectText';
 import Feedback from './writing-feedback';
+import {
+    getExerciseType,
+    clearUserAudio,
+    setLoadingState,
+    triggerSuccessEffect,
+    sanitizeFeedbackMessage,
+    extractScoreFromFeedback,
+    toNumber
+} from './helpers';
+import * as Navigation from './navigation';
 
 // Current question id
 const question = window.appData.question;
@@ -77,259 +86,13 @@ let mediaRecorder = null, mediaStream = null, chunks = [];
 let mediaSupported = false;
 let isRecording = false;
 
-function triggerSuccessEffect(score = null) {
-    try {
-        const intensity = score && Number.isFinite(score) ? Math.min(Math.max(score, 50), 100) : 90;
-        confetti({
-            particleCount: Math.round(intensity),
-            startVelocity: 35,
-            spread: 65,
-            origin: { y: 0.6 },
-            scalar: 0.8,
-        });
-    } catch (error) {
-        console.warn('[questionPage] Không thể chạy hiệu ứng confetti', error);
-    }
-}
-
-function sanitizeFeedbackMessage(feedback, answer = '') {
-    if (!feedback) return feedback;
-    const trimmedAnswer = (answer || '').trim();
-    if (!trimmedAnswer) return feedback;
-
-    const endsWithPunctuation = /[.!?…]+$/.test(trimmedAnswer);
-    if (!endsWithPunctuation) return feedback;
-
-    return feedback.replace(/Lần sau con nhớ thêm dấu chấm cuối câu nhé\.*\s*/gi, '').trim();
-}
-
-function extractScoreFromFeedback(feedback) {
-    if (!feedback) return null;
-    const scoreMatch = feedback.match(/Điểm:\s*(\d+)\s*\/\s*100/i);
-    if (scoreMatch && scoreMatch[1]) {
-        const parsed = Number.parseInt(scoreMatch[1], 10);
-        return Number.isNaN(parsed) ? null : parsed;
-    }
-    return null;
-}
-
-const toNumber = (value) => {
-    if (value === null || value === undefined || value === '') return null;
-    const num = Number(value);
-    return Number.isNaN(num) ? null : num;
-};
+// Helper functions đã được tách ra helpers.js
 
 let activeTypeCode = currentContext.type || (question?.exercise?.type?.code ?? (navigationData[0]?.code ?? null));
 let activeLessonId = toNumber(currentContext.lesson_id ?? question?.exercise?.lesson_id);
 let activeExerciseId = toNumber(currentContext.exercise_id ?? question?.exercise?.id);
 
-// Get all unique lessons from all types
-function getAllLessons() {
-    const lessonsMap = new Map();
-    
-    // Collect all lessons from all types
-    for (const type of navigationData) {
-        if (!Array.isArray(type.lessons)) continue;
-        for (const lesson of type.lessons) {
-            const lessonId = Number(lesson.id);
-            if (!lessonsMap.has(lessonId)) {
-                lessonsMap.set(lessonId, {
-                    id: lesson.id,
-                    title: lesson.title,
-                });
-            }
-        }
-    }
-    
-    return Array.from(lessonsMap.values());
-}
-
-// Check if a lesson has any types (has exercises with questions)
-function lessonHasTypes(lessonId) {
-    if (!lessonId) return false;
-    
-    for (const type of navigationData) {
-        const lessonData = type.lessons?.find((lesson) => Number(lesson.id) === Number(lessonId));
-        if (lessonData && Array.isArray(lessonData.exercises) && lessonData.exercises.length > 0) {
-            // Check if lesson has at least one exercise with questions
-            const hasQuestions = lessonData.exercises.some((exercise) => {
-                return getFirstQuestionIdFromExercise(exercise) !== null;
-            });
-            if (hasQuestions) {
-                return true;
-            }
-        }
-    }
-    
-    return false;
-}
-
-// Get available types for a lesson (filter types that have exercises in this lesson)
-function getAvailableTypesForLesson(lessonId) {
-    if (!lessonId) return [];
-    
-    const availableTypes = [];
-    
-    // Loop through all types to find which ones have this lesson
-    for (const type of navigationData) {
-        const lessonData = type.lessons?.find((lesson) => Number(lesson.id) === Number(lessonId));
-        if (lessonData && Array.isArray(lessonData.exercises) && lessonData.exercises.length > 0) {
-            // Check if lesson has at least one exercise with questions
-            const hasQuestions = lessonData.exercises.some((exercise) => {
-                return getFirstQuestionIdFromExercise(exercise) !== null;
-            });
-            
-            if (hasQuestions) {
-                availableTypes.push(type);
-            }
-        }
-    }
-    
-    return availableTypes;
-}
-
-// Get available lessons for a type
-function getAvailableLessonsForType(typeCode) {
-    if (!typeCode) return [];
-    
-    const typeData = navigationData.find((type) => type.code === typeCode);
-    if (!typeData) return [];
-    
-    return Array.isArray(typeData.lessons) ? typeData.lessons : [];
-}
-
-function renderTypeOptions(lessonId = null) {
-    if (!typeSelect) return;
-    
-    // LUÔN LUÔN hiển thị tất cả types (không filter)
-    // Nếu có lessonId, highlight types có trong lesson đó
-    const allTypes = navigationData;
-    const availableTypesForLesson = lessonId ? getAvailableTypesForLesson(lessonId) : [];
-    
-    if (!allTypes.length) {
-        typeSelect.innerHTML = '<option value="">Không có dạng bài</option>';
-        typeSelect.disabled = true;
-        return;
-    }
-
-    // Hiển thị tất cả types, nhưng highlight types có trong lesson hiện tại
-    const optionsHtml = allTypes.map((type) => {
-        const label = type.name || type.code;
-        const selected = type.code === activeTypeCode ? 'selected' : '';
-        // Nếu có lessonId và type không có trong lesson, vẫn hiển thị nhưng có thể style khác
-        const isAvailable = !lessonId || availableTypesForLesson.some((t) => t.code === type.code);
-        return `<option value="${type.code}" ${selected} ${!isAvailable ? 'style="color: #999;"' : ''}>${label}</option>`;
-    }).join('');
-
-    typeSelect.innerHTML = optionsHtml;
-    
-    // Nếu có lessonId và lesson chỉ có 1 type hoặc không có type → lock type selector
-    if (lessonId) {
-        if (availableTypesForLesson.length <= 1) {
-            // Lesson chỉ có 1 type hoặc không có type → lock type selector
-            typeSelect.disabled = true;
-        } else {
-            // Lesson có nhiều hơn 1 type → unlock type selector
-            typeSelect.disabled = false;
-        }
-    } else {
-        // Không có lessonId → unlock type selector
-        typeSelect.disabled = false;
-    }
-}
-
-function updateLessonOptions(typeCode = null) {
-    if (!lessonSelect) return;
-    
-    // LUÔN LUÔN hiển thị tất cả lessons (không filter theo type)
-    const allLessons = getAllLessons();
-    
-    if (!allLessons.length) {
-        lessonSelect.innerHTML = '<option value="">Không có bài học</option>';
-        lessonSelect.disabled = true;
-        activeLessonId = null;
-        return;
-    }
-
-    // Nếu có typeCode, lấy danh sách lessons có trong type đó để highlight
-    const lessonsInType = typeCode ? getAvailableLessonsForType(typeCode).map((l) => Number(l.id)) : [];
-
-    // Hiển thị tất cả lessons, nhưng disable lesson nếu lesson đó không có type nào
-    const optionsHtml = allLessons.map((lesson) => {
-        const lessonId = Number(lesson.id);
-        const selected = lessonId === Number(activeLessonId) ? 'selected' : '';
-        const hasTypes = lessonHasTypes(lessonId);
-        const disabled = !hasTypes ? 'disabled' : '';
-        const style = !hasTypes ? 'style="color: #999;"' : '';
-        // Nếu có typeCode và lesson không có trong type đó, vẫn hiển thị nhưng có thể style khác
-        const isInType = !typeCode || lessonsInType.includes(lessonId);
-        return `<option value="${lesson.id}" ${selected} ${disabled} ${style}>${lesson.title}</option>`;
-    }).join('');
-
-    lessonSelect.innerHTML = optionsHtml;
-    // KHÔNG disable lesson selector (chỉ disable từng option)
-    lessonSelect.disabled = false;
-    
-    // Nếu current lesson không có types, không tự động chọn lesson khác (giữ nguyên selection)
-    // Chỉ đảm bảo lesson hiện tại có trong list
-    if (activeLessonId && !allLessons.some((lesson) => Number(lesson.id) === activeLessonId)) {
-        // Nếu lesson hiện tại không có trong list, tìm lesson đầu tiên có types
-        const firstAvailableLesson = allLessons.find((lesson) => lessonHasTypes(Number(lesson.id)));
-        if (firstAvailableLesson) {
-            activeLessonId = Number(firstAvailableLesson.id);
-            lessonSelect.value = String(activeLessonId);
-        }
-    }
-}
-
-function getFirstQuestionIdFromExercise(exerciseItem) {
-    if (!exerciseItem) return null;
-    if (exerciseItem.first_question_id) return exerciseItem.first_question_id;
-    if (Array.isArray(exerciseItem.questions) && exerciseItem.questions.length > 0) {
-        return exerciseItem.questions[0].id ?? null;
-    }
-    return null;
-}
-
-// Get first question ID from a lesson (loops through all exercises in lesson)
-function getFirstQuestionIdFromLesson(typeCode, lessonId) {
-    if (!typeCode || !lessonId) return null;
-
-    const typeData = navigationData.find((type) => type.code === typeCode);
-    if (!typeData) return null;
-
-    const lessonData = typeData.lessons?.find((lesson) => Number(lesson.id) === Number(lessonId));
-    if (!lessonData) return null;
-
-    const exercises = Array.isArray(lessonData.exercises) ? lessonData.exercises : [];
-    
-    // Loop through exercises to find first question
-    for (const exercise of exercises) {
-        const questionId = getFirstQuestionIdFromExercise(exercise);
-        if (questionId) {
-            return Number(questionId);
-        }
-    }
-
-    return null;
-}
-
-function getFirstQuestionIdForType(typeCode) {
-    const typeData = navigationData.find((type) => type.code === typeCode);
-    if (!typeData || !Array.isArray(typeData.lessons)) return null;
-
-    for (const lesson of typeData.lessons) {
-        if (!Array.isArray(lesson.exercises)) continue;
-        for (const exercise of lesson.exercises) {
-            const questionId = getFirstQuestionIdFromExercise(exercise);
-            if (questionId) {
-                return Number(questionId);
-            }
-        }
-    }
-
-    return null;
-}
+// Navigation functions đã được tách ra navigation.js
 
 function initNavigationSelectors() {
     if (!navigationData.length) return;
@@ -339,58 +102,43 @@ function initNavigationSelectors() {
     }
 
     // Initialize: hiển thị tất cả lessons và types
-    updateLessonOptions(activeTypeCode); // Hiển thị tất cả lessons, nhưng có thể highlight theo type
-    renderTypeOptions(activeLessonId); // Hiển thị tất cả types, lock/unlock dựa trên số lượng types trong lesson
+    Navigation.updateLessonOptions(activeTypeCode, activeLessonId, lessonSelect, navigationData);
+    Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
 
     // Đảm bảo activeLessonId và activeTypeCode có thể kết hợp được
     if (activeLessonId && activeTypeCode) {
-        const availableTypes = getAvailableTypesForLesson(activeLessonId);
-        const availableLessons = getAvailableLessonsForType(activeTypeCode);
+        const availableTypes = Navigation.getAvailableTypesForLesson(activeLessonId, navigationData);
+        const availableLessons = Navigation.getAvailableLessonsForType(activeTypeCode, navigationData);
         
-        // Nếu lesson hiện tại không có trong type hiện tại, tìm lesson đầu tiên có types trong type này
         if (availableLessons.length > 0 && !availableLessons.some((l) => Number(l.id) === activeLessonId)) {
-            const firstLessonWithTypes = availableLessons.find((lesson) => lessonHasTypes(Number(lesson.id)));
+            const firstLessonWithTypes = availableLessons.find((lesson) => Navigation.lessonHasTypes(Number(lesson.id), navigationData));
             if (firstLessonWithTypes) {
                 activeLessonId = Number(firstLessonWithTypes.id);
-                if (lessonSelect) {
-                    lessonSelect.value = String(activeLessonId);
-                }
-                // Update type options sau khi thay đổi lesson
-                renderTypeOptions(activeLessonId);
+                if (lessonSelect) lessonSelect.value = String(activeLessonId);
+                Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
             }
         }
         
-        // Nếu type hiện tại không có trong lesson hiện tại, switch to first available type
         if (availableTypes.length > 0 && !availableTypes.some((t) => t.code === activeTypeCode)) {
             activeTypeCode = availableTypes[0].code;
-            if (typeSelect) {
-                typeSelect.value = activeTypeCode;
-            }
+            if (typeSelect) typeSelect.value = activeTypeCode;
         }
     } else if (activeLessonId) {
-        // Có lesson nhưng không có type, tìm type đầu tiên có trong lesson
-        const availableTypes = getAvailableTypesForLesson(activeLessonId);
+        const availableTypes = Navigation.getAvailableTypesForLesson(activeLessonId, navigationData);
         if (availableTypes.length > 0) {
             activeTypeCode = availableTypes[0].code;
-            if (typeSelect) {
-                typeSelect.value = activeTypeCode;
-            }
+            if (typeSelect) typeSelect.value = activeTypeCode;
         }
-        // Update type options sau khi cập nhật type
-        renderTypeOptions(activeLessonId);
+        Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
     } else if (activeTypeCode) {
-        // Có type nhưng không có lesson, tìm lesson đầu tiên có trong type
-        const availableLessons = getAvailableLessonsForType(activeTypeCode);
-        const firstLessonWithTypes = availableLessons.find((lesson) => lessonHasTypes(Number(lesson.id)));
+        const availableLessons = Navigation.getAvailableLessonsForType(activeTypeCode, navigationData);
+        const firstLessonWithTypes = availableLessons.find((lesson) => Navigation.lessonHasTypes(Number(lesson.id), navigationData));
         if (firstLessonWithTypes) {
             activeLessonId = Number(firstLessonWithTypes.id);
-            if (lessonSelect) {
-                lessonSelect.value = String(activeLessonId);
-            }
+            if (lessonSelect) lessonSelect.value = String(activeLessonId);
         }
-        // Update lesson options sau khi cập nhật lesson
-        updateLessonOptions(activeTypeCode);
-        renderTypeOptions(activeLessonId);
+        Navigation.updateLessonOptions(activeTypeCode, activeLessonId, lessonSelect, navigationData);
+        Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
     }
 
     if (typeSelect) {
@@ -400,51 +148,27 @@ function initNavigationSelectors() {
 
             activeTypeCode = selectedType;
             activeExerciseId = null;
-
-            // Update lessons: hiển thị tất cả lessons (nhưng có thể highlight theo type)
-            updateLessonOptions(activeTypeCode);
+            Navigation.updateLessonOptions(activeTypeCode, activeLessonId, lessonSelect, navigationData);
             
-            // Tìm question từ type và lesson hiện tại
-            // Nếu lesson hiện tại có trong type mới, dùng lesson hiện tại
-            const availableLessons = getAvailableLessonsForType(activeTypeCode);
+            const availableLessons = Navigation.getAvailableLessonsForType(activeTypeCode, navigationData);
             const currentLessonInType = availableLessons.find((lesson) => Number(lesson.id) === activeLessonId);
             
-            if (currentLessonInType && lessonHasTypes(activeLessonId)) {
-                // Lesson hiện tại có trong type mới và có types
-                // Update type options (sẽ lock/unlock dựa trên số lượng types trong lesson)
-                renderTypeOptions(activeLessonId);
-                
-                const questionId = getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId);
-                if (questionId) {
-                    window.location.assign(`/embed/question/${questionId}`);
-                }
+            if (currentLessonInType && Navigation.lessonHasTypes(activeLessonId, navigationData)) {
+                Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
+                const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
+                if (questionId) window.location.assign(`/embed/question/${questionId}`);
             } else {
-                // Lesson hiện tại không có trong type mới hoặc không có types
-                // Tìm lesson đầu tiên có types trong type mới
-                const firstLessonWithTypes = availableLessons.find((lesson) => lessonHasTypes(Number(lesson.id)));
-                
+                const firstLessonWithTypes = availableLessons.find((lesson) => Navigation.lessonHasTypes(Number(lesson.id), navigationData));
                 if (firstLessonWithTypes) {
                     activeLessonId = Number(firstLessonWithTypes.id);
-                    if (lessonSelect) {
-                        lessonSelect.value = String(activeLessonId);
-                    }
-                    
-                    // Update type options sau khi thay đổi lesson (sẽ lock/unlock dựa trên số lượng types)
-                    renderTypeOptions(activeLessonId);
-                    
-                    const questionId = getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId);
-                    if (questionId) {
-                        window.location.assign(`/embed/question/${questionId}`);
-                    }
+                    if (lessonSelect) lessonSelect.value = String(activeLessonId);
+                    Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
+                    const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
+                    if (questionId) window.location.assign(`/embed/question/${questionId}`);
                 } else {
-                    // Nếu type không có lesson nào, tìm question đầu tiên trong type
-                    // Type selector sẽ không bị lock (vì không có lesson nào)
-                    renderTypeOptions(null);
-                    
-                    const questionId = getFirstQuestionIdForType(activeTypeCode);
-                    if (questionId) {
-                        window.location.assign(`/embed/question/${questionId}`);
-                    }
+                    Navigation.renderTypeOptions(null, activeTypeCode, typeSelect, navigationData);
+                    const questionId = Navigation.getFirstQuestionIdForType(activeTypeCode, navigationData);
+                    if (questionId) window.location.assign(`/embed/question/${questionId}`);
                 }
             }
         });
@@ -455,42 +179,29 @@ function initNavigationSelectors() {
             const selectedLessonId = toNumber(e.target.value);
             if (!selectedLessonId || selectedLessonId === activeLessonId) return;
             
-            // Check if lesson has types
-            if (!lessonHasTypes(selectedLessonId)) {
+            if (!Navigation.lessonHasTypes(selectedLessonId, navigationData)) {
                 console.warn('Lesson does not have any types');
-                // Vẫn cho phép chọn lesson này, nhưng sẽ disable type selector
                 activeLessonId = selectedLessonId;
-                renderTypeOptions(activeLessonId);
+                Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
                 return;
             }
 
             activeLessonId = selectedLessonId;
             activeExerciseId = null;
-
-            // Filter types theo lesson (nhưng vẫn hiển thị tất cả)
-            // renderTypeOptions sẽ tự động lock/unlock type selector dựa trên số lượng types
-            renderTypeOptions(activeLessonId);
+            Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
             
-            // Đảm bảo type hiện tại có trong lesson
-            const availableTypes = getAvailableTypesForLesson(activeLessonId);
+            const availableTypes = Navigation.getAvailableTypesForLesson(activeLessonId, navigationData);
             if (availableTypes.length > 0) {
                 if (!availableTypes.some((type) => type.code === activeTypeCode)) {
-                    // Current type not in lesson, switch to first available type
                     activeTypeCode = availableTypes[0].code;
-                    if (typeSelect) {
-                        typeSelect.value = activeTypeCode;
-                    }
+                    if (typeSelect) typeSelect.value = activeTypeCode;
                 }
             } else {
-                // Lesson không có type nào, giữ nguyên type hiện tại (nhưng type selector sẽ bị lock)
                 console.warn('Lesson does not have any available types');
             }
             
-            const questionId = getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId);
-
-            if (questionId) {
-                window.location.assign(`/embed/question/${questionId}`);
-            }
+            const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
+            if (questionId) window.location.assign(`/embed/question/${questionId}`);
         });
     }
 }
@@ -501,10 +212,11 @@ function hydrateQuestionContent() {
     const exercise = question.exercise || {};
     const exerciseType = exercise.type || {};
     const lesson = exercise.lesson || {};
-    const rawTypeCode = (exerciseType.code || '').toString().toUpperCase();
-    const isWritingType = rawTypeCode.startsWith('W');
-    const isSpeakingType = rawTypeCode.startsWith('S');
-    const isWcs = rawTypeCode === 'WCS';
+    const type = getExerciseType(question);
+    const isWritingType = type.isWriting;
+    const isSpeakingType = type.isSpeaking;
+    const isWcs = type.isWcs;
+    const rawTypeCode = type.code;
 
     if (writingWrapper) {
         writingWrapper.style.display = isWritingType ? '' : 'none';
@@ -617,8 +329,8 @@ async function setSampleAudio() {
         return;
     }
 
-    const typeCode = (question?.exercise?.type?.code || '').toString().toUpperCase();
-    if (!typeCode.startsWith('S')) {
+    const type = getExerciseType(question);
+    if (!type.isSpeaking) {
         sampleAudioBtn.onclick = null;
         sampleAudioBtn.disabled = false;
         return;
@@ -912,7 +624,24 @@ async function stopRec() {
         }
     }
 
-    // Đảm bảo có userAnswer trước khi submit
+    // Kiểm tra nếu không có audioBlob hoặc audioBlob quá nhỏ (có thể không có tiếng nói)
+    const MIN_AUDIO_SIZE = 1000; // 1KB - ngưỡng tối thiểu để coi là có audio
+    if (!audioBlob || audioBlob.size < MIN_AUDIO_SIZE) {
+        console.warn('Không có audio hoặc audio quá nhỏ', {
+            hasAudioBlob: !!audioBlob,
+            audioBlobSize: audioBlob?.size || 0,
+            userAnswer: userAnswer
+        });
+        if (errorEl) {
+            showError('Bạn chưa ghi âm hoặc không có tiếng nói. Vui lòng bấm nút mic và đọc câu trả lời rõ ràng.');
+        }
+        if (recordingIndicator) {
+            recordingIndicator.style.display = 'none';
+        }
+        clearUserAudio(userAudio);
+        return;
+    }
+
     // Nếu SpeechRecognition không nhận được text, dùng STT API
     if ((!userAnswer || userAnswer.trim() === '') && mediaSupported && audioBlob) {
         console.log('SpeechRecognition không nhận được text, dùng STT API...');
@@ -924,16 +653,11 @@ async function stopRec() {
     const finalUserAnswer = userAnswer || savedUserAnswer || '';
     if (!finalUserAnswer || finalUserAnswer.trim() === '') {
         console.warn('Không có userAnswer để submit', {
-            userAnswer: userAnswer,
-            savedUserAnswer: savedUserAnswer,
-            audioBlobSize: audioBlob?.size || 0
+            userAnswer, savedUserAnswer, audioBlobSize: audioBlob?.size || 0
         });
-        if (errorEl) {
-            showError('Vui lòng đọc nội dung rõ ràng hơn.');
-        }
-        if (recordingIndicator) {
-            recordingIndicator.style.display = 'none';
-        }
+        showError('Không nhận được giọng nói. Vui lòng đọc lại rõ ràng và đầy đủ hơn.');
+        if (recordingIndicator) recordingIndicator.style.display = 'none';
+        clearUserAudio(userAudio);
         return;
     }
 
@@ -965,14 +689,12 @@ function playUiSound(type) {
 }
 
 function validateAnswer(answer) {
-    const exerciseTypeCode = (question?.exercise?.type?.code || '').toString().toUpperCase();
-    const isWcs = exerciseTypeCode === 'WCS';
-    const isWritingType = exerciseTypeCode.startsWith('W');
-    
-    if (!isWritingType) {
-        // Not a writing exercise, skip validation
-        return;
+    const type = getExerciseType(question);
+    if (!type.isWriting) {
+        return; // Not a writing exercise, skip validation
     }
+    
+    const isWcs = type.isWcs;
     
     if (isWcs) {
         if (answerSuffixEl) {
@@ -1012,113 +734,62 @@ function validateAnswer(answer) {
 
 // Submit answer
 async function submitAnswer(answerText='', audioBlob=null) {
-    // Xác định loại exercise
-    const exerciseTypeCode = (question?.exercise?.type?.code || '').toString().toUpperCase();
-    const isWritingType = exerciseTypeCode.startsWith('W');
-    const isSpeakingType = exerciseTypeCode.startsWith('S');
-    
-    // Dùng tham số answerText, nếu rỗng thì dùng biến global userAnswer (cho speaking)
+    const type = getExerciseType(question);
     let finalAnswer = answerText || userAnswer;
     
-    if (isWritingType) {
-        // Writing exercise
+    if (type.isWriting) {
         validateAnswer(finalAnswer);
         finalAnswer = answerField?.value || finalAnswer;
-
         console.log("User answer (Writing): " + finalAnswer);
 
         if (isEmpty(finalAnswer)) {
             showError('Vui lòng nhập câu trả lời.');
             return;
         }
-
-        if (submitBtn) {
-            if (!submitBtn.dataset.originalContent) {
-                submitBtn.dataset.originalContent = submitBtn.innerHTML;
-            }
-            const loadingText = submitBtn.dataset.loadingText || 'Đang chấm bài...';
-            submitBtn.innerHTML = `<span class="btn-loader"></span><span>${loadingText}</span>`;
-            submitBtn.classList.add('is-loading');
-            submitBtn.disabled = true;
-        }
-        if (loadingEl) loadingEl.style.display = 'flex';
-        if (errorEl) errorEl.style.display = 'none';
-    } else if (isSpeakingType) {
-        // Speaking exercise (SPS, SPW)
-        console.log("Speaking exercise detected, type:", exerciseTypeCode);
-        console.log("finalAnswer before check:", finalAnswer);
-        console.log("audioBlob:", audioBlob ? `size: ${audioBlob.size}` : 'null');
+        setLoadingState(true, submitBtn, loadingEl, errorEl);
+    } else if (type.isSpeaking) {
+        console.log("Speaking exercise detected, type:", type.code);
         
         if (!finalAnswer || finalAnswer.trim() === '') {
-            console.error("No userAnswer found for speaking exercise");
             showError('Vui lòng đọc nội dung.');
             if (recordingIndicator) recordingIndicator.style.display = 'none';
             return;
         }
 
         if (!audioBlob) {
-            console.error("No audioBlob found for speaking exercise");
             showError('Không có file ghi âm. Vui lòng ghi âm lại.');
             return;
         }
 
         console.log("User answer (Speaking): " + finalAnswer);
-        console.log("Audio blob size:", audioBlob.size, "type:", audioBlob.type);
-
-        // Đảm bảo userAudio đã được set trong stopRec()
         if (userAudio && !userAudio.src) {
             userAudio.src = URL.createObjectURL(audioBlob);
         }
-        if (userAudio) {
-            userAudio.style.display = 'block';
-        }
-        
-        // Set loading state for speaking
-        if (submitBtn) {
-            if (!submitBtn.dataset.originalContent) {
-                submitBtn.dataset.originalContent = submitBtn.innerHTML;
-            }
-            const loadingText = submitBtn.dataset.loadingText || 'Đang chấm bài...';
-            submitBtn.innerHTML = `<span class="btn-loader"></span><span>${loadingText}</span>`;
-            submitBtn.classList.add('is-loading');
-            submitBtn.disabled = true;
-        }
-        if (loadingEl) loadingEl.style.display = 'flex';
-        if (errorEl) errorEl.style.display = 'none';
+        if (userAudio) userAudio.style.display = 'block';
+        setLoadingState(true, submitBtn, loadingEl, errorEl);
     } else {
-        console.error("Unknown exercise type:", exerciseTypeCode);
         showError('Không xác định được loại bài tập.');
         return;
     }
 
     playUiSound('button');
-
     if (resultCard) resultCard.style.display = 'none';
 
     try {
         const response = await questionApi.evaluateAnswer(userId, question.id, finalAnswer, audioBlob);
-
         renderResult(response.data);
     } catch (error) {
         showError(error.message);
     } finally {
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('is-loading');
-            submitBtn.innerHTML = submitBtn.dataset.originalContent || 'Gửi câu trả lời';
-        }
-        if (loadingEl) loadingEl.style.display = 'none';
+        setLoadingState(false, submitBtn, loadingEl, errorEl);
     }
 }
 
 function resetAnswer() {
-    const exerciseTypeCode = (question?.exercise?.type?.code || '').toString().toUpperCase();
-    const isWcs = exerciseTypeCode === 'WCS';
-    const isWritingType = exerciseTypeCode.startsWith('W');
-    const isSpeakingType = exerciseTypeCode.startsWith('S');
+    const type = getExerciseType(question);
     
-    if (isWritingType) {
-        if (isWcs) {
+    if (type.isWriting) {
+        if (type.isWcs) {
             if (answerSuffixEl) {
                 answerSuffixEl.value = '';
                 answerSuffixEl.placeholder = '...';
@@ -1134,12 +805,8 @@ function resetAnswer() {
                 : 'Viết câu trả lời của con tại đây...';
             answerField.focus();
         }
-    } else if (isSpeakingType) {
-        // Reset speaking: clear audio and userAnswer
-        if (userAudio) {
-            userAudio.style.display = 'none';
-            userAudio.src = '';
-        }
+    } else if (type.isSpeaking) {
+        clearUserAudio(userAudio);
         userAnswer = '';
         if (recordingIndicator) {
             recordingIndicator.style.display = 'none';
@@ -1170,20 +837,16 @@ function renderResult(data) {
     let score = null;
     let numericScore = null;
 
-    // Xác định loại exercise
-    const exerciseTypeCode = (question?.exercise?.type?.code || '').toString().toUpperCase();
-    const isWritingType = exerciseTypeCode.startsWith('W');
-    const isSpeakingType = exerciseTypeCode.startsWith('S');
-    
+    const type = getExerciseType(question);
     const userWrittenAnswer = answerField?.value ?? '';
     let rawFeedback = data.feedback || '';
 
-    if (isWritingType) {
+    if (type.isWriting) {
         rawFeedback = sanitizeFeedbackMessage(rawFeedback, userWrittenAnswer);
         numericScore = Number.isFinite(data.score) ? Number(data.score) : extractScoreFromFeedback(rawFeedback);
         score = Number.isFinite(numericScore) ? `${numericScore}/100` : 'N/A';
         feedbackText = Feedback.formatFeedbackForKids ? Feedback.formatFeedbackForKids(rawFeedback) : rawFeedback;
-    } else if (isSpeakingType) {
+    } else if (type.isSpeaking) {
         // Speaking exercise (SPS, SPW)
         feedbackText = data.feedback || '';
         // Use score from backend if available, otherwise calculate from is_correct

@@ -41,20 +41,20 @@ class AttemptService
             'user_audio_url' => null,
             'is_correct' => $result['is_correct'],
             'feedback' => $result['feedback'],
+            'score' => $result['score'] ?? null, // Lưu score vào database
+            'evaluation_meta' => $result['evaluation_meta'] ?? null, // Lưu evaluation_meta vào database
             'created_at' => now(),
         ]);
 
-        // Add metadata to response
+        // Add metadata to response (for backward compatibility)
         $metadata = [
-            'score' => $result['score'] ?? null,
             'template_used' => $result['template_used'] ?? null,
             'extracted_value' => $result['extracted_value'] ?? null,
-            'evaluation_meta' => $result['evaluation_meta'] ?? null,
         ];
 
         $this->loadAttemptRelations($attempt);
         
-        // Add metadata back to attempt object after loading relations
+        // Add metadata back to attempt object after loading relations (for response only)
         foreach ($metadata as $key => $value) {
             $attempt->{$key} = $value;
         }
@@ -107,6 +107,7 @@ class AttemptService
             'user_audio_url' => $userAudioUrl ?? null,
             'is_correct'     => $isCorrect,
             'feedback'       => $feedback,
+            // Không lưu score cho speaking - chỉ cần is_correct (đúng/sai)
             'created_at'     => now(),
         ]);
 
@@ -116,9 +117,6 @@ class AttemptService
             'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
             'user:id,name,email'
         ]);
-
-        // Add score to attempt object for response
-        $attempt->score = $score;
 
         return $attempt;
     }

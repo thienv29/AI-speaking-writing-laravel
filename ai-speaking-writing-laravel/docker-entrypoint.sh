@@ -37,6 +37,8 @@ wait_for_mysql() {
             exit(1); 
         }" 2>/dev/null; then
             # MySQL is up, ensure database and user exist
+            # Note: MySQL container may have already created the user via MYSQL_USER env var
+            # We need to ensure it uses mysql_native_password plugin for compatibility
             php -r "
             try {
                 \$pdo = new PDO('mysql:host=${DB_HOST}', 'root', '${root_password}');
@@ -47,9 +49,9 @@ wait_for_mysql() {
                 \$userExists = \$stmt->fetchColumn() > 0;
                 
                 if (!\$userExists) {
-                    \$pdo->exec(\"CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}'\");
+                    \$pdo->exec(\"CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD}'\");
                 } else {
-                    \$pdo->exec(\"ALTER USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}'\");
+                    \$pdo->exec(\"ALTER USER '${DB_USERNAME}'@'%' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD}'\");
                 }
                 
                 \$pdo->exec(\"GRANT ALL PRIVILEGES ON ${DB_DATABASE}.* TO '${DB_USERNAME}'@'%'\");
@@ -58,7 +60,10 @@ wait_for_mysql() {
             } catch (PDOException \$e) {
                 exit(1);
             }
-            " 2>/dev/null
+            " 2>/dev/null || true
+            
+            # Wait a bit for privileges to take effect
+            sleep 1
             
             # Now try to connect with the app user
             if php -r "try { 
@@ -71,6 +76,20 @@ wait_for_mysql() {
             }" 2>/dev/null; then
                 log_info "MySQL is ready!"
                 return 0
+            else
+                # If connection fails, try one more time after a short delay
+                sleep 2
+                if php -r "try { 
+                    \$pdo = new PDO('mysql:host=${DB_HOST};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}'); 
+                    \$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    \$pdo->query('SELECT 1');
+                    exit(0); 
+                } catch (PDOException \$e) { 
+                    exit(1); 
+                }" 2>/dev/null; then
+                    log_info "MySQL is ready!"
+                    return 0
+                fi
             fi
         fi
         
