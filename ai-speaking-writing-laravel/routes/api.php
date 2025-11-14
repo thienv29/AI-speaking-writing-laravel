@@ -10,8 +10,13 @@ use App\Http\Controllers\ExerciseTypeController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\AttemptController;
 use App\Http\Controllers\TranslationController;
+use App\Http\Controllers\SpeechController;
 
 Route::post('/translate', [TranslationController::class, 'translate']);
+
+// Speech service proxy routes
+Route::post('/tts', [SpeechController::class, 'textToSpeech'])->name('api.tts');
+Route::post('/stt', [SpeechController::class, 'speechToText'])->name('api.stt');
 
 Route::post('/lessons/{id}/restore', [LessonController::class, 'restore']);
 Route::resource('lessons', LessonController::class);

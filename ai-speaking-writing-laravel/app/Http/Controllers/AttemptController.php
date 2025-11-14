@@ -95,19 +95,39 @@ class AttemptController extends Controller
                 $userAudioUrl = Storage::url('user_audio_url/' . $filename);
             }
 
-            // Check if this is a writing attempt (has user_answer but no user_audio_url)
-            $isWritingAttempt = !empty($userAnswer) && empty($userAudioUrl);
+            // Xác định loại bài tập dựa trên exercise type code
+            $question = \App\Models\Question::with('exercise.type')->findOrFail($questionId);
+            $exerciseTypeCode = $question->exercise->type->code ?? '';
             
-            if ($isWritingAttempt) {
+            // Writing exercises: WAQ, WCS, WSG
+            // Speaking exercises: SPS, SPW
+            $isWritingExercise = in_array($exerciseTypeCode, ['WAQ', 'WCS', 'WSG']);
+            $isSpeakingExercise = in_array($exerciseTypeCode, ['SPS', 'SPW']);
+            
+            if ($isWritingExercise) {
                 // Auto-evaluate writing using AttemptService
                 $attempt = $this->attemptService->evaluateWritingAttempt(
                     $questionId, $userId, $userAnswer
                 );
             } 
-            else {
+            elseif ($isSpeakingExercise) {
+                // Auto-evaluate speaking
                 $attempt = $this->attemptService->evaluateSpeakingAttempt(
                     $questionId, $userId, $userAnswer, $userAudioUrl
                 );
+            }
+            else {
+                // Fallback: dùng logic cũ nếu không xác định được type
+                $isWritingAttempt = !empty($userAnswer) && empty($userAudioUrl);
+                if ($isWritingAttempt) {
+                    $attempt = $this->attemptService->evaluateWritingAttempt(
+                        $questionId, $userId, $userAnswer
+                    );
+                } else {
+                    $attempt = $this->attemptService->evaluateSpeakingAttempt(
+                        $questionId, $userId, $userAnswer, $userAudioUrl
+                    );
+                }
             }
 
             return response()->json([

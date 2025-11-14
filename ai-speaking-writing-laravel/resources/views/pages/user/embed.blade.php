@@ -158,7 +158,190 @@
             }
         }
 
+        /* Improved Navigation Layout */
+        .nav-card-improved {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 24px;
+            align-items: center;
+            padding: 20px 24px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-top: 16px;
+        }
+
+        .nav-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-section--lesson {
+            text-align: left;
+        }
+
+        .nav-section--question {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            min-width: 320px;
+        }
+
+        .nav-section--type {
+            text-align: right;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .nav-select-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .nav-section--lesson .nav-select-wrapper {
+            max-width: 250px;
+            margin-right: auto;
+        }
+
+        .nav-section--type .nav-select-wrapper {
+            max-width: 250px;
+            margin-left: auto;
+        }
+
+        .nav-select {
+            width: 100%;
+            padding: 10px 36px 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .nav-select:hover {
+            border-color: #3b82f6;
+        }
+
+        .nav-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .nav-select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #6b7280;
+            font-size: 10px;
+        }
+
+        .nav-question-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-question-group .nav-label {
+            margin-bottom: 0;
+        }
+
+        .nav-question-group .nav-select-wrapper {
+            max-width: 120px;
+        }
+
+        .nav-counter {
+            font-size: 11px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .nav-arrow-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-arrow-btn:hover:not(:disabled) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .nav-arrow-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .nav-arrow-icon {
+            font-size: 16px;
+        }
+
+        .nav-select-static {
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            background: #f9fafb;
+        }
+
         /* Responsive for iframe */
+        @media (max-width: 1024px) {
+            .nav-card-improved {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .nav-section--lesson,
+            .nav-section--type {
+                text-align: center;
+            }
+
+            .nav-section--lesson .nav-select-wrapper,
+            .nav-section--type .nav-select-wrapper {
+                margin: 0 auto;
+            }
+
+            .nav-section--question {
+                order: -1;
+                min-width: 100%;
+                padding-bottom: 16px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+        }
+
         @media (max-width: 768px) {
             .layout {
                 grid-template-columns: 1fr;
@@ -166,6 +349,16 @@
             
             .info-panel {
                 display: none;
+            }
+
+            .nav-section--question {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .nav-arrow-btn {
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -201,45 +394,31 @@
                         <span class="tag">Loại bài: <strong id="typeTag">{{ $exerciseType->code ?? '—' }}</strong></span>
                         <span class="tag">Câu số <strong id="orderTag">#{{ $question->order_index ?? '1' }}</strong></span>
                     </div>
-                    <div class="nav-card">
-                        <div class="nav-section nav-section--type">
-                            <span class="nav-label">Dạng bài</span>
-                            @if($navigationCollection->count() > 1)
-                                <div class="nav-select-wrapper">
-                                    <select id="typeSelect" class="nav-select">
-                                        @foreach($navigationCollection as $typeGroup)
-                                            <option value="{{ $typeGroup['code'] }}" {{ ($exerciseType->code ?? '') === $typeGroup['code'] ? 'selected' : '' }}>
-                                                {{ $typeGroup['name'] ?? $typeGroup['code'] }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @else
-                                <div class="nav-select-static">
-                                    {{ $exerciseType->name ?? $exerciseType->code ?? 'Dạng bài' }}
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="nav-divider"></div>
-
+                    <div class="nav-card nav-card-improved">
+                        <!-- Bài học - Bên trái -->
                         <div class="nav-section nav-section--lesson">
                             <span class="nav-label">Bài học</span>
                             @php
-                                $lessonOptions = $navigationCollection
-                                    ->firstWhere('code', $exerciseType->code ?? '')['lessons'] ?? [];
+                                // Collect all unique lessons from all types
+                                $allLessonsMap = [];
+                                foreach($navigationCollection as $typeGroup) {
+                                    foreach($typeGroup['lessons'] ?? [] as $lessonGroup) {
+                                        $lessonId = $lessonGroup['id'];
+                                        if (!isset($allLessonsMap[$lessonId])) {
+                                            $allLessonsMap[$lessonId] = $lessonGroup;
+                                        }
+                                    }
+                                }
+                                $allLessons = array_values($allLessonsMap);
                             @endphp
-                            @if(count($lessonOptions) > 1)
+                            @if(count($allLessons) > 0)
                                 <div class="nav-select-wrapper">
                                     <select id="lessonSelect" class="nav-select">
-                                        @foreach($navigationCollection as $typeGroup)
-                                            @foreach($typeGroup['lessons'] as $lessonGroup)
-                                                <option value="{{ $lessonGroup['id'] }}"
-                                                    data-type="{{ $typeGroup['code'] }}"
-                                                    {{ $lessonGroup['id'] == ($lesson->id ?? null) && $typeGroup['code'] === ($exerciseType->code ?? '') ? 'selected' : '' }}>
-                                                    {{ $lessonGroup['title'] }}
-                                                </option>
-                                            @endforeach
+                                        @foreach($allLessons as $lessonItem)
+                                            <option value="{{ $lessonItem['id'] }}"
+                                                {{ $lessonItem['id'] == ($lesson->id ?? null) ? 'selected' : '' }}>
+                                                {{ $lessonItem['title'] }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -250,34 +429,7 @@
                             @endif
                         </div>
 
-                        <div class="nav-divider"></div>
-
-                        <div class="nav-section nav-section--exercise">
-                            <span class="nav-label">Bài tập</span>
-                            @if($allExercises->count() > 1)
-                                <div class="nav-select-wrapper">
-                                    <select id="exerciseSelect" class="nav-select">
-                                        @foreach($allExercises as $ex)
-                                            <option 
-                                                value="{{ $ex->first_question_id ?? '' }}" 
-                                                data-exercise-id="{{ $ex->id }}"
-                                                {{ $ex->id == $exercise->id ? 'selected' : '' }}
-                                                {{ empty($ex->first_question_id) ? 'disabled' : '' }}
-                                            >
-                                                {{ $ex->title }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @else
-                                <div class="nav-select-static">
-                                    {{ $exercise->title ?? 'Bài tập' }}
-                                </div>
-                            @endif
-                        </div>
-
-                        <div class="nav-divider"></div>
-
+                        <!-- Câu hỏi - Giữa -->
                         <div class="nav-section nav-section--question">
                             <button id="prevQuestionBtn" class="nav-arrow-btn" type="button" title="Câu trước">
                                 <span class="nav-arrow-icon">←</span>
@@ -285,7 +437,7 @@
                             </button>
 
                             <div class="nav-question-group">
-                                <span class="nav-label">Câu hỏi</span>
+                                <span class="nav-label">CÂU HỎI</span>
                                 <div class="nav-select-wrapper">
                                     <select id="questionSelect" class="nav-select">
                                         @if(isset($allQuestions))
@@ -304,6 +456,26 @@
                                 <span class="nav-arrow-text">Sau</span>
                                 <span class="nav-arrow-icon">→</span>
                             </button>
+                        </div>
+
+                        <!-- Dạng bài - Bên phải -->
+                        <div class="nav-section nav-section--type">
+                            <span class="nav-label">Dạng bài</span>
+                            @if($navigationCollection->count() > 0)
+                                <div class="nav-select-wrapper">
+                                    <select id="typeSelect" class="nav-select">
+                                        @foreach($navigationCollection as $typeGroup)
+                                            <option value="{{ $typeGroup['code'] }}" {{ ($exerciseType->code ?? '') === $typeGroup['code'] ? 'selected' : '' }}>
+                                                {{ $typeGroup['name'] ?? $typeGroup['code'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @else
+                                <div class="nav-select-static">
+                                    {{ $exerciseType->name ?? $exerciseType->code ?? 'Dạng bài' }}
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

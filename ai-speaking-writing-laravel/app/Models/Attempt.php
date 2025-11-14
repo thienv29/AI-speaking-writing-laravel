@@ -36,6 +36,7 @@ class Attempt extends Model
         'evaluation_meta' => 'array',
         'is_correct' => 'boolean',
         'score' => 'integer',
+        'created_at' => 'datetime',
     ];
 
     public function user()

@@ -88,6 +88,9 @@ class GeminiScoringService
                 if ($responseText && !empty(trim($responseText))) {
                     $result = $this->parseGeminiResponse($responseText, $question, $userAnswer);
                     
+                    // Check if result is error message (system error)
+                    $isErrorResult = $this->isErrorResult($result);
+                    
                     // Log if we got default result (parsing failed)
                     if ($result['score'] == 70 && $result['feedback'] == 'Good effort! Keep practicing. 💪') {
                         Log::warning('Gemini parsing failed, using default result', [
@@ -99,10 +102,17 @@ class GeminiScoringService
                         ]);
                     }
                     
-                    Cache::put($cacheKey, $result, self::CACHE_TTL);
-                    
-                    // Update rate limit counters after successful API call
-                    $this->incrementRateLimitCounters();
+                    // Only cache if result is NOT an error
+                    if (!$isErrorResult) {
+                        Cache::put($cacheKey, $result, self::CACHE_TTL);
+                        // Update rate limit counters after successful API call
+                        $this->incrementRateLimitCounters();
+                    } else {
+                        Log::info('Skipping cache for error result', [
+                            'question_id' => $question->id,
+                            'feedback' => $result['feedback']
+                        ]);
+                    }
                     
                     return $result;
                 } else {
@@ -124,12 +134,14 @@ class GeminiScoringService
                 'candidates_structure' => isset($response['candidates'][0]) ? array_keys($response['candidates'][0]) : 'no candidates',
                 'full_response' => $response
             ]);
+            // Don't cache error results
             return $this->getDefaultResult($userAnswer);
         } catch (\Throwable $e) {
             Log::error('Gemini API error: ' . $e->getMessage(), [
                 'question_id' => $question->id,
                 'trace' => $e->getTraceAsString()
             ]);
+            // Don't cache error results
             return $this->getDefaultResult($userAnswer);
         }
     }
@@ -197,22 +209,23 @@ class GeminiScoringService
 
         $context .= "GENERAL EVALUATION GUIDELINES:\n";
         $context .= "- Reward answers that match the topic, make sense, and are written as simple sentences.\n";
-        $context .= "- Encourage proper capitalization and ending punctuation, but be gentle: mention it only if missing.\n";
+        $context .= "- Encourage proper capitalization, but be gentle: mention it only if missing.\n";
         $context .= "- Mark incorrect if the answer is unrelated, empty, or impossible to understand.\n\n";
 
         $context .= "SCORING (0-100):\n";
-        $context .= "- 90-100: Rất tốt – câu trả lời đầy đủ, ít hoặc không có lỗi.\n";
-        $context .= "- 70-89: Tốt – hợp lý, có thể có lỗi nhỏ.\n";
-        $context .= "- 50-69: Tạm được – còn lỗi rõ ràng nhưng vẫn hiểu được.\n";
-        $context .= "- 30-49: Yếu – nhiều lỗi hoặc thiếu thông tin.\n";
-        $context .= "- 0-29: Sai – không đúng chủ đề, quá thiếu, hoặc không phải câu.\n\n";
+        $context .= "- 90-100: Rất tốt – câu trả lời đầy đủ, có ý nghĩa, chính xác.\n";
+        $context .= "- 70-89: Tốt – hợp lý, có thể có lỗi nhỏ về chính tả, ngữ pháp, hoặc dấu câu nhưng vẫn hiểu được ý nghĩa.\n";
+        $context .= "- 50-69: Tạm được – có lỗi rõ ràng nhưng vẫn liên quan đến câu hỏi và có thể hiểu được.\n";
+        $context .= "- 30-49: Yếu – nhiều lỗi hoặc thiếu thông tin quan trọng.\n";
+        $context .= "- 0-29: Sai – hoàn toàn không đúng chủ đề, rỗng, hoặc không thể hiểu được.\n\n";
         
         $context .= "FEEDBACK STYLE:\n";
         $context .= "- Luôn bắt đầu bằng lời khen tích cực (ví dụ: 'Con làm tốt lắm!').\n";
         $context .= "- Giải thích ngắn gọn điều cần sửa bằng từ ngữ đơn giản (ví dụ: 'Con nhớ viết hoa chữ cái đầu nhé').\n";
         $context .= "- Kết thúc bằng lời động viên (ví dụ: 'Tiếp tục cố gắng nhé con!').\n";
         $context .= "- Có thể dùng tối đa 1-2 emoji thân thiện.\n";
-        $context .= "- Feedback phải hoàn toàn bằng tiếng Việt, không dùng câu tiếng Anh như 'Try saying ...'.\n\n";
+        $context .= "- Feedback phải hoàn toàn bằng tiếng Việt, không dùng câu tiếng Anh như 'Try saying ...'.\n";
+        $context .= "- Không yêu cầu thêm dấu chấm cuối câu trong feedback.\n\n";
 
         $context .= "OUTPUT REQUIREMENTS:\n";
         $context .= "- Chỉ trả về JSON hợp lệ, không thêm lời giải thích trước hoặc sau.\n";
@@ -321,6 +334,12 @@ class GeminiScoringService
         $score = isset($data['score']) ? (int) $data['score'] : 30;
         // Ensure score is valid (0-100)
         $score = max(0, min(100, $score));
+        
+        // Làm tròn lên 100 nếu điểm > 90
+        if ($score > 90) {
+            $score = 100;
+        }
+        
         $isCorrect = $data['is_correct'] ?? ($score >= 80);
         $feedback = $data['feedback'] ?? 'Vui lòng kiểm tra lại câu trả lời của con nhé.';
 
@@ -515,6 +534,28 @@ class GeminiScoringService
                 'percentage' => round(($dayCount / self::RATE_LIMIT_PER_DAY) * 100, 2)
             ]
         ];
+    }
+
+    /**
+     * Check if result is an error result (system error)
+     */
+    private function isErrorResult(array $result): bool
+    {
+        // Check if feedback contains error message
+        $feedback = $result['feedback'] ?? '';
+        $errorKeywords = [
+            'hệ thống gặp sự cố',
+            'gặp sự cố khi chấm bài',
+            'hệ thống đang tạm thời không thể chấm điểm'
+        ];
+        
+        foreach ($errorKeywords as $keyword) {
+            if (stripos($feedback, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**

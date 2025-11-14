@@ -38,26 +38,68 @@ const questionApi = {
     const fd = new FormData();
     fd.append('file', audioBlob, filename); 
 
+    // Dùng axiosClient vì bây giờ là relative URL (Laravel proxy)
     const res = await axiosClient.post(API_ROUTES.question.speechToText, fd, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 30000, // 30 seconds timeout
     });
 
     return res.data;
   },
 
   async textToSpeech(text, lang='en') {
-    const fd = new FormData();
-    fd.append('text', text);
-    fd.append('lang', lang);
+    try {
+      if (!text || !text.trim()) {
+        throw new Error('Text is empty');
+      }
 
-    const res = await axiosClient.post(API_ROUTES.question.textToSpeech, 
-      {text, lang}, {responseType: "blob"});
+      const requestData = {text: text.trim(), lang};
+      const ttsUrl = API_ROUTES.question.textToSpeech;
+      console.log('📞 Calling TTS API (via Laravel proxy):', ttsUrl, {text: text.substring(0, 50) + '...', lang});
+      
+      // Dùng axiosClient vì bây giờ là relative URL (Laravel proxy)
+      const res = await axiosClient.post(
+        ttsUrl, 
+        requestData,
+        {
+          responseType: "blob",
+          timeout: 20000, // 20 seconds timeout
+        }
+      );
 
-    const audioBlob = res.data;
-    const audioUrl = URL.createObjectURL(audioBlob);
-    return audioUrl;
+      // Kiểm tra response
+      if (!res || !res.data) {
+        throw new Error('TTS API returned no data');
+      }
+
+      if (res.data.size === 0) {
+        throw new Error('TTS API returned empty blob');
+      }
+
+      // Kiểm tra content type
+      const contentType = res.headers['content-type'] || res.headers['Content-Type'] || '';
+      if (!contentType.includes('audio') && !contentType.includes('mpeg')) {
+        console.warn('⚠️ Unexpected content type:', contentType, 'size:', res.data.size);
+      }
+
+      const audioBlob = res.data;
+      const audioUrl = URL.createObjectURL(audioBlob);
+      console.log('✅ TTS API success! Blob size:', audioBlob.size, 'bytes, type:', audioBlob.type || contentType);
+      return audioUrl;
+    } catch (error) {
+      const errorDetails = {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        code: error.code
+      };
+      console.error('❌ TTS API error:', errorDetails);
+      
+      throw error;
+    }
   },
 };
 

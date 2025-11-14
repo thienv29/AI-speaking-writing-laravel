@@ -64,20 +64,36 @@ class AttemptService
 
     public function evaluateSpeakingAttempt(int $questionId, int $userId, string $userAnswer, ?string $userAudioUrl=null): Attempt
     {
-        $question = Question::findOrFail($questionId);
+        $question = Question::with('exercise.type')->findOrFail($questionId);
+        $exerciseTypeCode = strtoupper($question->exercise->type->code ?? '');
 
         $isCorrect = null;
         $feedback  = null;
+        $score     = 0;
 
         if (!empty($userAnswer)) {
             $normalizedAnswer = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $userAnswer)));
             $normalizedTarget = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $question->target_text ?? '')));
 
-            $isCorrect = $this->matchesTarget($normalizedAnswer, $normalizedTarget);
-            if (!$isCorrect && !empty($question->target_text_alt)) {
-                $normalizedAlt = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $question->target_text_alt)));
-                $isCorrect = $this->matchesTarget($normalizedAnswer, $normalizedAlt);
+            // For SPW (Speaking Word), do exact match or word-level match
+            if ($exerciseTypeCode === 'SPW') {
+                // Exact match for words
+                $isCorrect = $normalizedAnswer === $normalizedTarget;
+                if (!$isCorrect && !empty($question->target_text_alt)) {
+                    $normalizedAlt = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $question->target_text_alt)));
+                    $isCorrect = $normalizedAnswer === $normalizedAlt;
+                }
+            } else {
+                // For SPS (Speaking Sentence), allow "starts with" matching
+                $isCorrect = $this->matchesTarget($normalizedAnswer, $normalizedTarget);
+                if (!$isCorrect && !empty($question->target_text_alt)) {
+                    $normalizedAlt = strtolower(trim(preg_replace('/[[:punct:]]+/u', '', $question->target_text_alt)));
+                    $isCorrect = $this->matchesTarget($normalizedAnswer, $normalizedAlt);
+                }
             }
+
+            // Calculate score (100 if correct, 0 if incorrect)
+            $score = $isCorrect ? 100 : 0;
 
             $feedback = $isCorrect
                 ? 'Làm tốt lắm! Tiếp tục phát huy nhé.'
@@ -100,6 +116,9 @@ class AttemptService
             'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
             'user:id,name,email'
         ]);
+
+        // Add score to attempt object for response
+        $attempt->score = $score;
 
         return $attempt;
     }

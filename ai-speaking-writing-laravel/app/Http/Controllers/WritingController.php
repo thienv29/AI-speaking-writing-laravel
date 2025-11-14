@@ -222,7 +222,8 @@ class WritingController extends Controller
                 ->orderBy('order_index')
                 ->get(['id', 'order_index']);
             
-            $supportedTypeCodes = array_unique(array_merge(ExerciseTypes::writingTypes(), ['SPS']));
+            // Bao gồm cả Writing và Speaking types, sắp xếp W trước, S sau
+            $supportedTypeCodes = array_unique(array_merge(ExerciseTypes::writingTypes(), ['SPS', 'SPW']));
             $supportedTypeIds = ExerciseType::whereIn('code', $supportedTypeCodes)
                 ->pluck('id', 'code');
             
@@ -254,20 +255,22 @@ class WritingController extends Controller
                                 return null;
                             }
                             
-                            $exercises = $lessonExercises->map(function ($exerciseItem) {
-                                $firstQuestion = $exerciseItem->questions->first();
-                                return [
-                                    'id' => $exerciseItem->id,
-                                    'title' => $exerciseItem->title,
-                                    'instruction' => $exerciseItem->instruction,
-                                    'first_question_id' => optional($firstQuestion)->id,
-                                    'order_index' => $exerciseItem->order_index,
-                                ];
-                            })
-                            ->filter(function ($exerciseData) {
-                                return !is_null($exerciseData['first_question_id']);
-                            })
-                            ->values();
+                            $exercises = $lessonExercises
+                                ->sortBy('order_index') // Sắp xếp exercises theo order_index
+                                ->map(function ($exerciseItem) {
+                                    $firstQuestion = $exerciseItem->questions->first();
+                                    return [
+                                        'id' => $exerciseItem->id,
+                                        'title' => $exerciseItem->title,
+                                        'instruction' => $exerciseItem->instruction,
+                                        'first_question_id' => optional($firstQuestion)->id,
+                                        'order_index' => $exerciseItem->order_index,
+                                    ];
+                                })
+                                ->filter(function ($exerciseData) {
+                                    return !is_null($exerciseData['first_question_id']);
+                                })
+                                ->values();
                             
                             if ($exercises->isEmpty()) {
                                 return null;
@@ -293,6 +296,16 @@ class WritingController extends Controller
                     ];
                 })
                 ->filter()
+                ->sortBy(function ($typeData) {
+                    // Sắp xếp: W types trước, S types sau
+                    $code = $typeData['code'] ?? '';
+                    if (strpos($code, 'W') === 0) {
+                        return '0_' . $code; // W types: 0_WAQ, 0_WCS, 0_WSG
+                    } elseif (strpos($code, 'S') === 0) {
+                        return '1_' . $code; // S types: 1_SPS, 1_SPW
+                    }
+                    return '2_' . $code; // Others
+                })
                 ->values();
             
             $currentLessonExercises = collect();
