@@ -22,28 +22,67 @@ log_error() {
 # Wait for MySQL to be ready with retry logic
 wait_for_mysql() {
     log_info "Waiting for MySQL to be ready..."
-    local max_attempts=30
+    local max_attempts=60
     local attempt=1
+    local root_password="${MYSQL_ROOT_PASSWORD:-rootpassword}"
     
     while [ $attempt -le $max_attempts ]; do
+        # First, try to connect with root user (to check if MySQL is up and create DB/user if needed)
         if php -r "try { 
-            \$pdo = new PDO('mysql:host=${DB_HOST};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}'); 
+            \$pdo = new PDO('mysql:host=${DB_HOST}', 'root', '${root_password}'); 
             \$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             \$pdo->query('SELECT 1');
             exit(0); 
         } catch (PDOException \$e) { 
             exit(1); 
         }" 2>/dev/null; then
-            log_info "MySQL is ready!"
-            return 0
+            # MySQL is up, ensure database and user exist
+            php -r "
+            try {
+                \$pdo = new PDO('mysql:host=${DB_HOST}', 'root', '${root_password}');
+                \$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                \$pdo->exec('CREATE DATABASE IF NOT EXISTS ${DB_DATABASE} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+                
+                \$stmt = \$pdo->query(\"SELECT COUNT(*) FROM mysql.user WHERE user='${DB_USERNAME}' AND host='%'\");
+                \$userExists = \$stmt->fetchColumn() > 0;
+                
+                if (!\$userExists) {
+                    \$pdo->exec(\"CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}'\");
+                } else {
+                    \$pdo->exec(\"ALTER USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}'\");
+                }
+                
+                \$pdo->exec(\"GRANT ALL PRIVILEGES ON ${DB_DATABASE}.* TO '${DB_USERNAME}'@'%'\");
+                \$pdo->exec('FLUSH PRIVILEGES');
+                exit(0);
+            } catch (PDOException \$e) {
+                exit(1);
+            }
+            " 2>/dev/null
+            
+            # Now try to connect with the app user
+            if php -r "try { 
+                \$pdo = new PDO('mysql:host=${DB_HOST};dbname=${DB_DATABASE}', '${DB_USERNAME}', '${DB_PASSWORD}'); 
+                \$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                \$pdo->query('SELECT 1');
+                exit(0); 
+            } catch (PDOException \$e) { 
+                exit(1); 
+            }" 2>/dev/null; then
+                log_info "MySQL is ready!"
+                return 0
+            fi
         fi
         
         if [ $attempt -eq $max_attempts ]; then
             log_error "MySQL connection failed after $max_attempts attempts"
+            log_error "Please check MySQL container logs: docker compose logs mysql"
             exit 1
         fi
         
-        log_warn "Waiting for MySQL... (attempt $attempt/$max_attempts)"
+        if [ $((attempt % 5)) -eq 0 ]; then
+            log_warn "Waiting for MySQL... (attempt $attempt/$max_attempts)"
+        fi
         sleep 2
         attempt=$((attempt + 1))
     done

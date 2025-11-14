@@ -66,7 +66,7 @@ RUN (getent group www-data || groupadd -g 1000 www-data) && \
 # 5. Chạy migrations (fresh --seed nếu lần đầu, migrate nếu đã có data)
 # 6. Tạo storage link và set permissions
 # 7. php artisan serve
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \

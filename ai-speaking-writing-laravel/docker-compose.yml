@@ -32,6 +32,7 @@ services:
       - DB_DATABASE=${DB_DATABASE:-iclc_db}
       - DB_USERNAME=${DB_USERNAME:-iclc_user}
       - DB_PASSWORD=${DB_PASSWORD:-password}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
       - CACHE_DRIVER=${CACHE_DRIVER:-file}
       - SESSION_DRIVER=${SESSION_DRIVER:-file}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION:-sync}
