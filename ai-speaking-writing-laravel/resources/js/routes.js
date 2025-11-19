@@ -6,4 +6,8 @@ export const API_ROUTES = {
     speechToText: `/stt`,  // Dùng Laravel proxy (baseURL="/api" đã có sẵn)
     textToSpeech: `/tts`,   // Dùng Laravel proxy (baseURL="/api" đã có sẵn)
   },
+  exercise: {
+    base: "/exercises",
+    importExcel: `/import-excel`,
+  }
 };

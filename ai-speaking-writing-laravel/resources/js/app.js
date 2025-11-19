@@ -4,3 +4,7 @@ if (document.getElementById('question-page-content')) {
     import('./user/questionPage/writing-feedback.js');
     import('./user/questionPage/main.js');
 }
+
+if (document.getElementById('admin-exercises-page-content')) {
+    import('./admin/exercises/importExcel.js');
+}

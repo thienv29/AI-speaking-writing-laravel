@@ -115,4 +115,14 @@ class ExerciseController extends Controller
         return redirect()->route('admin.exercises.index', $queryParams)
             ->with('success', 'Bài tập đã được xóa thành công!');
     }
+
+    public function importExcelView() 
+    {
+        $lessons = Lesson::orderBy('created_at')->get();
+        return view('admin.exercises.import', compact('lessons'));
+    }
+
+    public function importExcel(Request $request) {
+        return 'test';
+    }
 }

@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin Panel') - ICLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Assets -->
+    @php
+        $manifest = null;
+        $manifestPath = public_path('build/manifest.json');
+        if (file_exists($manifestPath)) {
+            $json = file_get_contents($manifestPath);
+            $manifest = $json ? json_decode($json, true) : null;
+        }
+    @endphp
+    @if (!empty($manifest['resources/css/app.css']['file']))
+        <link rel="stylesheet" href="{{ '/build/' . ltrim($manifest['resources/css/app.css']['file'], '/') }}">
+    @endif
+    @if (!empty($manifest['resources/js/app.js']['file']))
+        <script type="module" src="{{ '/build/' . ltrim($manifest['resources/js/app.js']['file'], '/') }}" defer></script>
+    @endif
 </head>
 <body class="bg-gray-50">
     <!-- Navbar -->

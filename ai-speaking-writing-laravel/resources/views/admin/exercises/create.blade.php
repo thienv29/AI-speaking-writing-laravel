@@ -4,9 +4,16 @@
 
 @section('content')
 <div class="px-4 py-6 sm:px-0">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Tạo bài tập mới</h1>
-        <p class="mt-2 text-gray-600">Thêm bài tập mới vào hệ thống</p>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Tạo bài tập mới</h1>
+            <p class="mt-2 text-gray-600">Thêm bài tập mới vào hệ thống</p>
+        </div>
+
+        <a href="{{ route('admin.exercises.import') }}" 
+        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+            Import Excel
+        </a>
     </div>
 
     <div class="bg-white shadow rounded-lg p-6">

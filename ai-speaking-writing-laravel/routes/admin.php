@@ -17,6 +17,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('lessons', LessonController::class);
     
     // Exercises
+    Route::get('exercises/import', [ExerciseController::class, 'importExcelView'])
+    ->name('exercises.import');
+    Route::post('exercises/import', [ExerciseController::class, 'importExcel'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+    ->name('exercises.import.post');
     Route::resource('exercises', ExerciseController::class);
     
     // Questions
