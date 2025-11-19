@@ -38,6 +38,7 @@ const answerField = document.getElementById('userAnswer');
 const answerSuffixEl = document.getElementById('answerSuffix');
 const resultFeedback = document.getElementById('resultFeedback');
 const questionCounter = document.getElementById('questionCounter');
+const questionCounterBanner = document.getElementById('questionCounterBanner');
 const questionSection = document.querySelector('.nav-section--question');
 const exerciseTitleHeadingEl = document.getElementById('exerciseTitleHeading');
 const exerciseTitleEl = document.getElementById('exerciseTitle');
@@ -64,6 +65,23 @@ const currentQuestionIndex = Math.max(
     exerciseQuestions.findIndex((q) => q.id === question.id)
 );
 
+const ANSWER_STORAGE_NAMESPACE = `questionAnswers:${userId || 'guest'}`;
+let inMemoryAnswerCache = {};
+
+const answerStorage = (() => {
+    try {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+            const testKey = '__qa_test__';
+            window.sessionStorage.setItem(testKey, '1');
+            window.sessionStorage.removeItem(testKey);
+            return window.sessionStorage;
+        }
+    } catch (error) {
+        console.warn('[questionPage] SessionStorage unavailable, fallback to memory cache.', error);
+    }
+    return null;
+})();
+
 const recordBtn = document.getElementById('mic-btn');
 const sampleAudioBtn = document.getElementById('sample-audio-btn');
 const recordingIndicator = document.getElementById('recording-indicator');
@@ -87,6 +105,71 @@ let mediaSupported = false;
 let isRecording = false;
 
 // Helper functions đã được tách ra helpers.js
+
+function readStoredAnswers() {
+    if (answerStorage) {
+        try {
+            const raw = answerStorage.getItem(ANSWER_STORAGE_NAMESPACE);
+            return raw ? JSON.parse(raw) : {};
+        } catch (error) {
+            console.warn('[questionPage] Failed to parse stored answers', error);
+            return {};
+        }
+    }
+    return inMemoryAnswerCache;
+}
+
+function writeStoredAnswers(state) {
+    if (answerStorage) {
+        try {
+            answerStorage.setItem(ANSWER_STORAGE_NAMESPACE, JSON.stringify(state));
+        } catch (error) {
+            console.warn('[questionPage] Failed to persist answers', error);
+        }
+    } else {
+        inMemoryAnswerCache = state;
+    }
+}
+
+function getStoredAnswer(questionId) {
+    if (!questionId) return null;
+    const state = readStoredAnswers();
+    return state[String(questionId)] || null;
+}
+
+function rememberAnswer(questionId, payload) {
+    if (!questionId || !payload) return;
+    const state = { ...readStoredAnswers(), [String(questionId)]: payload };
+    writeStoredAnswers(state);
+}
+
+function clearStoredAnswer(questionId) {
+    if (!questionId) return;
+    const state = { ...readStoredAnswers() };
+    if (Object.prototype.hasOwnProperty.call(state, String(questionId))) {
+        delete state[String(questionId)];
+        writeStoredAnswers(state);
+    }
+}
+
+function hydrateStoredAnswer() {
+    const type = getExerciseType(question);
+    if (!type.isWriting) return;
+
+    const stored = getStoredAnswer(question.id);
+    if (!stored) return;
+
+    if (type.isWcs) {
+        if (answerSuffixEl && typeof stored.suffix === 'string') {
+            answerSuffixEl.value = stored.suffix;
+        }
+        if (answerField && typeof stored.text === 'string') {
+            answerField.value = stored.text;
+        }
+    } else if (answerField && typeof stored.text === 'string') {
+        answerField.value = stored.text;
+    }
+}
 
 let activeTypeCode = currentContext.type || (question?.exercise?.type?.code ?? (navigationData[0]?.code ?? null));
 let activeLessonId = toNumber(currentContext.lesson_id ?? question?.exercise?.lesson_id);
@@ -746,6 +829,12 @@ async function submitAnswer(answerText='', audioBlob=null) {
             showError('Vui lòng nhập câu trả lời.');
             return;
         }
+        rememberAnswer(question.id, {
+            text: answerField?.value ?? finalAnswer,
+            suffix: type.isWcs && answerSuffixEl ? answerSuffixEl.value : null,
+            type: type.code,
+            updatedAt: Date.now(),
+        });
         setLoadingState(true, submitBtn, loadingEl, errorEl);
     } else if (type.isSpeaking) {
         console.log("Speaking exercise detected, type:", type.code);
@@ -787,6 +876,7 @@ async function submitAnswer(answerText='', audioBlob=null) {
 
 function resetAnswer() {
     const type = getExerciseType(question);
+    clearStoredAnswer(question.id);
     
     if (type.isWriting) {
         if (type.isWcs) {
@@ -897,6 +987,21 @@ function showError(message) {
     document.getElementById('error').style.display = 'block';
 }
 
+function updateQuestionCounters() {
+    const hasQuestions = totalQuestions > 0;
+    const displayIndex = hasQuestions ? currentQuestionIndex + 1 : null;
+
+    if (questionCounter) {
+        questionCounter.textContent = hasQuestions ? `(${displayIndex}/${totalQuestions})` : '(—)';
+    }
+
+    if (questionCounterBanner) {
+        questionCounterBanner.textContent = hasQuestions
+            ? `Câu ${displayIndex}/${totalQuestions}`
+            : 'Câu —';
+    }
+}
+
 function setNavigationBtnUrl() {
     if (!prevBtn || !nextBtn) return;
 
@@ -908,13 +1013,7 @@ function setNavigationBtnUrl() {
     nextBtn.disabled = !hasNext;
     nextBtn.dataset.target = hasNext ? question.next_question_id : '';
 
-    if (questionCounter) {
-        if (totalQuestions > 0) {
-            questionCounter.textContent = `(${currentQuestionIndex + 1}/${totalQuestions})`;
-        } else {
-            questionCounter.textContent = '(—)';
-        }
-    }
+    updateQuestionCounters();
 
     if (questionSection) {
         questionSection.classList.toggle('nav-single', totalQuestions <= 1);
@@ -996,6 +1095,7 @@ function initEventListeners() {
 
 function initQuestionPage() {
     hydrateQuestionContent();
+    hydrateStoredAnswer();
     initTranslationFeature();
     initEventListeners();
     setNavigationBtnUrl();

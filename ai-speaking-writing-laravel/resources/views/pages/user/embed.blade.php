@@ -288,6 +288,26 @@
             font-weight: 500;
         }
 
+        .question-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .question-counter-banner {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
+        }
+
         .nav-arrow-btn {
             display: flex;
             align-items: center;
@@ -371,6 +391,11 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            .question-counter-banner {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 
@@ -397,6 +422,16 @@
         <div class="container">
 @php
     $navigationCollection = collect($navigationData ?? []);
+    $questionList = collect($allQuestions ?? []);
+    $questionTotal = $questionList->count();
+    if ($questionTotal === 0 && isset($exercise) && $exercise->relationLoaded('questions')) {
+        $questionTotal = $exercise->questions->count();
+    }
+    if ($questionTotal === 0) {
+        $questionTotal = 1;
+    }
+    $currentQuestionOrder = optional($questionList->firstWhere('id', $question->id))->order_index
+        ?? ($question->order_index ?? 1);
 @endphp
             <div class="header-card">
                 <div class="header-content">
@@ -451,16 +486,18 @@
                                 <span class="nav-label">CÂU HỎI</span>
                                 <div class="nav-select-wrapper">
                                     <select id="questionSelect" class="nav-select">
-                                        @if(isset($allQuestions))
-                                            @foreach($allQuestions as $q)
-                                                <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
-                                                    Câu {{ $q->order_index }}
-                                                </option>
-                                            @endforeach
-                                        @endif
+                                        @forelse($questionList as $q)
+                                            <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
+                                                Câu {{ $q->order_index }}
+                                            </option>
+                                        @empty
+                                            <option value="{{ $question->id }}" selected>Câu {{ $currentQuestionOrder }}</option>
+                                        @endforelse
                                     </select>
                                 </div>
-                                <div class="nav-counter" id="questionCounter"></div>
+                                <div class="nav-counter" id="questionCounter">
+                                    ({{ $currentQuestionOrder }}/{{ $questionTotal }})
+                                </div>
                             </div>
 
                             <button id="nextQuestionBtn" class="nav-arrow-btn" type="button" title="Câu sau">
@@ -496,6 +533,9 @@
                 <div class="question-header">
                     <h2 class="question-title" id="exerciseTitle">Câu {{ $question->order_index ?? '—' }}</h2>
                     <span class="lesson-pill" id="lessonPill">{{ $lesson->title ?? 'I-CLC' }}</span>
+                    <span class="question-counter-banner" id="questionCounterBanner">
+                        Câu {{ $currentQuestionOrder }}/{{ $questionTotal }}
+                    </span>
                 </div>
 
                 <div class="prompt-card">
