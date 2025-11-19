@@ -7,6 +7,7 @@ from pydub import AudioSegment
 import os
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
+from openpyxl import load_workbook
 
 app = FastAPI()
 
@@ -70,3 +71,27 @@ async def stt(file: UploadFile = File(...)):
                 os.remove(p)
 
     return JSONResponse(content={"recognized_text": text})
+
+@app.post("/import-excel")
+async def import_excel(file: UploadFile = File(...)):
+    # Kiểm tra file
+    if not file.filename.endswith(".xlsx"):
+        return JSONResponse(status_code=400, content={"error": "File must be .xlsx"})
+    
+    try:
+        workbook = load_workbook(file.file)
+        sheet = workbook.active
+
+        # Lấy header
+        headers = [cell.value for cell in sheet[1]]
+
+        # Parse từng dòng
+        data_list = []
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            obj = {headers[i]: row[i] for i in range(len(headers))}
+            data_list.append(obj)
+
+        return {"total": len(data_list), "data": data_list}
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Cannot read Excel file: {str(e)}"})
