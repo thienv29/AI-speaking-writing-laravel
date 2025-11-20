@@ -11,6 +11,7 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\AttemptController;
 use App\Http\Controllers\TranslationController;
 use App\Http\Controllers\SpeechController;
+use App\Http\Controllers\GroupController;
 
 Route::post('/translate', [TranslationController::class, 'translate']);
 
@@ -38,3 +39,6 @@ Route::delete('/lessons/{lessonId}/attempts', [AttemptController::class, 'delete
 
 Route::resource('users', UserController::class);
 Route::post('/users/{id}/restore', [UserController::class, 'restore']);
+
+Route::resource('groups', GroupController::class);
+

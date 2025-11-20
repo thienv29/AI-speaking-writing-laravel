@@ -38,4 +38,8 @@ class Question extends Model
         return $this->hasMany(Attempt::class, 'question_id');
     }
 
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_question');
+    }
 }
