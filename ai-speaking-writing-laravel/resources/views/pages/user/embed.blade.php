@@ -922,6 +922,18 @@
                     @include('components.user.speaking-answer', ['question' => $question])
                 </div>
 
+                <div class="bottom-navigation">
+                    <button id="prevQuestionBtn" class="nav-arrow-btn" type="button" title="Câu trước">
+                        <span class="nav-arrow-icon">←</span>
+                        <span class="nav-arrow-text">Câu trước</span>
+                    </button>
+                    <span class="nav-counter" id="questionCounter"></span>
+                    <button id="nextQuestionBtn" class="nav-arrow-btn" type="button" title="Câu sau">
+                        <span class="nav-arrow-text">Câu sau</span>
+                        <span class="nav-arrow-icon">→</span>
+                    </button>
+                </div>
+
                 <!-- Lesson Statistics Section -->
                 <div class="lesson-statistics-section" id="lessonStatisticsSection" style="display: none;">
                     <div id="lessonStatisticsContent"></div>

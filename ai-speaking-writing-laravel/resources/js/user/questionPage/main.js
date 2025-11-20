@@ -562,8 +562,8 @@ async function startRec() {
     if (recordBtn) {
         recordBtn.classList.add('is-recording');
     }
-    errorEl.style.display='none';
-    resultCard.style.display='none';
+    if (errorEl) errorEl.style.display='none';
+    if (resultCard) resultCard.style.display='none';
 
     userAnswer = '';
     chunks = [];
@@ -1105,7 +1105,10 @@ function showLessonStatistics(stats) {
     const statisticsSection = document.getElementById('lessonStatisticsSection');
     const statisticsContent = document.getElementById('lessonStatisticsContent');
     
-    if (!statisticsSection || !statisticsContent) return;
+    if (!statisticsSection || !statisticsContent) {
+        console.warn('Statistics section elements not found');
+        return;
+    }
     
     // Calculate percentage
     const percentage = stats.total_questions > 0 
@@ -1140,7 +1143,9 @@ function showLessonStatistics(stats) {
         </div>
     `;
     
-    statisticsSection.style.display = 'block';
+    if (statisticsSection) {
+        statisticsSection.style.display = 'block';
+    }
     
     // Reset button
     const resetBtn = document.getElementById('reset-lesson-btn');
