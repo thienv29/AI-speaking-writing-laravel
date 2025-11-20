@@ -37,6 +37,13 @@ const resultCard = document.getElementById('resultCard');
 const answerField = document.getElementById('userAnswer');
 const answerSuffixEl = document.getElementById('answerSuffix');
 const resultFeedback = document.getElementById('resultFeedback');
+
+// Popup elements
+const loadingPopup = document.getElementById('loadingPopup');
+const resultPopup = document.getElementById('resultPopup');
+const resultPopupContent = document.getElementById('resultPopupContent');
+const resultPopupClose = document.getElementById('resultPopupClose');
+let resultPopupTimeout = null;
 const questionCounter = document.getElementById('questionCounter');
 const questionCounterBanner = document.getElementById('questionCounterBanner');
 const questionSection = document.querySelector('.nav-section--question');
@@ -44,6 +51,9 @@ const exerciseTitleHeadingEl = document.getElementById('exerciseTitleHeading');
 const exerciseTitleEl = document.getElementById('exerciseTitle');
 const exerciseSubtitleEl = document.getElementById('instructionText');
 const instructionSectionEl = document.getElementById('instructionSection');
+const instructionToggleBtn = document.getElementById('instructionToggleBtn');
+const instructionPopup = document.getElementById('instructionPopup');
+const instructionPopupClose = document.getElementById('instructionPopupClose');
 const hintSectionEl = document.getElementById('hintSection');
 const hintTextEl = document.getElementById('hintText');
 const lessonPillEl = document.getElementById('lessonPill');
@@ -835,7 +845,7 @@ async function submitAnswer(answerText='', audioBlob=null) {
             type: type.code,
             updatedAt: Date.now(),
         });
-        setLoadingState(true, submitBtn, loadingEl, errorEl);
+        setLoadingState(true, submitBtn, loadingEl, errorEl, loadingPopup);
     } else if (type.isSpeaking) {
         console.log("Speaking exercise detected, type:", type.code);
         
@@ -855,7 +865,7 @@ async function submitAnswer(answerText='', audioBlob=null) {
             userAudio.src = URL.createObjectURL(audioBlob);
         }
         if (userAudio) userAudio.style.display = 'block';
-        setLoadingState(true, submitBtn, loadingEl, errorEl);
+        setLoadingState(true, submitBtn, loadingEl, errorEl, loadingPopup);
     } else {
         showError('Không xác định được loại bài tập.');
         return;
@@ -870,7 +880,7 @@ async function submitAnswer(answerText='', audioBlob=null) {
     } catch (error) {
         showError(error.message);
     } finally {
-        setLoadingState(false, submitBtn, loadingEl, errorEl);
+        setLoadingState(false, submitBtn, loadingEl, errorEl, loadingPopup);
     }
 }
 
@@ -909,6 +919,22 @@ function resetAnswer() {
 
     if (errorEl) errorEl.style.display = 'none';
     if (resultCard) resultCard.style.display = 'none';
+}
+
+function openResultPopup() {
+    if (resultPopup) {
+        resultPopup.classList.add('show');
+    }
+}
+
+function closeResultPopup() {
+    if (resultPopup) {
+        resultPopup.classList.remove('show');
+    }
+    if (resultPopupTimeout) {
+        clearTimeout(resultPopupTimeout);
+        resultPopupTimeout = null;
+    }
 }
 
 function renderResult(data) {
@@ -957,28 +983,195 @@ function renderResult(data) {
         numericScore = null;
     }
 
-    resultFeedback.innerHTML = `
-        <div class="status-row">
-            <span class="status-pill ${statusClass}">✨ ${statusText}</span>
-            <span class="score-pill">Điểm: ${score}</span>
-        </div>
-        <div class="result-text">${feedbackText}</div>
-        ${notesHtml ? `<div class="hl-container">${notesHtml}</div>` : ''}
-        <div class="result-actions">
-            <button id="do-again-btn" class="btn-primary" type="button">Làm thêm lần nữa</button>
-        </div>
-    `;
+    // Render to popup
+    if (resultPopupContent) {
+        const hasNext = Boolean(question.next_question_id);
+        resultPopupContent.innerHTML = `
+            <div class="status-row">
+                <span class="status-pill ${statusClass}">✨ ${statusText}</span>
+                <span class="score-pill">Điểm: ${score}</span>
+            </div>
+            <div class="result-text">${feedbackText}</div>
+            ${notesHtml ? `<div class="hl-container">${notesHtml}</div>` : ''}
+            <div class="result-actions">
+                <button id="do-again-btn" class="btn-primary" type="button">Làm thêm lần nữa</button>
+                ${hasNext ? `<button id="popup-next-btn" class="btn-secondary" type="button">Câu sau</button>` : ''}
+            </div>
+        `;
 
-    
-    const doAgainBtn = document.getElementById('do-again-btn');
-    doAgainBtn.addEventListener('click', resetAnswer)
+        // Add event listeners
+        const doAgainBtn = document.getElementById('do-again-btn');
+        if (doAgainBtn) {
+            doAgainBtn.addEventListener('click', () => {
+                closeResultPopup();
+                resetAnswer();
+            });
+        }
 
-    resultCard.style.display = 'block';
-    resultCard.scrollIntoView({ behavior: 'smooth' });
+        const popupNextBtn = document.getElementById('popup-next-btn');
+        if (popupNextBtn && question.next_question_id) {
+            popupNextBtn.addEventListener('click', () => {
+                closeResultPopup();
+                handleQuestionSelect(question.next_question_id);
+            });
+        }
+
+        openResultPopup();
+
+        // Check statistics immediately after showing result
+        // Add small delay to ensure attempt is saved in database
+        setTimeout(() => {
+            checkAndShowLessonStatistics();
+        }, 1000);
+
+        // Auto-close after 5 seconds
+        if (resultPopupTimeout) {
+            clearTimeout(resultPopupTimeout);
+        }
+        resultPopupTimeout = setTimeout(() => {
+            closeResultPopup();
+        }, 5000);
+    }
+
+    // Fallback to inline result card if popup not available
+    if (resultFeedback && resultCard) {
+        resultFeedback.innerHTML = `
+            <div class="status-row">
+                <span class="status-pill ${statusClass}">✨ ${statusText}</span>
+                <span class="score-pill">Điểm: ${score}</span>
+            </div>
+            <div class="result-text">${feedbackText}</div>
+            ${notesHtml ? `<div class="hl-container">${notesHtml}</div>` : ''}
+            <div class="result-actions">
+                <button id="do-again-btn" class="btn-primary" type="button">Làm thêm lần nữa</button>
+            </div>
+        `;
+        const doAgainBtn = document.getElementById('do-again-btn');
+        if (doAgainBtn) {
+            doAgainBtn.addEventListener('click', resetAnswer);
+        }
+        resultCard.style.display = 'block';
+        resultCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
     playUiSound(stage);
 
     if (stage === 'success' || (Number.isFinite(numericScore) && numericScore >= 80)) {
         triggerSuccessEffect(numericScore);
+    }
+}
+
+async function checkAndShowLessonStatistics() {
+    try {
+        const lessonId = question?.exercise?.lesson_id;
+        
+        if (!lessonId) {
+            console.log('No lesson_id found, skipping statistics check');
+            return;
+        }
+        
+        console.log('Checking lesson statistics for lesson_id:', lessonId, 'user_id:', userId);
+        
+        // Get lesson statistics
+        const response = await questionApi.getLessonStatistics(lessonId, userId);
+        
+        console.log('Statistics response:', response);
+        
+        if (response.status === 'success' && response.data) {
+            const stats = response.data;
+            
+            console.log('Statistics data:', stats);
+            console.log('Completed:', stats.completed_questions, 'Total:', stats.total_questions);
+            
+            // Show statistics if all questions are completed
+            if (stats.completed_questions > 0 && stats.completed_questions === stats.total_questions) {
+                console.log('All questions completed! Showing statistics section');
+                showLessonStatistics(stats);
+            } else {
+                console.log('Not all questions completed yet. Completed:', stats.completed_questions, 'Total:', stats.total_questions);
+                // Hide statistics section if not completed
+                const statisticsSection = document.getElementById('lessonStatisticsSection');
+                if (statisticsSection) {
+                    statisticsSection.style.display = 'none';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error getting lesson statistics:', error);
+    }
+}
+
+function showLessonStatistics(stats) {
+    const statisticsSection = document.getElementById('lessonStatisticsSection');
+    const statisticsContent = document.getElementById('lessonStatisticsContent');
+    
+    if (!statisticsSection || !statisticsContent) return;
+    
+    // Calculate percentage
+    const percentage = stats.total_questions > 0 
+        ? Math.round((stats.completed_questions / stats.total_questions) * 100) 
+        : 0;
+    
+    statisticsContent.innerHTML = `
+        <div class="statistics-header">
+            <h3>🎉 Hoàn thành bài học!</h3>
+        </div>
+        <div class="statistics-body">
+            <div class="statistics-summary">
+                <div class="stat-item">
+                    <div class="stat-label">Điểm trung bình</div>
+                    <div class="stat-value highlight">${stats.average_score}/10</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Câu đúng</div>
+                    <div class="stat-value">${stats.correct_count}/${stats.completed_questions}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Hoàn thành</div>
+                    <div class="stat-value">${stats.completed_questions}/${stats.total_questions} câu</div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" style="width: ${percentage}%"></div>
+            </div>
+        </div>
+        <div class="statistics-actions">
+            <button id="reset-lesson-btn" class="btn-secondary" type="button">Làm lại bài học</button>
+        </div>
+    `;
+    
+    statisticsSection.style.display = 'block';
+    
+    // Reset button
+    const resetBtn = document.getElementById('reset-lesson-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', async () => {
+            if (confirm('Bạn có chắc muốn làm lại bài học này? Tất cả kết quả sẽ bị xóa.')) {
+                await resetLessonAttempts(stats.lesson_id);
+            }
+        });
+    }
+}
+
+async function resetLessonAttempts(lessonId) {
+    try {
+        const response = await questionApi.deleteLessonAttempts(lessonId, userId);
+        
+        if (response.status === 'success') {
+            // Hide statistics section
+            const statisticsSection = document.getElementById('lessonStatisticsSection');
+            if (statisticsSection) {
+                statisticsSection.style.display = 'none';
+            }
+            
+            // Reload page to reset counters
+            window.location.reload();
+        } else {
+            alert('Có lỗi xảy ra khi reset bài học. Vui lòng thử lại.');
+        }
+    } catch (error) {
+        console.error('Error resetting lesson attempts:', error);
+        alert('Có lỗi xảy ra khi reset bài học. Vui lòng thử lại.');
     }
 }
 
@@ -1032,6 +1225,64 @@ function initEventListeners() {
 
     if (resetBtn) {
         resetBtn.addEventListener('click', resetAnswer);
+    }
+
+    // Instruction popup handlers
+    function openInstructionPopup() {
+        if (instructionPopup) {
+            instructionPopup.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+    
+    function closeInstructionPopup() {
+        if (instructionPopup) {
+            instructionPopup.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    }
+    
+    if (instructionToggleBtn) {
+        instructionToggleBtn.addEventListener('click', openInstructionPopup);
+    }
+    
+    if (instructionPopupClose) {
+        instructionPopupClose.addEventListener('click', closeInstructionPopup);
+    }
+    
+    if (instructionPopup) {
+        instructionPopup.addEventListener('click', (e) => {
+            if (e.target === instructionPopup) {
+                closeInstructionPopup();
+            }
+        });
+        
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && instructionPopup.classList.contains('show')) {
+                closeInstructionPopup();
+            }
+        });
+    }
+    
+    // Close popup handlers
+    if (resultPopupClose) {
+        resultPopupClose.addEventListener('click', closeResultPopup);
+    }
+
+    if (resultPopup) {
+        resultPopup.addEventListener('click', (e) => {
+            if (e.target === resultPopup) {
+                closeResultPopup();
+            }
+        });
+
+        // Close on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && resultPopup.classList.contains('show')) {
+                closeResultPopup();
+            }
+        });
     }
 
     if (questionSelect) {
@@ -1093,7 +1344,7 @@ function initEventListeners() {
     }
 }
 
-function initQuestionPage() {
+async function initQuestionPage() {
     hydrateQuestionContent();
     hydrateStoredAnswer();
     initTranslationFeature();
@@ -1101,6 +1352,9 @@ function initQuestionPage() {
     setNavigationBtnUrl();
     if (sampleAudioBtn)  setSampleAudio();
     initNavigationSelectors();
+    
+    // Check and show lesson statistics on page load if already completed
+    await checkAndShowLessonStatistics();
 }
 
 if (document.readyState === 'loading') {

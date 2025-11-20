@@ -18,7 +18,7 @@ export function clearUserAudio(userAudio) {
     }
 }
 
-export function setLoadingState(isLoading, submitBtn, loadingEl, errorEl) {
+export function setLoadingState(isLoading, submitBtn, loadingEl, errorEl, loadingPopup = null) {
     if (submitBtn) {
         if (isLoading) {
             if (!submitBtn.dataset.originalContent) {
@@ -36,6 +36,14 @@ export function setLoadingState(isLoading, submitBtn, loadingEl, errorEl) {
     }
     if (loadingEl) loadingEl.style.display = isLoading ? 'flex' : 'none';
     if (errorEl && isLoading) errorEl.style.display = 'none';
+    // Show/hide loading popup
+    if (loadingPopup) {
+        if (isLoading) {
+            loadingPopup.classList.add('show');
+        } else {
+            loadingPopup.classList.remove('show');
+        }
+    }
 }
 
 export function triggerSuccessEffect(score = null) {

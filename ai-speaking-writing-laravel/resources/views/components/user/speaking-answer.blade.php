@@ -33,9 +33,16 @@
         </div>
     </div>
 
-    <div class="loading" id="loading" style="display: none;">
-        <div class="spinner"></div>
-        <span>đang chấm bài của bạn...</span>
+    <div class="bottom-navigation">
+        <button id="prevQuestionBtn" class="nav-arrow-btn" type="button" title="Câu trước">
+            <span class="nav-arrow-icon">←</span>
+            <span class="nav-arrow-text">Câu trước</span>
+        </button>
+        <span class="nav-counter" id="questionCounter"></span>
+        <button id="nextQuestionBtn" class="nav-arrow-btn" type="button" title="Câu sau">
+            <span class="nav-arrow-text">Câu sau</span>
+            <span class="nav-arrow-icon">→</span>
+        </button>
     </div>
     <div class="error" id="error">
         ❌ Lỗi: <span id="errorMessage"></span>

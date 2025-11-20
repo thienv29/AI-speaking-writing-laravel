@@ -101,6 +101,20 @@ const questionApi = {
       throw error;
     }
   },
+
+  async getLessonStatistics(lessonId, userId) {
+    const res = await axiosClient.get(API_ROUTES.question.getLessonStatistics(lessonId), {
+      params: { user_id: userId }
+    });
+    return res.data;
+  },
+
+  async deleteLessonAttempts(lessonId, userId) {
+    const res = await axiosClient.delete(API_ROUTES.question.deleteLessonAttempts(lessonId), {
+      params: { user_id: userId }
+    });
+    return res.data;
+  },
 };
 
 export default questionApi;

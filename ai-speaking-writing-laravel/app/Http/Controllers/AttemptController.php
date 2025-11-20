@@ -198,4 +198,107 @@ class AttemptController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Delete attempts for a lesson
+     */
+    public function deleteLessonAttempts(Request $request, int $lessonId)
+    {
+        try {
+            $userId = $request->input('user_id', 2);
+            
+            // Get all questions in this lesson
+            $lesson = \App\Models\Lesson::with('questions')->findOrFail($lessonId);
+            $questionIds = $lesson->questions->pluck('id');
+            
+            // Delete all attempts for these questions by this user
+            $deleted = Attempt::where('user_id', $userId)
+                ->whereIn('question_id', $questionIds)
+                ->delete();
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'All attempts deleted successfully',
+                'deleted_count' => $deleted
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Delete lesson attempts error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete attempts: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get lesson statistics for a user
+     */
+    public function getLessonStatistics(Request $request, int $lessonId)
+    {
+        try {
+            $userId = $request->input('user_id', 2); // Default to user_id 2
+            
+            // Get all questions in this lesson
+            $lesson = \App\Models\Lesson::with(['questions' => function($q) {
+                $q->orderBy('order_index');
+            }])->findOrFail($lessonId);
+            
+            $totalQuestions = $lesson->questions->count();
+            $questionIds = $lesson->questions->pluck('id');
+            
+            // Get all attempts for this lesson by this user
+            $attempts = Attempt::where('user_id', $userId)
+                ->whereIn('question_id', $questionIds)
+                ->with('question:id,order_index')
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Get latest attempt for each question
+            $latestAttempts = $attempts->groupBy('question_id')
+                ->map(function($questionAttempts) {
+                    return $questionAttempts->first(); // Get latest attempt
+                });
+            
+            $completedQuestions = $latestAttempts->count();
+            $totalScore = $latestAttempts->sum(function($attempt) {
+                return $attempt->score ?? 0;
+            });
+            
+            // Calculate average score on scale of 10
+            $averageScore = $completedQuestions > 0 
+                ? round(($totalScore / $completedQuestions) / 10, 1) 
+                : 0;
+            
+            // Count correct answers (score >= 80 or is_correct = true)
+            $correctCount = $latestAttempts->filter(function($attempt) {
+                return ($attempt->score >= 80) || ($attempt->is_correct === true);
+            })->count();
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'lesson_id' => $lessonId,
+                    'total_questions' => $totalQuestions,
+                    'completed_questions' => $completedQuestions,
+                    'correct_count' => $correctCount,
+                    'average_score' => $averageScore,
+                    'total_score' => $totalScore,
+                    'attempts' => $latestAttempts->values()->map(function($attempt) {
+                        return [
+                            'question_id' => $attempt->question_id,
+                            'question_order' => $attempt->question->order_index ?? null,
+                            'score' => $attempt->score,
+                            'is_correct' => $attempt->is_correct,
+                        ];
+                    })
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get lesson statistics error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get lesson statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

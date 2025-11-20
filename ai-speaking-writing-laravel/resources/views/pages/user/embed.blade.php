@@ -12,11 +12,31 @@
     {{-- <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/writing-question.css"> --}}
     <style>
-        /* Reset body for iframe */
-        body {
+        /* Lock page - prevent scrolling */
+        html, body {
             margin: 0;
             padding: 0;
             background: transparent;
+            overflow: hidden !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            position: fixed !important;
+            box-sizing: border-box;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        #question-page-content {
+            height: 100vh !important;
+            width: 100vw !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            box-sizing: border-box;
         }
         
         /* Remove background shapes for cleaner iframe look */
@@ -24,14 +44,10 @@
             display: none;
         }
         
-        /* Compact header for iframe */
-        .header-card {
-            margin-bottom: 20px;
-            padding: 16px 20px;
-        }
-        
-        .header-card h1 {
-            font-size: 20px;
+        /* Remove padding from question-page-wrapper */
+        .question-page-wrapper {
+            padding: 0;
+            margin: 0;
         }
         
         /* Compact layout */
@@ -48,10 +64,129 @@
         .question-page-wrapper .container {
             padding: 16px;
             max-width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        
+        /* Hide navigation section */
+        .nav-card,
+        .nav-card-improved {
+            display: none !important;
+        }
+        
+        /* Question panel should take remaining space */
+        .question-panel {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            max-height: 100%;
         }
         
         .answer-wrapper-container {
             width: 100%;
+            overflow: hidden;
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            max-height: 100%;
+        }
+        
+        /* Increase font size for prompt */
+        .prompt-card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+        }
+        
+        .prompt-card p {
+            font-size: 18px;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        /* Instruction toggle button - fixed position */
+        .instruction-toggle-btn-fixed {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border: 2px solid #e5e7eb;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .instruction-toggle-btn-fixed:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+        
+        .instruction-icon {
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        /* Instruction popup */
+        .instruction-popup-content {
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .instruction-popup-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .instruction-icon-large {
+            font-size: 32px;
+            line-height: 1;
+        }
+        
+        .instruction-popup-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .instruction-popup-body {
+            padding: 0;
+        }
+        
+        .instruction-popup-body .instruction-text {
+            color: #4b5563;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+        
+        /* Remove padding from bottom navigation if exists */
+        .bottom-navigation {
+            padding: 0;
         }
 
         .answer-wrapper-container.is-hidden {
@@ -397,6 +532,333 @@
                 justify-content: center;
             }
         }
+
+        /* Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+        }
+
+        .popup-overlay.show {
+            display: flex;
+        }
+
+        .popup-content {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: popupSlideIn 0.3s ease-out;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #f3f4f6;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .popup-close:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .loading-popup-content {
+            text-align: center;
+            padding: 40px 24px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .result-popup-content {
+            text-align: center;
+        }
+
+        .result-popup-content .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .result-popup-content .status-pill {
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .result-popup-content .status-pill.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .result-popup-content .status-pill.failure {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+        }
+
+        .result-popup-content .score-pill {
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: #f3f4f6;
+            color: #1f2937;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .result-popup-content .result-text {
+            text-align: left;
+            margin: 16px 0;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        .result-popup-content .result-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        /* Bottom navigation styles */
+        .bottom-navigation {
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .bottom-navigation .nav-arrow-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bottom-navigation .nav-arrow-btn:hover:not(:disabled) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .bottom-navigation .nav-arrow-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .bottom-navigation .nav-counter {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .result-popup-content .btn-primary {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #3b82f6;
+            color: #fff;
+        }
+
+        .result-popup-content .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .result-popup-content .btn-secondary {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #3b82f6;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+            color: #3b82f6;
+        }
+
+        .result-popup-content .btn-secondary:hover {
+            background: #eff6ff;
+        }
+        
+        /* Statistics Popup Styles */
+        /* Lesson Statistics Section (not popup) */
+        .lesson-statistics-section {
+            margin-top: 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        
+        .statistics-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .statistics-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .statistics-body {
+            margin-bottom: 24px;
+        }
+        
+        .statistics-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .stat-value.highlight {
+            color: #3b82f6;
+            font-size: 24px;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+        
+        .statistics-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .statistics-actions .btn-secondary {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 2px solid #3b82f6;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+            color: #3b82f6;
+            font-size: 16px;
+        }
+        
+        .statistics-actions .btn-secondary:hover {
+            background: #eff6ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+        }
+        
+        .statistics-body {
+            margin-bottom: 0;
+        }
+        
+        .statistics-summary {
+            margin-bottom: 16px;
+        }
     </style>
 
     @php
@@ -433,102 +895,11 @@
     $currentQuestionOrder = optional($questionList->firstWhere('id', $question->id))->order_index
         ?? ($question->order_index ?? 1);
 @endphp
-            <div class="header-card">
-                <div class="header-content">
-                    <h1 id="exerciseTitleHeading">{{ $exercise->title ?? ($isSpeaking ? 'Speaking Exercise' : 'Writing Exercise') }}</h1>
-                    <div class="tag-list">
-                        <span class="tag">Loại bài: <strong id="typeTag">{{ $exerciseType->code ?? '—' }}</strong></span>
-                        <span class="tag">Câu số <strong id="orderTag">#{{ $question->order_index ?? '1' }}</strong></span>
-                    </div>
-                    <div class="nav-card nav-card-improved">
-                        <!-- Bài học - Bên trái -->
-                        <div class="nav-section nav-section--lesson">
-                            <span class="nav-label">Bài học</span>
-                            @php
-                                // Collect all unique lessons from all types
-                                $allLessonsMap = [];
-                                foreach($navigationCollection as $typeGroup) {
-                                    foreach($typeGroup['lessons'] ?? [] as $lessonGroup) {
-                                        $lessonId = $lessonGroup['id'];
-                                        if (!isset($allLessonsMap[$lessonId])) {
-                                            $allLessonsMap[$lessonId] = $lessonGroup;
-                                        }
-                                    }
-                                }
-                                $allLessons = array_values($allLessonsMap);
-                            @endphp
-                            @if(count($allLessons) > 0)
-                                <div class="nav-select-wrapper">
-                                    <select id="lessonSelect" class="nav-select">
-                                        @foreach($allLessons as $lessonItem)
-                                            <option value="{{ $lessonItem['id'] }}"
-                                                {{ $lessonItem['id'] == ($lesson->id ?? null) ? 'selected' : '' }}>
-                                                {{ $lessonItem['title'] }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @else
-                                <div class="nav-select-static">
-                                    {{ $lesson->title ?? 'Bài học' }}
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Câu hỏi - Giữa -->
-                        <div class="nav-section nav-section--question">
-                            <button id="prevQuestionBtn" class="nav-arrow-btn" type="button" title="Câu trước">
-                                <span class="nav-arrow-icon">←</span>
-                                <span class="nav-arrow-text">Trước</span>
-                            </button>
-
-                            <div class="nav-question-group">
-                                <span class="nav-label">CÂU HỎI</span>
-                                <div class="nav-select-wrapper">
-                                    <select id="questionSelect" class="nav-select">
-                                        @forelse($questionList as $q)
-                                            <option value="{{ $q->id }}" {{ $q->id == $question->id ? 'selected' : '' }}>
-                                                Câu {{ $q->order_index }}
-                                            </option>
-                                        @empty
-                                            <option value="{{ $question->id }}" selected>Câu {{ $currentQuestionOrder }}</option>
-                                        @endforelse
-                                    </select>
-                                </div>
-                                <div class="nav-counter" id="questionCounter">
-                                    ({{ $currentQuestionOrder }}/{{ $questionTotal }})
-                                </div>
-                            </div>
-
-                            <button id="nextQuestionBtn" class="nav-arrow-btn" type="button" title="Câu sau">
-                                <span class="nav-arrow-text">Sau</span>
-                                <span class="nav-arrow-icon">→</span>
-                            </button>
-                        </div>
-
-                        <!-- Dạng bài - Bên phải -->
-                        <div class="nav-section nav-section--type">
-                            <span class="nav-label">Dạng bài</span>
-                            @if($navigationCollection->count() > 0)
-                                <div class="nav-select-wrapper">
-                                    <select id="typeSelect" class="nav-select">
-                                        @foreach($navigationCollection as $typeGroup)
-                                            <option value="{{ $typeGroup['code'] }}" {{ ($exerciseType->code ?? '') === $typeGroup['code'] ? 'selected' : '' }}>
-                                                {{ $typeGroup['name'] ?? $typeGroup['code'] }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @else
-                                <div class="nav-select-static">
-                                    {{ $exerciseType->name ?? $exerciseType->code ?? 'Dạng bài' }}
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            @if(!empty($exercise->instruction))
+                <button class="instruction-toggle-btn-fixed" id="instructionToggleBtn" type="button" title="Xem hướng dẫn">
+                    <span class="instruction-icon">📝</span>
+                </button>
+            @endif
             <main class="question-panel">
                 <div class="question-header">
                     <h2 class="question-title" id="exerciseTitle">Câu {{ $question->order_index ?? '—' }}</h2>
@@ -541,14 +912,6 @@
                 <div class="prompt-card">
                     <h2>Đề bài</h2>
                     <p id="questionPrompt">{{ $question->prompt_text ?? 'Please wait...' }}</p>
-                    <div class="instruction-section" id="instructionSection" style="display: {{ !empty($exercise->instruction) ? 'block' : 'none' }};">
-                        <div class="instruction-label">📝 Hướng dẫn:</div>
-                        <div class="instruction-text" id="instructionText">{{ $exercise->instruction ?? '' }}</div>
-                    </div>
-                    <div class="hint-section" id="hintSection" style="display: {{ !empty($question->starter_text) ? 'block' : 'none' }};">
-                        <div class="hint-label">💡 Gợi ý:</div>
-                        <div class="hint-text" id="hintText">{{ $question->starter_text ?? '' }}</div>
-                    </div>
                 </div>
 
                 <div class="answer-wrapper-container" id="writingAnswerWrapper" style="{{ $isWriting ? '' : 'display:none;' }}">
@@ -559,10 +922,51 @@
                     @include('components.user.speaking-answer', ['question' => $question])
                 </div>
 
-                <div class="result-card" id="resultCard">
-                    <div class="result-feedback" id="resultFeedback"></div>
+                <!-- Lesson Statistics Section -->
+                <div class="lesson-statistics-section" id="lessonStatisticsSection" style="display: none;">
+                    <div id="lessonStatisticsContent"></div>
                 </div>
             </main>
+        </div>
+    </div>
+
+    <!-- Loading Popup -->
+    <div class="popup-overlay" id="loadingPopup">
+        <div class="popup-content loading-popup-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Đang chấm bài...</div>
+        </div>
+    </div>
+
+    <!-- Result Popup -->
+    <div class="popup-overlay" id="resultPopup">
+        <div class="popup-content result-popup-content">
+            <button class="popup-close" id="resultPopupClose">×</button>
+            <div id="resultPopupContent"></div>
+        </div>
+    </div>
+
+    <!-- Instruction Popup -->
+    @if(!empty($exercise->instruction))
+        <div class="popup-overlay" id="instructionPopup">
+            <div class="popup-content instruction-popup-content">
+                <button class="popup-close" id="instructionPopupClose">×</button>
+                <div class="instruction-popup-header">
+                    <span class="instruction-icon-large">📝</span>
+                    <h3>Hướng dẫn</h3>
+                </div>
+                <div class="instruction-popup-body">
+                    <div class="instruction-text" id="instructionText">{{ $exercise->instruction ?? '' }}</div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Statistics Popup -->
+    <div class="popup-overlay" id="statisticsPopup">
+        <div class="popup-content statistics-popup-content">
+            <button class="popup-close" id="statisticsPopupClose">×</button>
+            <div id="statisticsPopupContent"></div>
         </div>
     </div>
 

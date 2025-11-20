@@ -33,6 +33,8 @@ Route::get('/questions/{id}/template-hint', [AttemptController::class, 'getTempl
 
 Route::resource('attempts', AttemptController::class);
 Route::post('/attempts/{id}/restore', [AttemptController::class, 'restore']);
+Route::get('/lessons/{lessonId}/statistics', [AttemptController::class, 'getLessonStatistics']);
+Route::delete('/lessons/{lessonId}/attempts', [AttemptController::class, 'deleteLessonAttempts']);
 
 Route::resource('users', UserController::class);
 Route::post('/users/{id}/restore', [UserController::class, 'restore']);
