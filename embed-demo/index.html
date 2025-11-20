@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iframe bài tập I-CLC</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="control-bar">
+        <label for="questionId">ID:</label>
+        <input id="questionId" type="number" min="1" value="1">
+        <button id="loadBtn">Tải</button>
+        <button id="openModalBtn">Popup</button>
+    </div>
+
+    <main class="inline-preview">
+        <section class="host-shell">
+            <div class="host-copy">
+                <p class="host-label">Trang web giả lập</p>
+                <h1>Landing page màu tương phản</h1>
+                <p>Iframe bên dưới mô phỏng cách bài tập xuất hiện khi nhúng vào website có phong cách khác hẳn.</p>
+            </div>
+            <div class="iframe-shell">
+                <iframe id="exerciseFrame" title="Bài tập I-CLC" loading="lazy"></iframe>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal" id="embedModal" aria-hidden="true">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content" role="dialog" aria-modal="true">
+            <button class="floating-close" id="closeModalBtn" aria-label="Đóng">✕</button>
+            <iframe id="modalFrame" title="Bài tập I-CLC (popup)" loading="lazy"></iframe>
+        </div>
+    </div>
+
+    <script src="modal.js"></script>
+</body>
+</html>

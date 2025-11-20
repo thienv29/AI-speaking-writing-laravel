@@ -29,13 +29,12 @@
         }
         
         #question-page-content {
-            height: 100vh !important;
-            width: 100vw !important;
-            max-height: 100vh !important;
-            overflow: hidden !important;
-            position: fixed !important;
-            top: 0;
-            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            padding: 16px;
             box-sizing: border-box;
         }
         
@@ -62,14 +61,9 @@
         
         /* Adjust container padding */
         .question-page-wrapper .container {
-            padding: 16px;
-            max-width: 100%;
-            height: 100vh;
-            max-height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
+            padding: 0;
+            max-width: min(960px, 100%);
+            width: 100%;
         }
         
         /* Hide navigation section */
@@ -80,18 +74,13 @@
         
         /* Question panel should take remaining space */
         .question-panel {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            max-height: 100%;
+            width: 100%;
         }
         
         .answer-wrapper-container {
             width: 100%;
             overflow: hidden;
-            padding: 16px;
+            padding: 12px;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -100,17 +89,22 @@
         }
         
         /* Increase font size for prompt */
+        .prompt-card {
+            padding: 16px 18px;
+        }
+
         .prompt-card h2 {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: #1f2937;
-            margin: 0;
+            margin: 0 0 6px;
         }
-        
+
         .prompt-card p {
-            font-size: 18px;
+            font-size: 16px;
             color: #1f2937;
-            line-height: 1.6;
+            line-height: 1.4;
+            margin: 0;
         }
         
         /* Instruction toggle button - fixed position */
@@ -187,16 +181,22 @@
         /* Remove padding from bottom navigation if exists */
         .bottom-navigation {
             padding: 0;
+            margin-top: 8px;
         }
 
         .answer-wrapper-container.is-hidden {
             display: none !important;
         }
 
+        .answer-wrapper--speaking {
+            padding: 12px;
+        }
+
         .answer-wrapper--speaking .speaking-layout {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
+            min-height: 0;
         }
 
         .speaking-illustration {
@@ -204,24 +204,31 @@
             max-width: 100%;
             overflow: hidden;
             border-radius: 12px;
+            max-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            padding: 8px;
         }
 
         .speaking-illustration img {
-            width: 100%;
-            max-width: 100%;
+            width: auto;
+            max-width: 80%;
             height: auto;
-            max-height: 260px;
+            max-height: 110px;
             object-fit: contain;
             object-position: center;
             display: block;
             border-radius: 12px;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .speaking-content {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
+            min-height: 0;
         }
 
         .speaking-prompt {
@@ -294,13 +301,21 @@
 
         @media (min-width: 768px) {
             .answer-wrapper--speaking .speaking-layout {
-                flex-direction: row;
-                align-items: stretch;
+                display: grid;
+                grid-template-columns: minmax(180px, 0.7fr) 1fr;
+                align-items: center;
+                gap: 20px;
             }
 
             .speaking-illustration,
             .speaking-content {
-                flex: 1;
+                min-height: 0;
+            }
+        }
+
+        @media (max-width: 860px) {
+            .speaking-illustration {
+                display: none;
             }
         }
 
