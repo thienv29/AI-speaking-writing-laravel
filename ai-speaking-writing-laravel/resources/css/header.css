@@ -1,0 +1,86 @@
+/* ============================================
+   HEADER.CSS - Header-specific styles only
+   Common styles (variables, global, header, topbar) are in common.css
+   ============================================ */
+
+/* CTA Button kids decoration (for writing page) */
+.btn-kids-decoration {
+    position: absolute;
+    top: -25px;
+    right: -15px;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+    z-index: 10;
+    animation: climbButton 2s ease-in-out infinite;
+}
+
+.btn-kids-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(107, 44, 144, 0.3));
+    transform-origin: bottom center;
+}
+
+.cta-btn:hover .btn-kids-decoration {
+    animation: climbButtonHover 0.5s ease-in-out;
+    transform: translateY(-5px) rotate(5deg);
+}
+
+@keyframes climbButton {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-3px) rotate(2deg);
+    }
+}
+
+@keyframes climbButtonHover {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(8deg) scale(1.1);
+    }
+    100% {
+        transform: translateY(-5px) rotate(5deg);
+    }
+}
+
+/* Responsive - Header specific */
+@media (max-width: 968px) {
+    nav {
+        font-size: 14px;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 640px) {
+    header {
+        padding: 16px 4vw;
+    }
+    
+    .topbar {
+        padding: 8px 4vw;
+        font-size: 12px;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+    
+    .topbar-links {
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .topbar-phone {
+        font-size: 13px;
+    }
+    
+    .topbar-phone-icon {
+        width: 14px;
+        height: 14px;
+    }
+}

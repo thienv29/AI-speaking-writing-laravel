@@ -1,0 +1,420 @@
+/* ============================================
+   COMMON CSS - Shared across all pages
+   ============================================ */
+
+/* CSS Variables */
+:root {
+    --purple: #6b2c90;
+    --purple-dark: #511b71;
+    --purple-light: #ad6af1;
+    --orange: #f89b1c;
+    --orange-soft: #ffe3b0;
+    --yellow: #f5c12c;
+    --pink: #f47fb3;
+    --coral: #ffbd59;
+    --green: #2ecc71;
+    --green-soft: #d9f5e4;
+    --blue: #3c69e7;
+    --violet: #6b2c90;
+    --navy: #1f2a56;
+    --text: #2e2f4b;
+    --soft-bg: linear-gradient(140deg, #fbf7ff 0%, #fef5ed 60%, #f1f5ff 100%);
+    --bg: #f7f4ff;
+    --card-bg: rgba(255,255,255,0.96);
+}
+
+/* Global Reset & Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--soft-bg);
+    color: var(--navy);
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Prevent double scrollbar on writing question pages only */
+body:has(.question-page-wrapper) main {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+/* Remove scrollbar from question page containers only */
+body:has(.question-page-wrapper) main .question-page-wrapper,
+body:has(.question-page-wrapper) main .question-page-wrapper .container,
+body:has(.question-page-wrapper) main .layout,
+body:has(.question-page-wrapper) main .info-panel,
+body:has(.question-page-wrapper) main .question-panel,
+body:has(.question-page-wrapper) main .prompt-card,
+body:has(.question-page-wrapper) main .answer-wrapper,
+body:has(.question-page-wrapper) main .result-card,
+body:has(.question-page-wrapper) main .header-card {
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+}
+
+/* Exception for elements that need scrolling */
+body:has(.question-page-wrapper) textarea {
+    overflow-y: auto !important;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+/* Floating Bubbles Animation */
+.floating-bubbles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(245, 193, 44, 0.08);
+    animation: floatBubble 20s infinite ease-in-out;
+}
+
+.bubble.one {
+    width: 80px;
+    height: 80px;
+    left: 10%;
+}
+
+.bubble.two {
+    width: 120px;
+    height: 120px;
+    left: 70%;
+    animation-delay: 5s;
+    background: rgba(107, 44, 144, 0.06);
+}
+
+.bubble.three {
+    width: 60px;
+    height: 60px;
+    left: 40%;
+    animation-delay: 10s;
+    background: rgba(248, 155, 28, 0.08);
+}
+
+@keyframes floatBubble {
+    0%, 100% {
+        transform: translate(0, 0);
+        opacity: 0.3;
+    }
+    33% {
+        transform: translate(50px, -100px);
+        opacity: 0.6;
+    }
+    66% {
+        transform: translate(-30px, -50px);
+        opacity: 0.4;
+    }
+}
+
+/* Topbar */
+.topbar {
+    background: var(--purple);
+    color: #fff;
+    font-size: 13px;
+    padding: 10px 6vw;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.topbar-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.topbar-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.topbar a {
+    color: #fff;
+    opacity: 0.88;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.topbar a:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+}
+
+.topbar-phone {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Full screen support for topbar */
+@media (min-width: 1920px) {
+    .topbar {
+        padding: 12px 8vw;
+        font-size: 14px;
+    }
+    
+    .topbar-wrapper {
+        max-width: 1800px;
+    }
+}
+
+@media (min-width: 2560px) {
+    .topbar {
+        padding: 14px 10vw;
+        font-size: 15px;
+    }
+    
+    .topbar-wrapper {
+        max-width: 2200px;
+    }
+}
+
+.topbar-phone-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+}
+
+/* Header */
+header {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    padding: 24px 6vw;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: transparent;
+}
+
+header.sticky {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(107, 44, 144, 0.1);
+    padding: 16px 6vw;
+}
+
+.header-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Full screen support for header */
+@media (min-width: 1920px) {
+    header {
+        padding: 28px 8vw;
+    }
+    
+    header.sticky {
+        padding: 20px 8vw;
+    }
+    
+    .header-wrapper {
+        max-width: 1800px;
+    }
+}
+
+@media (min-width: 2560px) {
+    header {
+        padding: 32px 10vw;
+    }
+    
+    header.sticky {
+        padding: 24px 10vw;
+    }
+    
+    .header-wrapper {
+        max-width: 2200px;
+    }
+    
+    .logo-img {
+        height: 64px;
+    }
+    
+    nav {
+        font-size: 17px;
+        gap: 28px;
+    }
+    
+    .cta-btn {
+        padding: 12px 28px;
+        font-size: 16px;
+    }
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--purple);
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.logo-img {
+    height: 54px;
+    width: auto;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.logo-area:hover .logo-img {
+    transform: scale(1.05) rotate(5deg);
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    font-weight: 600;
+    color: var(--purple);
+    align-items: center;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+nav a:not(.cta-btn) {
+    position: relative;
+    padding: 4px 0;
+}
+
+nav a:not(.cta-btn)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--orange);
+    transition: width 0.3s ease;
+}
+
+nav a:not(.cta-btn):hover::after {
+    width: 100%;
+}
+
+nav a:not(.cta-btn):hover {
+    color: var(--purple-dark);
+}
+
+/* CTA Button - Common styles */
+.cta-btn {
+    background: linear-gradient(135deg, var(--orange), var(--yellow));
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: visible;
+    box-shadow: 0 12px 30px rgba(245, 143, 127, 0.35);
+}
+
+.cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(245, 143, 127, 0.45);
+}
+
+.cta-btn:active {
+    transform: translateY(0);
+}
+
+/* Common Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Scroll to Top Button */
+.scroll-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--purple);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 999;
+    box-shadow: 0 4px 15px rgba(107, 44, 144, 0.3);
+    border: none;
+    font-size: 20px;
+}
+
+.scroll-to-top.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.scroll-to-top:hover {
+    background: var(--purple-dark);
+    transform: translateY(-5px);
+}
