@@ -49,4 +49,14 @@ class Question extends Model
                               ->where('question_id', $this->id);
                     });
     }
+
+    public function groups()
+    {
+        return $this->belongsToMany(
+            Group::class,
+            'group_question', 
+            'question_id',   
+            'group_id'        
+        )->withTimestamps();
+    }
 }
