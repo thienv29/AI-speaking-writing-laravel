@@ -23,5 +23,8 @@ Route::get('/writing/question/{id}', function ($id) {
 // Embed route for iframe
 Route::get('/embed/question/{id}', [WritingController::class, 'embed'])->name('writing.embed');
 
+Route::get('/embed-writing/exercises/{id}', [WritingController::class, 'embedWriting'])->name('embed.writing');
+Route::get('/embed-speaking/exercises/{id}', [WritingController::class, 'embedSpeaking'])->name('embed.speaking');
+
 // Review Routes
 Route::get('/review', [ReviewController::class, 'index'])->name('review.index');

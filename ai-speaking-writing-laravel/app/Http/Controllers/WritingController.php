@@ -8,6 +8,7 @@ use App\Models\Exercise;
 use App\Models\ExerciseType;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
 class WritingController extends Controller
 {
@@ -437,6 +438,118 @@ class WritingController extends Controller
             }
             
             abort(500, 'Unable to load question. Please try again later.');
+        }
+    }
+
+    public function embedWriting(Exercise $exercise, Request $request)
+    {
+        return $this->embedTest($exercise, $request, 'writing');
+    }
+
+    public function embedSpeaking(Exercise $exercise, Request $request)
+    {
+        return $this->embedTest($exercise, $request, 'speaking');
+    }
+
+    public function embedTest(Exercise $exercise, Request $request, string $type)
+    {
+        try {
+            $userId = 2;
+
+            // Load relation type và lesson
+            $exercise->load(['type', 'lesson']);
+
+            $questionId = $request->query('questionId');
+            $question = $questionId 
+                        ? $exercise->questions()->find($questionId)
+                        : $exercise->questions()->orderBy('order_index')->first();
+
+            if (!$question) {
+                throw new \Exception('Câu hỏi không tồn tại trong exercise này.', 404);
+            }
+
+            // Latest attempt
+            $latestAttempt = $question->attempts()
+                                ->where('user_id', $userId)
+                                ->orderBy('created_at', 'desc')
+                                ->first();
+
+            // Prev question
+            $prev = $exercise->questions()
+                ->where('order_index', '<', $question->order_index)
+                ->orderBy('order_index', 'desc')
+                ->first();
+
+            // Next question
+            $next = $exercise->questions()
+                ->where('order_index', '>', $question->order_index)
+                ->orderBy('order_index', 'asc')
+                ->first();
+
+            // Nếu không có question tiếp theo trong exercise hiện tại
+            if (!$next) {
+                $nextExercise = Exercise::where('lesson_id', $exercise->lesson_id)
+                    ->where('order_index', '>', $exercise->order_index)
+                    ->orderBy('order_index', 'asc')
+                    ->first();
+                if ($nextExercise) {
+                    $next = $nextExercise->questions()->orderBy('order_index')->first();
+                }
+            }
+
+            // Nếu không có prev question trong exercise hiện tại
+            if (!$prev) {
+                $prevExercise = Exercise::where('lesson_id', $exercise->lesson_id)
+                    ->where('order_index', '<', $exercise->order_index)
+                    ->orderBy('order_index', 'desc')
+                    ->first();
+                if ($prevExercise) {
+                    $prev = $prevExercise->questions()->orderBy('order_index', 'desc')->first();
+                }
+            }
+
+            // Chỉ cho next nếu đã có ít nhất 1 attempt
+            if (!$latestAttempt) {
+                $next = null;
+            }
+
+            // Tổng số câu hỏi của exercise
+            $exercise->question_count = $exercise->questions()->count();
+
+            // Chọn view theo type
+            $viewName = $type === 'writing' ? 'pages.user.embed-writing' : 'pages.user.embed.embed-speaking';
+
+            $response = response()->view($viewName, [
+                'exercise' => $exercise,
+                'question' => $question,
+                'prev' => $prev,
+                'next' => $next,
+                'latestAttempt' => $latestAttempt,
+            ]);
+
+            // Headers iframe-safe
+            $response->headers->remove('X-Frame-Options');
+            $response->headers->set('Content-Security-Policy', "frame-ancestors *; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
+            $response->headers->set('Access-Control-Allow-Origin', '*');
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+
+            return $response;
+
+        } catch (\Throwable $e) {
+            Log::error('Embed error', [
+                'exercise_id' => $exercise->id ?? null,
+                'question_id' => $request->query('questionId') ?? null,
+                'error' => $e->getMessage()
+            ]);
+
+            // Nếu lỗi 404 do question không tồn tại
+            if ($e->getCode() === 404) {
+                return response()->view('errors.404', ['message' => $e->getMessage()], 404);
+            }
+
+            // Lỗi khác
+            return response()->view('errors.500', ['message' => 'Không thể load question. Vui lòng thử lại sau.'], 500);
         }
     }
 }
