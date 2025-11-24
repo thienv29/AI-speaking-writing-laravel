@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Attempt extends Model
 {
@@ -13,7 +14,7 @@ class Attempt extends Model
 
     protected $fillable = [
         'user_id',
-        'question_id',
+        'exercise_question_id',
         'user_answer',
         'user_audio_url',
         'is_correct',
@@ -46,6 +47,26 @@ class Attempt extends Model
 
     public function question()
     {
-        return $this->belongsTo(Question::class, 'question_id');
+        return $this->belongsToMany(
+            Question::class,
+            'exercise_question', 
+            'id',                
+            'id',                
+            'exercise_question_id', 
+            'question_id'        
+        );
+    }
+
+    // Lấy exercise thông qua bảng pivot
+    public function exercise()
+    {
+        return $this->belongsToMany(
+            Exercise::class,
+            'exercise_question',
+            'id',                
+            'id',               
+            'exercise_question_id', 
+            'exercise_id'      
+        );
     }
 }

@@ -12,6 +12,7 @@ class Question extends Model
 
     protected $fillable = [
         'exercise_id',
+        'exercise_question_id',
         'img_url',
         'audio_url',
         'order_index',
@@ -28,18 +29,24 @@ class Question extends Model
         'starter_text'=> null
     ];
 
-    public function exercise()
+    public function exercises()
     {
-        return $this->belongsTo(Exercise::class, 'exercise_id');
+        return $this->belongsToMany(
+            Exercise::class,
+            'exercise_question',
+            'question_id',
+            'exercise_id'
+        )->withPivot('order_index')
+        ->withTimestamps();
     }
 
     public function attempts()
     {
-        return $this->hasMany(Attempt::class, 'question_id');
-    }
-
-    public function groups()
-    {
-        return $this->belongsToMany(Group::class, 'group_question');
+        return $this->hasMany(Attempt::class, 'exercise_question_id')
+                    ->whereIn('exercise_question_id', function ($query) {
+                        $query->select('id')
+                              ->from('exercise_question')
+                              ->where('question_id', $this->id);
+                    });
     }
 }

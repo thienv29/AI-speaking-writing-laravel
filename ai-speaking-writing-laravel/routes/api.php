@@ -40,5 +40,4 @@ Route::delete('/lessons/{lessonId}/attempts', [AttemptController::class, 'delete
 Route::resource('users', UserController::class);
 Route::post('/users/{id}/restore', [UserController::class, 'restore']);
 
-Route::resource('groups', GroupController::class);
 

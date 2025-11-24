@@ -14,6 +14,7 @@ class Exercise extends Model
     protected $fillable = [
         'type_id',
         'lesson_id',
+        'exercise_question_id',
         'title',
         'instruction',
         'difficulty',
@@ -37,6 +38,12 @@ class Exercise extends Model
 
     public function questions()
     {
-        return $this->hasMany(Question::class, 'exercise_id');
+        return $this->belongsToMany(
+            Question::class,
+            'exercise_question',
+            'exercise_id',
+            'question_id'
+        )->withPivot('order_index')
+        ->withTimestamps();
     }
 }
