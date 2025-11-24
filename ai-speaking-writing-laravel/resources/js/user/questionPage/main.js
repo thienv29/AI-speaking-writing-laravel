@@ -12,23 +12,20 @@ import {
     extractScoreFromFeedback,
     toNumber
 } from './helpers';
-import * as Navigation from './navigation';
 
 // Current question id
 const question = window.appData.question;
-const userId = "2";
+const exercise = window.appData.exercise;
+const type = window.appData.type;
+const lesson = window.appData.lesson;
+const prev = window.appData.prev;
+const next = window.appData.next;
+const lastestAttempt = window.appData.lastestAttempt;
 
 const prevBtn = document.getElementById('prevQuestionBtn');
 const nextBtn = document.getElementById('nextQuestionBtn');
 const submitBtn = document.getElementById('submitBtn');
 const resetBtn = document.getElementById('resetBtn');
-const typeSelect = document.getElementById('typeSelect');
-const lessonSelect = document.getElementById('lessonSelect');
-const questionSelect = document.getElementById('questionSelect');
-// Exercise selector removed - no longer needed
-const exerciseSelect = null;
-const writingWrapper = document.getElementById('writingAnswerWrapper');
-const speakingWrapper = document.getElementById('speakingAnswerWrapper');
 
 const loadingEl = document.getElementById('loading');
 const errorEl = document.getElementById('error');
@@ -44,19 +41,14 @@ const resultPopup = document.getElementById('resultPopup');
 const resultPopupContent = document.getElementById('resultPopupContent');
 const resultPopupClose = document.getElementById('resultPopupClose');
 let resultPopupTimeout = null;
-const questionCounter = document.getElementById('questionCounter');
-const questionCounterBanner = document.getElementById('questionCounterBanner');
-const questionSection = document.querySelector('.nav-section--question');
-const exerciseTitleHeadingEl = document.getElementById('exerciseTitleHeading');
+
 const exerciseTitleEl = document.getElementById('exerciseTitle');
 const exerciseSubtitleEl = document.getElementById('instructionText');
 const instructionSectionEl = document.getElementById('instructionSection');
 const instructionToggleBtn = document.getElementById('instructionToggleBtn');
 const instructionPopup = document.getElementById('instructionPopup');
 const instructionPopupClose = document.getElementById('instructionPopupClose');
-const hintSectionEl = document.getElementById('hintSection');
-const hintTextEl = document.getElementById('hintText');
-const lessonPillEl = document.getElementById('lessonPill');
+
 const typeTagEl = document.getElementById('typeTag');
 const orderTagEl = document.getElementById('orderTag');
 const questionPromptEl = document.getElementById('questionPrompt');
@@ -65,15 +57,6 @@ const wcsPrefixEl = document.getElementById('wcsPrefix');
 const speakingPromptEl = document.getElementById('question-prompt-text');
 const speakingImageEl = document.getElementById('question-img');
 const speakingPlaybackEl = document.getElementById('playback');
-const navigationData = Array.isArray(window.appData.navigation) ? window.appData.navigation : [];
-const currentContext = window.appData.current || {};
-
-const exerciseQuestions = Array.isArray(question?.exercise?.questions) ? question.exercise.questions : [];
-const totalQuestions = exerciseQuestions.length;
-const currentQuestionIndex = Math.max(
-    0,
-    exerciseQuestions.findIndex((q) => q.id === question.id)
-);
 
 const ANSWER_STORAGE_NAMESPACE = `questionAnswers:${userId || 'guest'}`;
 let inMemoryAnswerCache = {};
@@ -113,8 +96,6 @@ let recognition = null, userAnswer = '';
 let mediaRecorder = null, mediaStream = null, chunks = [];
 let mediaSupported = false;
 let isRecording = false;
-
-// Helper functions đã được tách ra helpers.js
 
 function readStoredAnswers() {
     if (answerStorage) {
@@ -181,151 +162,12 @@ function hydrateStoredAnswer() {
     }
 }
 
-let activeTypeCode = currentContext.type || (question?.exercise?.type?.code ?? (navigationData[0]?.code ?? null));
-let activeLessonId = toNumber(currentContext.lesson_id ?? question?.exercise?.lesson_id);
-let activeExerciseId = toNumber(currentContext.exercise_id ?? question?.exercise?.id);
-
-// Navigation functions đã được tách ra navigation.js
-
-function initNavigationSelectors() {
-    if (!navigationData.length) return;
-
-    if (!activeTypeCode) {
-        activeTypeCode = navigationData[0]?.code ?? null;
-    }
-
-    // Initialize: hiển thị tất cả lessons và types
-    Navigation.updateLessonOptions(activeTypeCode, activeLessonId, lessonSelect, navigationData);
-    Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-
-    // Đảm bảo activeLessonId và activeTypeCode có thể kết hợp được
-    if (activeLessonId && activeTypeCode) {
-        const availableTypes = Navigation.getAvailableTypesForLesson(activeLessonId, navigationData);
-        const availableLessons = Navigation.getAvailableLessonsForType(activeTypeCode, navigationData);
-        
-        if (availableLessons.length > 0 && !availableLessons.some((l) => Number(l.id) === activeLessonId)) {
-            const firstLessonWithTypes = availableLessons.find((lesson) => Navigation.lessonHasTypes(Number(lesson.id), navigationData));
-            if (firstLessonWithTypes) {
-                activeLessonId = Number(firstLessonWithTypes.id);
-                if (lessonSelect) lessonSelect.value = String(activeLessonId);
-                Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-            }
-        }
-        
-        if (availableTypes.length > 0 && !availableTypes.some((t) => t.code === activeTypeCode)) {
-            activeTypeCode = availableTypes[0].code;
-            if (typeSelect) typeSelect.value = activeTypeCode;
-        }
-    } else if (activeLessonId) {
-        const availableTypes = Navigation.getAvailableTypesForLesson(activeLessonId, navigationData);
-        if (availableTypes.length > 0) {
-            activeTypeCode = availableTypes[0].code;
-            if (typeSelect) typeSelect.value = activeTypeCode;
-        }
-        Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-    } else if (activeTypeCode) {
-        const availableLessons = Navigation.getAvailableLessonsForType(activeTypeCode, navigationData);
-        const firstLessonWithTypes = availableLessons.find((lesson) => Navigation.lessonHasTypes(Number(lesson.id), navigationData));
-        if (firstLessonWithTypes) {
-            activeLessonId = Number(firstLessonWithTypes.id);
-            if (lessonSelect) lessonSelect.value = String(activeLessonId);
-        }
-        Navigation.updateLessonOptions(activeTypeCode, activeLessonId, lessonSelect, navigationData);
-        Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-    }
-
-    if (typeSelect) {
-        typeSelect.addEventListener('change', (e) => {
-            const selectedType = e.target.value;
-            if (!selectedType || selectedType === activeTypeCode) return;
-
-            activeTypeCode = selectedType;
-            activeExerciseId = null;
-            Navigation.updateLessonOptions(activeTypeCode, activeLessonId, lessonSelect, navigationData);
-            
-            const availableLessons = Navigation.getAvailableLessonsForType(activeTypeCode, navigationData);
-            const currentLessonInType = availableLessons.find((lesson) => Number(lesson.id) === activeLessonId);
-            
-            if (currentLessonInType && Navigation.lessonHasTypes(activeLessonId, navigationData)) {
-                Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-                const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
-                if (questionId) window.location.assign(`/embed/question/${questionId}`);
-            } else {
-                const firstLessonWithTypes = availableLessons.find((lesson) => Navigation.lessonHasTypes(Number(lesson.id), navigationData));
-                if (firstLessonWithTypes) {
-                    activeLessonId = Number(firstLessonWithTypes.id);
-                    if (lessonSelect) lessonSelect.value = String(activeLessonId);
-                    Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-                    const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
-                    if (questionId) window.location.assign(`/embed/question/${questionId}`);
-                } else {
-                    Navigation.renderTypeOptions(null, activeTypeCode, typeSelect, navigationData);
-                    const questionId = Navigation.getFirstQuestionIdForType(activeTypeCode, navigationData);
-                    if (questionId) window.location.assign(`/embed/question/${questionId}`);
-                }
-            }
-        });
-    }
-
-    if (lessonSelect) {
-        lessonSelect.addEventListener('change', (e) => {
-            const selectedLessonId = toNumber(e.target.value);
-            if (!selectedLessonId || selectedLessonId === activeLessonId) return;
-            
-            if (!Navigation.lessonHasTypes(selectedLessonId, navigationData)) {
-                console.warn('Lesson does not have any types');
-                activeLessonId = selectedLessonId;
-                Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-                return;
-            }
-
-            activeLessonId = selectedLessonId;
-            activeExerciseId = null;
-            Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
-            
-            const availableTypes = Navigation.getAvailableTypesForLesson(activeLessonId, navigationData);
-            if (availableTypes.length > 0) {
-                if (!availableTypes.some((type) => type.code === activeTypeCode)) {
-                    activeTypeCode = availableTypes[0].code;
-                    if (typeSelect) typeSelect.value = activeTypeCode;
-                }
-            } else {
-                console.warn('Lesson does not have any available types');
-            }
-            
-            const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
-            if (questionId) window.location.assign(`/embed/question/${questionId}`);
-        });
-    }
-}
-
 function hydrateQuestionContent() {
     if (!question) return;
-
-    const exercise = question.exercise || {};
-    const exerciseType = exercise.type || {};
-    const lesson = exercise.lesson || {};
-    const type = getExerciseType(question);
     const isWritingType = type.isWriting;
     const isSpeakingType = type.isSpeaking;
     const isWcs = type.isWcs;
     const rawTypeCode = type.code;
-
-    if (writingWrapper) {
-        writingWrapper.style.display = isWritingType ? '' : 'none';
-    }
-
-    if (speakingWrapper) {
-        speakingWrapper.style.display = isSpeakingType ? '' : 'none';
-    }
-
-    if (exerciseTitleHeadingEl) {
-        exerciseTitleHeadingEl.textContent = exercise.title || (isSpeakingType ? 'Speaking Exercise' : 'Writing Exercise');
-    }
-
-    if (exerciseTitleEl) {
-        exerciseTitleEl.textContent = `Câu ${question.order_index ?? ''}`;
-    }
 
     if (typeTagEl) {
         typeTagEl.textContent = rawTypeCode || '—';
@@ -419,13 +261,6 @@ function hydrateQuestionContent() {
 
 async function setSampleAudio() {
     if (!sampleAudioBtn) {
-        return;
-    }
-
-    const type = getExerciseType(question);
-    if (!type.isSpeaking) {
-        sampleAudioBtn.onclick = null;
-        sampleAudioBtn.disabled = false;
         return;
     }
 
@@ -766,7 +601,7 @@ function playUiSound(type) {
 
     if (!audioCache[type]) {
         const audio = new Audio(src);
-        audio.volume = 0.5; // Giảm volume xuống 50%
+        audio.volume = 0.5;
         audio.load();
         audioCache[type] = audio;
     }
@@ -774,17 +609,17 @@ function playUiSound(type) {
     const audio = audioCache[type];
     try {
         audio.currentTime = 0;
-        audio.volume = 0.5; // Đảm bảo volume luôn là 50%
+        audio.volume = 0.5; 
         audio.play().catch(() => {});
     } catch (error) {
-        console.warn('[writing-question] Failed to play sound', type, error);
+        console.warn('Failed to play sound', type, error);
     }
 }
 
 function validateAnswer(answer) {
     const type = getExerciseType(question);
     if (!type.isWriting) {
-        return; // Not a writing exercise, skip validation
+        return; 
     }
     
     const isWcs = type.isWcs;
@@ -1216,11 +1051,6 @@ function setNavigationBtnUrl() {
     if (questionSection) {
         questionSection.classList.toggle('nav-single', totalQuestions <= 1);
     }
-}
-
-function handleQuestionSelect(questionId) {
-    if (!questionId) return;
-    window.location.assign(`/embed/question/${questionId}`);
 }
 
 function initEventListeners() {

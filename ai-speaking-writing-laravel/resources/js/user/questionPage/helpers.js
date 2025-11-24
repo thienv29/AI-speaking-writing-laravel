@@ -11,13 +11,6 @@ export function getExerciseType(question) {
     };
 }
 
-export function clearUserAudio(userAudio) {
-    if (userAudio) {
-        userAudio.src = '';
-        userAudio.style.display = 'none';
-    }
-}
-
 export function setLoadingState(isLoading, submitBtn, loadingEl, errorEl, loadingPopup = null) {
     if (submitBtn) {
         if (isLoading) {

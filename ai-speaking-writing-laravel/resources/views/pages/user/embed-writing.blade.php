@@ -3,11 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    @php
-        $typeCode = strtoupper($exerciseType->code ?? '');
-        $isWriting = str_starts_with($typeCode, 'W');
-        $isSpeaking = str_starts_with($typeCode, 'S');
-    @endphp
     <title>Luyện viết - I-CLC</title>
     {{-- <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/writing-question.css"> --}}
@@ -897,39 +892,25 @@
 <body>
     <div id="question-page-content" class="question-page-wrapper embed-compact">
         <div class="container">
-@php
-    $navigationCollection = collect($navigationData ?? []);
-    $questionList = collect($allQuestions ?? []);
-    $questionTotal = $questionList->count();
-    if ($questionTotal === 0 && isset($exercise) && $exercise->relationLoaded('questions')) {
-        $questionTotal = $exercise->questions->count();
-    }
-    if ($questionTotal === 0) {
-        $questionTotal = 1;
-    }
-    $currentQuestionOrder = optional($questionList->firstWhere('id', $question->id))->order_index
-        ?? ($question->order_index ?? 1);
-@endphp
-            @if(!empty($exercise->instruction))
-                <button class="instruction-toggle-btn-fixed" id="instructionToggleBtn" type="button" title="Xem hướng dẫn">
-                    <span class="instruction-icon">📝</span>
-                </button>
-            @endif
+            <button class="instruction-toggle-btn-fixed" id="instructionToggleBtn" type="button" title="Xem hướng dẫn">
+                <span class="instruction-icon">📝</span>
+            </button>
+
             <main class="question-panel">
                 <div class="question-header">
-                    <h2 class="question-title" id="exerciseTitle">Câu {{ $question->order_index ?? '—' }}</h2>
-                    <span class="lesson-pill" id="lessonPill">{{ $lesson->title ?? 'I-CLC' }}</span>
+                    <h2 class="question-title" id="question-title">Câu {{ $question->order_index }}</h2>
+                    <span class="lesson-pill" id="lesson-title">{{ $lesson->title }}</span>
                     <span class="question-counter-banner" id="questionCounterBanner">
-                        Câu {{ $currentQuestionOrder }}/{{ $questionTotal }}
+                        Câu {{ $question->order_index }}/{{ $exercise->questions_count }}
                     </span>
                 </div>
 
                 <div class="prompt-card">
                     <h2>Đề bài</h2>
-                    <p id="questionPrompt">{{ $question->prompt_text ?? 'Please wait...' }}</p>
+                    <p id="questionPrompt">{{ $question->prompt_text }}</p>
                 </div>
 
-                <div class="answer-wrapper-container" id="writingAnswerWrapper" style="{{ $isWriting ? '' : 'display:none;' }}">
+                <div class="answer-wrapper-container" id="writingAnswerWrapper">
                     @include('components.user.writing-answer')
                 </div>
 
@@ -938,7 +919,9 @@
                         <span class="nav-arrow-icon">←</span>
                         <span class="nav-arrow-text">Câu trước</span>
                     </button>
-                    <span class="nav-counter" id="questionCounter"></span>
+                    <span class="nav-counter" id="questionCounter">
+                        {{ $question->order_index }}/{{ $exercise->questions_count }}
+                    </span>
                     <button id="nextQuestionBtn" class="nav-arrow-btn" type="button" title="Câu sau">
                         <span class="nav-arrow-text">Câu sau</span>
                         <span class="nav-arrow-icon">→</span>
@@ -979,7 +962,7 @@
                     <h3>Hướng dẫn</h3>
                 </div>
                 <div class="instruction-popup-body">
-                    <div class="instruction-text" id="instructionText">{{ $exercise->instruction ?? '' }}</div>
+                    <div class="instruction-text" id="instructionText">{{ $exercise->instruction }}</div>
                 </div>
             </div>
         </div>
@@ -996,8 +979,12 @@
     <script>
         window.appData = {
             question: @json($question),
-            navigation: @json($navigationData ?? []),
-            current: @json($currentContext ?? [])
+            exercise: @json($exercise),
+            lesson: @json($lesson),
+            type: @json($type),
+            prev: @json($prev),
+            next: @json($next),
+            latestAttempt: @json($latestAttempt),
         };
     </script>
 </body>

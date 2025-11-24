@@ -456,8 +456,8 @@ class WritingController extends Controller
         try {
             $userId = 2;
 
-            // Load relation type và lesson
-            $exercise->load(['type', 'lesson']);
+            $type = $exercise->type;
+            $lesson = $exercise->lesson;
 
             $questionId = $request->query('questionId');
             $question = $questionId 
@@ -522,6 +522,8 @@ class WritingController extends Controller
             $response = response()->view($viewName, [
                 'exercise' => $exercise,
                 'question' => $question,
+                'type' => $type,
+                'lesson' => $lesson,
                 'prev' => $prev,
                 'next' => $next,
                 'latestAttempt' => $latestAttempt,
