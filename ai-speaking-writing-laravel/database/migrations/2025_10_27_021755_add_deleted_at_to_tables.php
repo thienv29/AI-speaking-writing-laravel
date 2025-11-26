@@ -41,9 +41,10 @@ class AddDeletedAtToTables extends Migration
      */
     public function down()
     {
+        Schema::table('attempts', function (Blueprint $t) { $t->dropSoftDeletes(); });
         Schema::table('lessons', function (Blueprint $t) { $t->dropSoftDeletes(); });
         Schema::table('exercises', function (Blueprint $t) { $t->dropSoftDeletes(); });
-        Schema::table('exercise_type', function (Blueprint $t) { $t->dropSoftDeletes(); });
+        Schema::table('exercise_types', function (Blueprint $t) { $t->dropSoftDeletes(); });
         Schema::table('questions', function (Blueprint $t) { $t->dropSoftDeletes(); });
         Schema::table('users', function (Blueprint $t) { $t->dropSoftDeletes(); });
     }

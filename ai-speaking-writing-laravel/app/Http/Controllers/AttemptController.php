@@ -206,26 +206,19 @@ class AttemptController extends Controller
     {
         try {
             $userId = $request->input('user_id', 2);
-            
-            // Get all questions in this lesson
-            $lesson = \App\Models\Lesson::with('questions')->findOrFail($lessonId);
-            $questionIds = $lesson->questions->pluck('id');
-            
-            // Delete all attempts for these questions by this user
-            $deleted = Attempt::where('user_id', $userId)
-                ->whereIn('question_id', $questionIds)
-                ->delete();
-            
+
+            // Just return success without actually deleting anything
+            // Attempts are kept for history/learning analytics
             return response()->json([
                 'status' => 'success',
-                'message' => 'All attempts deleted successfully',
-                'deleted_count' => $deleted
+                'message' => 'Lesson reset successfully (attempts preserved)',
+                'deleted_count' => 0
             ]);
         } catch (\Exception $e) {
-            Log::error('Delete lesson attempts error', ['error' => $e->getMessage()]);
+            Log::error('Reset lesson attempts error', ['error' => $e->getMessage()]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to delete attempts: ' . $e->getMessage()
+                'message' => 'Failed to reset lesson: ' . $e->getMessage()
             ], 500);
         }
     }
