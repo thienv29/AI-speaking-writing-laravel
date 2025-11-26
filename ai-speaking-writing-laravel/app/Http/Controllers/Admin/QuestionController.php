@@ -126,4 +126,33 @@ class QuestionController extends Controller
         return redirect()->route('admin.questions.index', $queryParams)
             ->with('success', 'Câu hỏi đã được xóa thành công!');
     }
+
+    public function search(Request $request)
+    {
+        $query = $request->get('q', '');
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $questions = Question::with(['exercise.lesson', 'exercise.type'])
+            ->where(function($q) use ($query) {
+                $q->where('id', $query)
+                  ->orWhere('target_text', 'like', '%' . $query . '%')
+                  ->orWhere('prompt_text', 'like', '%' . $query . '%')
+                  ->orWhere('starter_text', 'like', '%' . $query . '%');
+            })
+            ->limit(20)
+            ->get()
+            ->map(function($question) {
+                return [
+                    'id' => $question->id,
+                    'text' => $question->target_text ?? $question->starter_text ?? 'Question ' . $question->id,
+                    'type' => $question->exercise->type->code,
+                    'lesson' => $question->exercise->lesson->title,
+                ];
+            });
+
+        return response()->json($questions);
+    }
 }

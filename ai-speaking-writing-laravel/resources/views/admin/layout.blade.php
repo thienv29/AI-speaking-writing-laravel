@@ -34,6 +34,7 @@
                         <a href="{{ route('admin.lessons.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Bài học</a>
                         <a href="{{ route('admin.exercises.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Bài tập</a>
                         <a href="{{ route('admin.questions.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Câu hỏi</a>
+                        <a href="{{ route('admin.groups.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Nhóm câu hỏi</a>
                         <a href="{{ route('admin.attempts.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Kết quả</a>
                     </div>
                 </div>

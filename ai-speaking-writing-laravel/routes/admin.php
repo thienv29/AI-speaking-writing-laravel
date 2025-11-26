@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ExerciseController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\ExerciseTypeController;
 use App\Http\Controllers\Admin\AttemptController;
+use App\Http\Controllers\Admin\GroupController;
 
 // Admin routes - no authentication for now
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -32,4 +33,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     
     // Attempts
     Route::resource('attempts', AttemptController::class)->only(['index', 'show', 'destroy']);
+
+    // Groups
+    Route::resource('groups', GroupController::class);
+    Route::post('groups/{group}/add-question', [GroupController::class, 'addQuestion'])->name('groups.add-question');
+    Route::delete('groups/{group}/questions/{questionId}', [GroupController::class, 'removeQuestion'])->name('groups.remove-question');
+    Route::get('questions/search', [QuestionController::class, 'search'])->name('questions.search');
 });
