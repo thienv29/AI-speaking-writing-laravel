@@ -41,6 +41,10 @@
                 <dt class="text-sm font-medium text-gray-500">Loại</dt>
                 <dd class="mt-1 text-sm text-gray-900">{{ $question->exercise->type->code ?? '—' }}</dd>
             </div>
+            <div>
+                <dt class="text-sm font-medium text-gray-500">Nhóm</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ $question->group->name ?? '—' }}</dd>
+            </div>
             <div class="sm:col-span-2">
                 <dt class="text-sm font-medium text-gray-500">Đề bài</dt>
                 <dd class="mt-1 text-sm text-gray-900">{{ $question->prompt_text ?? '—' }}</dd>

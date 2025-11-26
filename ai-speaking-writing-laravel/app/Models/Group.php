@@ -13,6 +13,6 @@ class Group extends Model
 
     public function questions()
     {
-        return $this->belongsToMany(Question::class, 'group_question');
+        return $this->hasMany(Question::class);
     }
 }

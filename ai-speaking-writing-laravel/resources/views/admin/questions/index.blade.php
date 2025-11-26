@@ -59,6 +59,18 @@
                     @endforeach
                 </select>
             </div>
+            <div class="min-w-[180px]">
+                <label for="group_id" class="block text-sm font-medium text-gray-700 mb-2">Nhóm</label>
+                <select id="group_id" name="group_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Tất cả</option>
+                    @foreach($groups as $group)
+                        <option value="{{ $group->id }}" {{ request('group_id') == $group->id ? 'selected' : '' }}>
+                            {{ $group->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
             <div class="flex gap-2">
                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                     Lọc
@@ -78,6 +90,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thứ tự</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Đề bài</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bài tập</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nhóm</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
                 </tr>
             </thead>
@@ -90,6 +103,9 @@
                     <td class="px-6 py-4 text-sm text-gray-500">
                         {{ $question->exercise->title ?? '—' }}<br>
                         <span class="text-xs text-gray-400">{{ $question->exercise->lesson->title ?? '' }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ $question->group->name ?? '—' }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex items-center space-x-3">

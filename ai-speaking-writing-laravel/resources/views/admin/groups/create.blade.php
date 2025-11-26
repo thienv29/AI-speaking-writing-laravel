@@ -16,7 +16,7 @@
             <div class="mb-4">
                 <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Tên nhóm *</label>
                 <input type="text" id="name" name="name" value="{{ old('name') }}"
-                    placeholder="Ví dụ: Từ vựng động vật, Ngữ pháp cơ bản..."
+                    placeholder="Ví dụ: Từ vựng cơ bản, Ngữ pháp nâng cao..."
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                     required>
 

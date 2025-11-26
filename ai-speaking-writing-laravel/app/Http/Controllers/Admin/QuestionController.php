@@ -5,13 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Question;
 use App\Models\Exercise;
+use App\Models\Group;
 use Illuminate\Http\Request;
-
 class QuestionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Question::with(['exercise.lesson', 'exercise.type']);
+        $query = Question::with(['exercise.lesson', 'exercise.type', 'group']);
 
         // Filter by exercise
         if ($request->filled('exercise_id')) {
@@ -32,6 +32,11 @@ class QuestionController extends Controller
             });
         }
 
+        // Filter by group
+        if ($request->filled('group_id')) {
+            $query->where('group_id', $request->group_id);
+        }
+
         // Search by prompt_text
         if ($request->filled('search')) {
             $query->where('prompt_text', 'like', '%' . $request->search . '%');
@@ -42,8 +47,9 @@ class QuestionController extends Controller
         $exercises = Exercise::with(['lesson', 'type'])->orderBy('id', 'desc')->get();
         $lessons = \App\Models\Lesson::orderBy('title')->get();
         $types = \App\Models\ExerciseType::orderBy('name')->get();
-        
-        return view('admin.questions.index', compact('questions', 'exercises', 'lessons', 'types'));
+        $groups = Group::orderBy('name')->get();
+
+        return view('admin.questions.index', compact('questions', 'exercises', 'lessons', 'types', 'groups'));
     }
 
     public function create()
@@ -51,13 +57,15 @@ class QuestionController extends Controller
         $exercises = Exercise::with(['lesson', 'type'])
             ->orderBy('id', 'desc')
             ->get();
-        return view('admin.questions.create', compact('exercises'));
+        $groups = Group::orderBy('name')->get();
+        return view('admin.questions.create', compact('exercises', 'groups'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'exercise_id' => 'required|exists:exercises,id',
+            'group_id' => 'nullable|exists:groups,id',
             'prompt_text' => 'required|string',
             'target_text' => 'nullable|string',
             'starter_text' => 'nullable|string',
@@ -81,7 +89,7 @@ class QuestionController extends Controller
 
     public function show(Question $question)
     {
-        $question->load(['exercise.lesson', 'exercise.type']);
+        $question->load(['exercise.lesson', 'exercise.type', 'group']);
         return view('admin.questions.show', compact('question'));
     }
 
@@ -90,13 +98,15 @@ class QuestionController extends Controller
         $exercises = Exercise::with(['lesson', 'type'])
             ->orderBy('id', 'desc')
             ->get();
-        return view('admin.questions.edit', compact('question', 'exercises'));
+        $groups = Group::orderBy('name')->get();
+        return view('admin.questions.edit', compact('question', 'exercises', 'groups'));
     }
 
     public function update(Request $request, Question $question)
     {
         $validated = $request->validate([
             'exercise_id' => 'required|exists:exercises,id',
+            'group_id' => 'nullable|exists:groups,id',
             'prompt_text' => 'required|string',
             'target_text' => 'nullable|string',
             'starter_text' => 'nullable|string',

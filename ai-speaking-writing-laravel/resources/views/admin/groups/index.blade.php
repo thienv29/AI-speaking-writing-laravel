@@ -38,11 +38,11 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên nhóm</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số câu hỏi</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tên nhóm</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số câu hỏi</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ngày tạo</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -60,7 +60,7 @@
                         <div class="flex items-center space-x-3">
                             <a href="{{ route('admin.groups.show', $group) }}" class="text-blue-600 hover:text-blue-900">Xem</a>
                             <a href="{{ route('admin.groups.edit', $group) }}" class="text-yellow-600 hover:text-yellow-900">Sửa</a>
-                            <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" class="inline-block" onsubmit="return confirm('Bạn có chắc muốn xóa nhóm này? Tất cả câu hỏi trong nhóm sẽ bị xóa khỏi nhóm.');">
+                            <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" class="inline-block" onsubmit="return confirm('Bạn có chắc muốn xóa nhóm này?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-900 cursor-pointer">Xóa</button>

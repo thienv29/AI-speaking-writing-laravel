@@ -44,6 +44,19 @@
             </div>
 
             <div class="mb-4">
+                <label for="group_id" class="block text-sm font-medium text-gray-700 mb-2">Nhóm câu hỏi</label>
+                <select id="group_id" name="group_id"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Không thuộc nhóm nào</option>
+                    @foreach($groups as $group)
+                        <option value="{{ $group->id }}" {{ old('group_id', $question->group_id) == $group->id ? 'selected' : '' }}>
+                            {{ $group->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="mb-4">
                 <label for="prompt_text" class="block text-sm font-medium text-gray-700 mb-2">Đề bài *</label>
                 <textarea id="prompt_text" name="prompt_text" rows="3" required
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">{{ old('prompt_text', $question->prompt_text) }}</textarea>

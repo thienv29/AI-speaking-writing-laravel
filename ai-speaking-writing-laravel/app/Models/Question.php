@@ -12,6 +12,7 @@ class Question extends Model
 
     protected $fillable = [
         'exercise_id',
+        'group_id',
         'img_url',
         'audio_url',
         'order_index',
@@ -38,8 +39,8 @@ class Question extends Model
         return $this->hasMany(Attempt::class, 'question_id');
     }
 
-    public function groups()
+    public function group()
     {
-        return $this->belongsToMany(Group::class, 'group_question');
+        return $this->belongsTo(Group::class);
     }
 }

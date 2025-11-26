@@ -68,28 +68,12 @@ class GroupController extends Controller
 
     public function destroy(Group $group)
     {
+        if ($group->questions()->count() > 0) {
+            return redirect()->route('admin.groups.index')->with('error', 'Không thể xóa nhóm này vì vẫn còn câu hỏi thuộc nhóm!');
+        }
+
         $group->delete();
 
         return redirect()->route('admin.groups.index')->with('success', 'Nhóm câu hỏi đã được xóa thành công!');
-    }
-
-    public function addQuestion(Request $request, Group $group)
-    {
-        $request->validate([
-            'question_id' => 'required|exists:questions,id'
-        ]);
-
-        if (!$group->questions()->where('question_id', $request->question_id)->exists()) {
-            $group->questions()->attach($request->question_id);
-        }
-
-        return redirect()->back()->with('success', 'Câu hỏi đã được thêm vào nhóm!');
-    }
-
-    public function removeQuestion(Group $group, $questionId)
-    {
-        $group->questions()->detach($questionId);
-
-        return redirect()->back()->with('success', 'Câu hỏi đã được xóa khỏi nhóm!');
     }
 }
