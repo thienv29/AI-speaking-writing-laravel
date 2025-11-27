@@ -75,6 +75,23 @@ const currentQuestionIndex = Math.max(
     exerciseQuestions.findIndex((q) => q.id === question.id)
 );
 
+// Helper function to build embed URL from question_id or exercise_id
+function buildEmbedUrl(questionId, exerciseId = null, exerciseType = null) {
+    // If we have exercise_id and type, use new route
+    const finalExerciseId = exerciseId || question?.exercise?.id || currentContext.exercise_id;
+    const finalExerciseType = exerciseType || question?.exercise?.type?.code || currentContext.type;
+    
+    if (finalExerciseId && finalExerciseType) {
+        const typeCode = String(finalExerciseType).toUpperCase();
+        const routePrefix = typeCode.startsWith('W') ? '/embed-writing/exercises' : '/embed-speaking/exercises';
+        const url = `${routePrefix}/${finalExerciseId}`;
+        return questionId ? `${url}?questionId=${questionId}` : url;
+    }
+    
+    // Fallback to old route (will redirect)
+    return `/embed/question/${questionId}`;
+}
+
 const ANSWER_STORAGE_NAMESPACE = `questionAnswers:${userId || 'guest'}`;
 let inMemoryAnswerCache = {};
 
@@ -260,7 +277,10 @@ function initNavigationSelectors() {
             if (currentLessonInType && Navigation.lessonHasTypes(activeLessonId, navigationData)) {
                 Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
                 const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
-                if (questionId) window.location.assign(`/embed/question/${questionId}`);
+                if (questionId) {
+                    const url = buildEmbedUrl(questionId);
+                    window.location.assign(url);
+                }
             } else {
                 const firstLessonWithTypes = availableLessons.find((lesson) => Navigation.lessonHasTypes(Number(lesson.id), navigationData));
                 if (firstLessonWithTypes) {
@@ -268,11 +288,17 @@ function initNavigationSelectors() {
                     if (lessonSelect) lessonSelect.value = String(activeLessonId);
                     Navigation.renderTypeOptions(activeLessonId, activeTypeCode, typeSelect, navigationData);
                     const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
-                    if (questionId) window.location.assign(`/embed/question/${questionId}`);
+                    if (questionId) {
+                    const url = buildEmbedUrl(questionId);
+                    window.location.assign(url);
+                }
                 } else {
                     Navigation.renderTypeOptions(null, activeTypeCode, typeSelect, navigationData);
                     const questionId = Navigation.getFirstQuestionIdForType(activeTypeCode, navigationData);
-                    if (questionId) window.location.assign(`/embed/question/${questionId}`);
+                    if (questionId) {
+                    const url = buildEmbedUrl(questionId);
+                    window.location.assign(url);
+                }
                 }
             }
         });
@@ -1276,7 +1302,8 @@ async function resetLessonAttempts(lessonId) {
                 const firstQuestion = navigation.find(nav => nav.lesson_id === lessonId);
                 if (firstQuestion && firstQuestion.first_question_id) {
                     // Navigate to first question
-                    window.location.href = `/embed/question/${firstQuestion.first_question_id}`;
+                    const url = buildEmbedUrl(firstQuestion.first_question_id);
+                    window.location.href = url;
                     return;
                 }
             }
@@ -1332,7 +1359,8 @@ function setNavigationBtnUrl() {
 
 function handleQuestionSelect(questionId) {
     if (!questionId) return;
-    window.location.assign(`/embed/question/${questionId}`);
+    const url = buildEmbedUrl(questionId);
+    window.location.assign(url);
 }
 
 function initEventListeners() {
@@ -1348,14 +1376,12 @@ function initEventListeners() {
     function openInstructionPopup() {
         if (instructionPopup) {
             instructionPopup.classList.add('show');
-            document.body.style.overflow = 'hidden';
         }
     }
     
     function closeInstructionPopup() {
         if (instructionPopup) {
             instructionPopup.classList.remove('show');
-            document.body.style.overflow = '';
         }
     }
     

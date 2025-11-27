@@ -18,7 +18,13 @@ class AttemptController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Attempt::with(['user', 'question.exercise.type', 'question.exercise.lesson']);
+        $query = Attempt::with([
+            'user',
+            'question.exercise.type',
+            'question.exercise.lesson',
+            'question.exercises.type',
+            'question.exercises.lesson'
+        ]);
 
         // Filter by user
         if ($request->filled('user_id')) {
@@ -32,21 +38,21 @@ class AttemptController extends Controller
 
         // Filter by exercise
         if ($request->filled('exercise_id')) {
-            $query->whereHas('question', function ($q) use ($request) {
-                $q->where('exercise_id', $request->exercise_id);
+            $query->whereHas('question.exercises', function ($q) use ($request) {
+                $q->where('exercises.id', $request->exercise_id);
             });
         }
 
         // Filter by lesson
         if ($request->filled('lesson_id')) {
-            $query->whereHas('question.exercise', function ($q) use ($request) {
+            $query->whereHas('question.exercises', function ($q) use ($request) {
                 $q->where('lesson_id', $request->lesson_id);
             });
         }
 
         // Filter by exercise type
         if ($request->filled('type_id')) {
-            $query->whereHas('question.exercise', function ($q) use ($request) {
+            $query->whereHas('question.exercises', function ($q) use ($request) {
                 $q->where('type_id', $request->type_id);
             });
         }
@@ -96,7 +102,7 @@ class AttemptController extends Controller
 
         // Get filter options
         $users = User::orderBy('name')->get(['id', 'name', 'email']);
-        $questions = Question::with('exercise.type', 'exercise.lesson')
+        $questions = Question::with(['exercise.type', 'exercise.lesson', 'exercises.type', 'exercises.lesson'])
             ->orderBy('id')
             ->get(['id', 'exercise_id', 'prompt_text']);
         $exercises = Exercise::with('type', 'lesson')
@@ -123,7 +129,9 @@ class AttemptController extends Controller
         $attempt->load([
             'user',
             'question.exercise.type',
-            'question.exercise.lesson'
+            'question.exercise.lesson',
+            'question.exercises.type',
+            'question.exercises.lesson'
         ]);
 
         return view('admin.attempts.show', compact('attempt'));

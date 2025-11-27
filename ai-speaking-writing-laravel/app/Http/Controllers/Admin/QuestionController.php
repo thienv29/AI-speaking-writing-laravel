@@ -7,27 +7,36 @@ use App\Models\Question;
 use App\Models\Exercise;
 use App\Models\Group;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 class QuestionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Question::with(['exercise.lesson', 'exercise.type', 'groups']);
+        $query = Question::with([
+            'exercises.lesson',
+            'exercises.type',
+            'exercise.lesson',
+            'exercise.type',
+            'groups'
+        ]);
 
         // Filter by exercise
         if ($request->filled('exercise_id')) {
-            $query->where('exercise_id', $request->exercise_id);
+            $query->whereHas('exercises', function($q) use ($request) {
+                $q->where('exercises.id', $request->exercise_id);
+            });
         }
 
         // Filter by lesson (through exercise)
         if ($request->filled('lesson_id')) {
-            $query->whereHas('exercise', function($q) use ($request) {
+            $query->whereHas('exercises', function($q) use ($request) {
                 $q->where('lesson_id', $request->lesson_id);
             });
         }
 
         // Filter by type (through exercise)
         if ($request->filled('type_id')) {
-            $query->whereHas('exercise', function($q) use ($request) {
+            $query->whereHas('exercises', function($q) use ($request) {
                 $q->where('type_id', $request->type_id);
             });
         }
@@ -66,7 +75,8 @@ class QuestionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'exercise_id' => 'required|exists:exercises,id',
+            'exercise_ids' => 'required|array|min:1',
+            'exercise_ids.*' => 'exists:exercises,id',
             'group_ids' => 'nullable|array',
             'group_ids.*' => 'exists:groups,id',
             'prompt_text' => 'required|string',
@@ -76,15 +86,34 @@ class QuestionController extends Controller
             'audio_url' => 'nullable|url|max:500',
         ]);
 
-        // Tự động tính order_index: max order_index trong cùng exercise + 1, hoặc 1 nếu chưa có
-        $maxOrder = Question::where('exercise_id', $validated['exercise_id'])->max('order_index');
-        $validated['order_index'] = ($maxOrder !== null) ? $maxOrder + 1 : 1;
+        $exerciseIds = $validated['exercise_ids'];
+        $primaryExerciseId = $exerciseIds[0];
 
-        // Remove group_ids from validated (not a column in questions table)
+        // Set legacy exercise_id + order_index for backward compatibility
+        $maxOrder = DB::table('exercise_question')->where('exercise_id', $primaryExerciseId)->max('order_index');
+        $orderIndex = ($maxOrder !== null) ? $maxOrder + 1 : 1;
+
         $groupIds = $validated['group_ids'] ?? [];
-        unset($validated['group_ids']);
 
-        $question = Question::create($validated);
+        $question = Question::create([
+            'exercise_id' => $primaryExerciseId,
+            'order_index' => $orderIndex,
+            'prompt_text' => $validated['prompt_text'],
+            'target_text' => $validated['target_text'] ?? null,
+            'starter_text' => $validated['starter_text'] ?? null,
+            'img_url' => $validated['img_url'] ?? null,
+            'audio_url' => $validated['audio_url'] ?? null,
+        ]);
+
+        // Sync exercises with pivot order_index
+        $pivotData = [];
+        foreach ($exerciseIds as $exerciseId) {
+            $maxOrderForExercise = DB::table('exercise_question')->where('exercise_id', $exerciseId)->max('order_index');
+            $pivotData[$exerciseId] = [
+                'order_index' => ($maxOrderForExercise !== null) ? $maxOrderForExercise + 1 : 1,
+            ];
+        }
+        $question->exercises()->sync($pivotData);
         
         // Sync groups (many-to-many)
         if (!empty($groupIds)) {
@@ -101,7 +130,7 @@ class QuestionController extends Controller
 
     public function show(Question $question)
     {
-        $question->load(['exercise.lesson', 'exercise.type', 'groups']);
+        $question->load(['exercises.lesson', 'exercises.type', 'groups']);
         return view('admin.questions.show', compact('question'));
     }
 
@@ -117,7 +146,8 @@ class QuestionController extends Controller
     public function update(Request $request, Question $question)
     {
         $validated = $request->validate([
-            'exercise_id' => 'required|exists:exercises,id',
+            'exercise_ids' => 'required|array|min:1',
+            'exercise_ids.*' => 'exists:exercises,id',
             'group_ids' => 'nullable|array',
             'group_ids.*' => 'exists:groups,id',
             'prompt_text' => 'required|string',
@@ -128,11 +158,46 @@ class QuestionController extends Controller
             'order_index' => 'nullable|integer',
         ]);
 
-        // Remove group_ids from validated (not a column in questions table)
         $groupIds = $validated['group_ids'] ?? [];
-        unset($validated['group_ids']);
+        $exerciseIds = $validated['exercise_ids'];
+        $primaryExerciseId = $exerciseIds[0];
 
-        $question->update($validated);
+        $question->update([
+            'exercise_id' => $primaryExerciseId,
+            'prompt_text' => $validated['prompt_text'],
+            'target_text' => $validated['target_text'] ?? null,
+            'starter_text' => $validated['starter_text'] ?? null,
+            'img_url' => $validated['img_url'] ?? null,
+            'audio_url' => $validated['audio_url'] ?? null,
+            'order_index' => $validated['order_index'] ?? $question->order_index,
+        ]);
+
+        // Prepare pivot sync payload
+        $currentPivotOrders = $question->exercises->pluck('pivot.order_index', 'id');
+        $pivotData = [];
+        foreach ($exerciseIds as $exerciseId) {
+            if ($currentPivotOrders->has($exerciseId)) {
+                $pivotData[$exerciseId] = [
+                    'order_index' => $currentPivotOrders[$exerciseId],
+                ];
+            } else {
+                $maxOrderForExercise = DB::table('exercise_question')
+                    ->where('exercise_id', $exerciseId)
+                    ->where('question_id', '<>', $question->id)
+                    ->max('order_index');
+                $pivotData[$exerciseId] = [
+                    'order_index' => ($maxOrderForExercise !== null) ? $maxOrderForExercise + 1 : 1,
+                ];
+            }
+        }
+        $question->exercises()->sync($pivotData);
+
+        // Ensure primary exercise pivot order matches updated order_index (if provided)
+        if (isset($validated['order_index'])) {
+            $question->exercises()->updateExistingPivot($primaryExerciseId, [
+                'order_index' => $question->order_index,
+            ]);
+        }
         
         // Sync groups (many-to-many)
         $question->groups()->sync($groupIds);
@@ -165,7 +230,7 @@ class QuestionController extends Controller
             return response()->json([]);
         }
 
-        $questions = Question::with(['exercise.lesson', 'exercise.type'])
+        $questions = Question::with(['exercise.lesson', 'exercise.type', 'exercises.lesson', 'exercises.type'])
             ->where(function($q) use ($query) {
                 $q->where('id', $query)
                   ->orWhere('target_text', 'like', '%' . $query . '%')
@@ -175,11 +240,12 @@ class QuestionController extends Controller
             ->limit(20)
             ->get()
             ->map(function($question) {
+                $exercise = $question->exercise ?? $question->exercises->first();
                 return [
                     'id' => $question->id,
                     'text' => $question->target_text ?? $question->starter_text ?? 'Question ' . $question->id,
-                    'type' => $question->exercise->type->code,
-                    'lesson' => $question->exercise->lesson->title,
+                    'type' => $exercise->type->code ?? 'N/A',
+                    'lesson' => $exercise->lesson->title ?? 'N/A',
                 ];
             });
 

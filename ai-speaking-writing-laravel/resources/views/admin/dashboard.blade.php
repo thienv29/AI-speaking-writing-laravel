@@ -199,6 +199,9 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($recentAttempts as $attempt)
+                    @php
+                        $exercise = optional($attempt->question)->exercise ?? optional($attempt->question)->exercises->first();
+                    @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $attempt->user->name ?? 'N/A' }}
@@ -207,7 +210,7 @@
                             {{ Str::limit($attempt->question->prompt_text ?? 'N/A', 30) }}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            {{ $attempt->question->exercise->type->code ?? 'N/A' }}
+                            {{ $exercise->type->code ?? 'N/A' }}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             @if($attempt->is_correct)

@@ -36,15 +36,17 @@ class DashboardController extends Controller
         $avgScore = $avgScore ? round($avgScore, 1) : 0;
 
         // Attempts by type
-        $attemptsByType = Attempt::with('question.exercise.type')
+        $attemptsByType = Attempt::with(['question.exercise.type', 'question.exercises.type'])
             ->get()
             ->groupBy(function ($attempt) {
-                return $attempt->question->exercise->type->code ?? 'UNKNOWN';
+                $exercise = $attempt->question->exercise ?? $attempt->question->exercises->first();
+                return $exercise->type->code ?? 'UNKNOWN';
             })
             ->map(function ($group) {
+                $exercise = $group->first()->question->exercise ?? $group->first()->question->exercises->first();
                 return [
-                    'code' => $group->first()->question->exercise->type->code ?? 'UNKNOWN',
-                    'name' => $group->first()->question->exercise->type->name ?? 'Unknown',
+                    'code' => $exercise->type->code ?? 'UNKNOWN',
+                    'name' => $exercise->type->name ?? 'Unknown',
                     'count' => $group->count(),
                     'correct' => $group->where('is_correct', true)->count(),
                 ];
@@ -57,7 +59,8 @@ class DashboardController extends Controller
             'user:id,name',
             'question:id,exercise_id,prompt_text',
             'question.exercise:id,title,type_id',
-            'question.exercise.type:id,code,name'
+            'question.exercise.type:id,code,name',
+            'question.exercises:id,title'
         ])
         ->orderByDesc('created_at')
         ->limit(10)
@@ -72,9 +75,15 @@ class DashboardController extends Controller
         $exercisesWithoutQuestions = Exercise::doesntHave('questions')->count();
         
         // Questions without img_url (for speaking)
-        $speakingQuestionsWithoutImg = Question::whereHas('exercise.type', function($q) {
-            $q->whereIn('code', ['SPS', 'SPW']);
-        })->whereNull('img_url')->count();
+        $speakingQuestionsWithoutImg = Question::whereNull('img_url')
+            ->where(function ($query) {
+                $query->whereHas('exercise.type', function($q) {
+                    $q->whereIn('code', ['SPS', 'SPW']);
+                })->orWhereHas('exercises.type', function($q) {
+                    $q->whereIn('code', ['SPS', 'SPW']);
+                });
+            })
+            ->count();
 
         return view('admin.dashboard', compact(
             'stats',

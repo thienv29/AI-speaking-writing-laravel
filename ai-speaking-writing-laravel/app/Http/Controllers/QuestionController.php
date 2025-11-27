@@ -7,6 +7,7 @@ use App\Models\Exercise;
 use App\Services\TemplateValidatorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -27,16 +28,19 @@ class QuestionController extends Controller
     public function index(Request $request)
     {
         $query = Question::with([
-            'exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index', 
-            'attempts',
-        ])
-        ->withCount('attempts')
-        ->orderBy('exercise_id')
-        ->orderBy('order_index');
-        
-        if ($request->has('exercise_id')) {
-            $query->where('exercise_id', $request->exercise_id)
-            ->orderBy('order_index'); 
+                'exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
+                'exercises:id,lesson_id,type_id,title,instruction,difficulty,order_index',
+                'exercises.lesson:id,title',
+                'exercises.type:id,code,name',
+                'attempts',
+            ])
+            ->withCount('attempts')
+            ->orderByDesc('id');
+
+        if ($request->filled('exercise_id')) {
+            $query->whereHas('exercises', function ($q) use ($request) {
+                $q->where('exercises.id', $request->exercise_id);
+            });
         }
 
         $questions = $query->get();
@@ -56,22 +60,24 @@ class QuestionController extends Controller
         try {
             $validated = $request->validate(
                 [
-                    'exercise_id'  => ['required', 'integer', Rule::exists('exercises', 'id')],
+                    'exercise_ids' => ['required', 'array', 'min:1'],
+                    'exercise_ids.*' => ['integer', Rule::exists('exercises', 'id')],
                     'img_url'      => ['nullable', 'url', 'max:2048'],
                     'audio_url'    => ['nullable', 'url', 'max:2048'],
-                    'order_index'  => ['required', 'integer', 'min:1'],
+                    'order_index'  => ['nullable', 'integer', 'min:1'],
                     'prompt_text'  => ['nullable', 'string'],
                     'target_text'  => ['nullable', 'string'],
                     'starter_text' => ['nullable', 'string']
                 ],
                 [
-                    'exercise_id.required' => 'The exercise_id is required.',
-                    'exercise_id.exists'   => 'The selected exercise is invalid.',
+                    'exercise_ids.required' => 'The exercise list is required.',
+                    'exercise_ids.array'    => 'Exercise IDs must be an array.',
+                    'exercise_ids.min'      => 'At least one exercise is required.',
+                    'exercise_ids.*.exists' => 'One of the selected exercises is invalid.',
 
                     'img_url.url'          => 'The image URL must be valid.',
                     'audio_url.url'        => 'The audio URL must be valid.',
 
-                    'order_index.required' => 'The order index is required.',
                     'order_index.integer'  => 'The order index must be an integer.',
                     'order_index.min'      => 'The order index must be at least 1.',
 
@@ -87,12 +93,28 @@ class QuestionController extends Controller
                 }
             }
 
-            $question = Question::create($validated);
+            $exerciseIds = $validated['exercise_ids'];
+            $primaryExerciseId = $exerciseIds[0];
+            $orderIndex = $validated['order_index'] ?? $this->nextOrderIndex($primaryExerciseId);
+
+            $question = Question::create([
+                'exercise_id'  => $primaryExerciseId,
+                'order_index'  => $orderIndex,
+                'prompt_text'  => $validated['prompt_text'] ?? null,
+                'target_text'  => $validated['target_text'] ?? null,
+                'starter_text' => $validated['starter_text'] ?? null,
+                'img_url'      => $validated['img_url'] ?? null,
+                'audio_url'    => $validated['audio_url'] ?? null,
+            ]);
+
+            $question->exercises()->sync(
+                $this->buildPivotData($exerciseIds)
+            );
 
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Question created successfully.',
-                'data'    => $question->load('exercise:id,title'),
+                'data'    => $question->load(['exercise:id,title', 'exercises:id,title']),
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -123,15 +145,24 @@ class QuestionController extends Controller
                     $query->with(['type:id,code,name', 'lesson:id,title'])
                           ->select('id', 'lesson_id', 'type_id', 'title', 'instruction', 'difficulty', 'order_index');
                 },
+                'exercises' => function ($query) {
+                    $query->with(['type:id,code,name', 'lesson:id,title'])
+                        ->orderBy('exercise_question.order_index');
+                },
             ])->loadCount('attempts');
-            $question->exercise->loadCount('questions');
 
-            $lessonId = $question->exercise->lesson_id;
-            $exerciseOrder = $question->exercise->order_index;
+            $primaryExercise = $this->resolvePrimaryExercise($question);
+            if (!$primaryExercise) {
+                abort(422, 'Question is not attached to any exercise.');
+            }
+            $primaryExercise->loadCount('questions');
+
+            $lessonId = $primaryExercise->lesson_id;
+            $exerciseOrder = $primaryExercise->order_index;
 
             // ===== Previous question =====
             // 1. Trong cùng exercise
-            $previous = Question::where('exercise_id', $question->exercise_id)
+            $previous = Question::where('exercise_id', $primaryExercise->id)
                 ->where('order_index', '<', $question->order_index)
                 ->orderBy('order_index', 'desc')
                 ->first();
@@ -152,7 +183,7 @@ class QuestionController extends Controller
 
             // ===== Next question =====
             // 1. Trong cùng exercise
-            $next = Question::where('exercise_id', $question->exercise_id)
+            $next = Question::where('exercise_id', $primaryExercise->id)
                 ->where('order_index', '>', $question->order_index)
                 ->orderBy('order_index', 'asc')
                 ->first();
@@ -174,7 +205,7 @@ class QuestionController extends Controller
             $question->prev_question_id = $previous ? $previous->id : null;
             $question->next_question_id = $next ? $next->id : null;
 
-            $allQuestions = Question::where('exercise_id', $question->exercise_id)
+            $allQuestions = Question::where('exercise_id', $primaryExercise->id)
                 ->orderBy('order_index')
                 ->get(['id', 'order_index']);
 
@@ -204,7 +235,7 @@ class QuestionController extends Controller
 
             // Load tất cả dữ liệu cần thiết
             $question->load([
-                'attempts', // danh sách các attempts của question
+                'attempts',
                 'exercise' => function ($query) {
                     $query->select('id', 'lesson_id', 'type_id', 'title', 'instruction', 'difficulty', 'order_index')
                         ->with([
@@ -214,14 +245,23 @@ class QuestionController extends Controller
                         ])
                         ->withCount('questions'); 
                 },
+                'exercises' => function ($query) {
+                    $query->with(['lesson:id,title', 'type:id,name,code'])
+                        ->orderBy('exercise_question.order_index');
+                },
             ])->loadCount('attempts'); 
 
-            $lessonId = $question->exercise->lesson_id;
-            $exerciseOrder = $question->exercise->order_index;
+            $primaryExercise = $this->resolvePrimaryExercise($question);
+            if (!$primaryExercise) {
+                abort(422, 'Question is not attached to any exercise.');
+            }
+
+            $lessonId = $primaryExercise->lesson_id;
+            $exerciseOrder = $primaryExercise->order_index;
 
             // ===== Previous question =====
             // 1. Trong cùng exercise
-            $previous = Question::where('exercise_id', $question->exercise_id)
+            $previous = Question::where('exercise_id', $primaryExercise->id)
                 ->where('order_index', '<', $question->order_index)
                 ->orderBy('order_index', 'desc')
                 ->first();
@@ -242,7 +282,7 @@ class QuestionController extends Controller
 
             // ===== Next question =====
             // 1. Trong cùng exercise
-            $next = Question::where('exercise_id', $question->exercise_id)
+            $next = Question::where('exercise_id', $primaryExercise->id)
                 ->where('order_index', '>', $question->order_index)
                 ->orderBy('order_index', 'asc')
                 ->first();
@@ -297,22 +337,24 @@ class QuestionController extends Controller
             $validated = validator(
                 $input,
                 [
-                    'exercise_id'  => ['sometimes','required','integer', Rule::exists('exercises', 'id')],
+                    'exercise_ids' => ['sometimes','required','array','min:1'],
+                    'exercise_ids.*' => ['integer', Rule::exists('exercises', 'id')],
                     'img_url'      => ['sometimes','nullable','url','max:2048'],
                     'audio_url'    => ['sometimes','nullable','url','max:2048'],
-                    'order_index'  => ['sometimes','required','integer','min:1'],
+                    'order_index'  => ['sometimes','nullable','integer','min:1'],
                     'prompt_text'  => ['sometimes','nullable','string'],
                     'target_text'  => ['sometimes','nullable','string'],
                     'starter_text' => ['sometimes','nullable','string'],
                 ],
                 [
-                    'exercise_id.required' => 'The exercise_id is required.',
-                    'exercise_id.exists'   => 'The selected exercise is invalid.',
+                    'exercise_ids.required' => 'The exercise list is required.',
+                    'exercise_ids.array'    => 'Exercise IDs must be an array.',
+                    'exercise_ids.min'      => 'At least one exercise is required.',
+                    'exercise_ids.*.exists' => 'One of the selected exercises is invalid.',
 
                     'img_url.url'          => 'The image URL must be valid.',
                     'audio_url.url'        => 'The audio URL must be valid.',
 
-                    'order_index.required' => 'The order index is required.',
                     'order_index.integer'  => 'The order index must be an integer.',
                     'order_index.min'      => 'The order index must be at least 1.',
 
@@ -322,9 +364,35 @@ class QuestionController extends Controller
                 ]
             )->validate();
 
-            $question->fill($validated)->save();
+            $exerciseIds = $validated['exercise_ids'] ?? $question->exercises()->pluck('exercises.id')->toArray();
+            if (empty($exerciseIds)) {
+                throw ValidationException::withMessages([
+                    'exercise_ids' => ['At least one exercise is required.'],
+                ]);
+            }
 
-            $question->load('exercise:id,title')->loadCount('attempts');
+            $primaryExerciseId = $exerciseIds[0];
+
+            $question->fill([
+                'exercise_id'  => $primaryExerciseId,
+                'prompt_text'  => $validated['prompt_text'] ?? $question->prompt_text,
+                'target_text'  => $validated['target_text'] ?? $question->target_text,
+                'starter_text' => $validated['starter_text'] ?? $question->starter_text,
+                'img_url'      => array_key_exists('img_url', $validated) ? $validated['img_url'] : $question->img_url,
+                'audio_url'    => array_key_exists('audio_url', $validated) ? $validated['audio_url'] : $question->audio_url,
+                'order_index'  => $validated['order_index'] ?? $question->order_index,
+            ])->save();
+
+            $pivotData = $this->buildPivotData($exerciseIds, $question);
+            $question->exercises()->sync($pivotData);
+
+            if (isset($validated['order_index'])) {
+                $question->exercises()->updateExistingPivot($primaryExerciseId, [
+                    'order_index' => $question->order_index,
+                ]);
+            }
+
+            $question->load(['exercise:id,title', 'exercises:id,title'])->loadCount('attempts');
 
             return response()->json([
                 'status' => 'success',
@@ -363,6 +431,7 @@ class QuestionController extends Controller
                 ]);
             }
 
+            $question->exercises()->detach();
             $question->forceDelete();
 
             return response()->json([
@@ -414,5 +483,73 @@ class QuestionController extends Controller
                 'message' => 'Cannot restore question: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Determine the next order index for a question inside an exercise.
+     */
+    protected function nextOrderIndex(int $exerciseId): int
+    {
+        $maxOrder = DB::table('exercise_question')
+            ->where('exercise_id', $exerciseId)
+            ->max('order_index');
+
+        return ($maxOrder ?? 0) + 1;
+    }
+
+    /**
+     * Build pivot payload for syncing exercises to a question.
+     */
+    protected function buildPivotData(array $exerciseIds, ?Question $question = null): array
+    {
+        $pivotData = [];
+        $existingOrders = collect();
+
+        if ($question) {
+            $question->loadMissing('exercises');
+            $existingOrders = $question->exercises->pluck('pivot.order_index', 'id');
+        }
+
+        foreach ($exerciseIds as $exerciseId) {
+            if ($existingOrders->has($exerciseId)) {
+                $pivotData[$exerciseId] = [
+                    'order_index' => $existingOrders[$exerciseId],
+                ];
+                continue;
+            }
+
+            $maxOrder = DB::table('exercise_question')
+                ->where('exercise_id', $exerciseId)
+                ->when($question, function ($query) use ($question) {
+                    $query->where('question_id', '<>', $question->id);
+                })
+                ->max('order_index');
+
+            $pivotData[$exerciseId] = [
+                'order_index' => ($maxOrder ?? 0) + 1,
+            ];
+        }
+
+        return $pivotData;
+    }
+
+    /**
+     * Resolve the primary exercise for a question.
+     */
+    protected function resolvePrimaryExercise(Question $question): ?Exercise
+    {
+        if ($question->relationLoaded('exercise') && $question->exercise) {
+            return $question->exercise;
+        }
+
+        if ($question->exercise_id) {
+            return Exercise::find($question->exercise_id);
+        }
+
+        if ($question->relationLoaded('exercises')) {
+            return $question->exercises->first();
+        }
+
+        return $question->exercises()->first();
     }
 }

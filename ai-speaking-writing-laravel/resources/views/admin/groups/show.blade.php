@@ -44,8 +44,14 @@
                     </div>
                 </div>
                 <div class="ml-4">
+                    @php
+                        $typeList = $group->questions->map(function($question) {
+                            $exercise = $question->exercise ?? $question->exercises->first();
+                            return $exercise?->type->code;
+                        })->filter()->unique()->join(', ');
+                    @endphp
                     <h3 class="text-lg font-medium text-gray-900">Loại bài tập</h3>
-                    <p class="text-sm text-gray-600">{{ $group->questions->pluck('exercise.type.code')->unique()->join(', ') ?: 'Chưa có' }}</p>
+                    <p class="text-sm text-gray-600">{{ $typeList ?: 'Chưa có' }}</p>
                 </div>
             </div>
         </div>
@@ -65,6 +71,9 @@
             <div class="mb-4 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
                 @if($availableQuestions->count() > 0)
                     @foreach($availableQuestions as $question)
+                        @php
+                            $exercise = $question->exercise ?? $question->exercises->first();
+                        @endphp
                         <label class="flex items-start p-2 hover:bg-gray-50 rounded cursor-pointer question-option" data-id="{{ $question->id }}" data-text="{{ strtolower($question->prompt_text ?? '') }}">
                             <input type="checkbox" name="question_ids[]" value="{{ $question->id }}" 
                                 class="mt-1 mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
@@ -73,7 +82,7 @@
                                     ID: {{ $question->id }} - {{ Str::limit($question->prompt_text, 60) }}
                                 </div>
                                 <div class="text-xs text-gray-500 mt-1">
-                                    {{ $question->exercise->type->code ?? 'N/A' }} • {{ $question->exercise->lesson->title ?? 'N/A' }}
+                                    {{ $exercise->type->code ?? 'N/A' }} • {{ $exercise->lesson->title ?? 'N/A' }}
                                 </div>
                             </div>
                         </label>
@@ -112,25 +121,32 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($group->questions as $question)
+                    @php
+                        $exercise = $question->exercise ?? $question->exercises->first();
+                    @endphp
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $question->id }}</td>
                         <td class="px-6 py-4 text-sm text-gray-900">
                             <div class="max-w-xs truncate">{{ Str::limit($question->prompt_text, 50) }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            @if($exercise)
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                @if($question->exercise->type->code == 'SPW') bg-blue-100 text-blue-800
-                                @elseif($question->exercise->type->code == 'SPS') bg-green-100 text-green-800
-                                @elseif($question->exercise->type->code == 'WAQ') bg-yellow-100 text-yellow-800
-                                @elseif($question->exercise->type->code == 'WCS') bg-purple-100 text-purple-800
-                                @elseif($question->exercise->type->code == 'WSG') bg-pink-100 text-pink-800
+                                @if($exercise->type->code == 'SPW') bg-blue-100 text-blue-800
+                                @elseif($exercise->type->code == 'SPS') bg-green-100 text-green-800
+                                @elseif($exercise->type->code == 'WAQ') bg-yellow-100 text-yellow-800
+                                @elseif($exercise->type->code == 'WCS') bg-purple-100 text-purple-800
+                                @elseif($exercise->type->code == 'WSG') bg-pink-100 text-pink-800
                                 @else bg-gray-100 text-gray-800
                                 @endif">
-                                {{ $question->exercise->type->code }}
+                                {{ $exercise->type->code }}
                             </span>
+                            @else
+                                <span class="text-gray-400">—</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">
-                            {{ Str::limit($question->exercise->title, 30) }}
+                            {{ $exercise ? Str::limit($exercise->title, 30) : '—' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <form action="{{ route('admin.groups.remove-question', [$group, $question->id]) }}" method="POST" 

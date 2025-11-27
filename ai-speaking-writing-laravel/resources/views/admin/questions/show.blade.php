@@ -29,17 +29,24 @@
                 <dt class="text-sm font-medium text-gray-500">Thứ tự</dt>
                 <dd class="mt-1 text-sm text-gray-900">{{ $question->order_index ?? '—' }}</dd>
             </div>
-            <div>
+            <div class="sm:col-span-2">
                 <dt class="text-sm font-medium text-gray-500">Bài tập</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $question->exercise->title ?? '—' }}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-gray-500">Bài học</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $question->exercise->lesson->title ?? '—' }}</dd>
-            </div>
-            <div>
-                <dt class="text-sm font-medium text-gray-500">Loại</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $question->exercise->type->code ?? '—' }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">
+                    @if($question->exercises->count())
+                        <div class="flex flex-col gap-2">
+                            @foreach($question->exercises as $exercise)
+                                <div class="border border-gray-200 rounded-lg px-3 py-2">
+                                    <div class="font-medium">{{ $exercise->title }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ $exercise->lesson->title ?? 'N/A' }} • {{ $exercise->type->code ?? 'N/A' }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        —
+                    @endif
+                </dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">Nhóm</dt>

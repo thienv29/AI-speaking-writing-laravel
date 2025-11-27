@@ -21,7 +21,7 @@ class ExerciseController extends Controller
             'lesson:id,title,description,level', 
             'type:id,name,code',
             'questions' => function ($q) {
-                $q->orderBy('order_index');
+                $q->orderBy('exercise_question.order_index');
             },
         ])
         ->withCount('questions');
@@ -136,7 +136,7 @@ class ExerciseController extends Controller
                 'lesson:id,title,description,level',
                 'type:id,name,code',
                 'questions' => function ($q) {
-                    $q->orderBy('order_index');
+                    $q->orderBy('exercise_question.order_index');
                 }
             ])->loadCount('questions');
 
@@ -260,6 +260,7 @@ class ExerciseController extends Controller
                 ]);
             }
 
+            $exercise->questions()->detach();
             $exercise->forceDelete();
 
             return response()->json([

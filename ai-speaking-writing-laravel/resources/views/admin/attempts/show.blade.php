@@ -33,15 +33,18 @@
             <div>
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Câu hỏi</h3>
                 <div class="bg-gray-50 p-4 rounded-lg">
+                    @php
+                        $exercise = optional($attempt->question)->exercise ?? optional($attempt->question)->exercises->first();
+                    @endphp
                     <p class="text-sm text-gray-900"><strong>ID:</strong> {{ $attempt->question_id }}</p>
                     <p class="text-sm text-gray-900"><strong>Đề bài:</strong> {{ $attempt->question->prompt_text ?? 'N/A' }}</p>
                     <p class="text-sm text-gray-900"><strong>Đáp án đúng:</strong> {{ $attempt->question->target_text ?? 'N/A' }}</p>
                     <p class="text-sm text-gray-500 mt-2">
-                        <strong>Bài tập:</strong> {{ $attempt->question->exercise->title ?? 'N/A' }} 
-                        ({{ $attempt->question->exercise->type->code ?? 'N/A' }})
+                        <strong>Bài tập:</strong> {{ $exercise->title ?? 'N/A' }} 
+                        ({{ $exercise->type->code ?? 'N/A' }})
                     </p>
                     <p class="text-sm text-gray-500">
-                        <strong>Bài học:</strong> {{ $attempt->question->exercise->lesson->title ?? 'N/A' }}
+                        <strong>Bài học:</strong> {{ $exercise->lesson->title ?? 'N/A' }}
                     </p>
                 </div>
             </div>

@@ -42,12 +42,22 @@ class GroupController extends Controller
     public function show(Group $group)
     {
         $group->load(['questions' => function($query) {
-            $query->with(['exercise.lesson', 'exercise.type'])->orderBy('order_index');
+            $query->with([
+                'exercise.lesson',
+                'exercise.type',
+                'exercises.lesson',
+                'exercises.type'
+            ])->orderBy('exercise_question.order_index');
         }]);
 
         // Get all questions for selection (excluding already in group)
         $existingQuestionIds = $group->questions->pluck('id')->toArray();
-        $availableQuestions = \App\Models\Question::with(['exercise.lesson', 'exercise.type'])
+        $availableQuestions = \App\Models\Question::with([
+                'exercise.lesson',
+                'exercise.type',
+                'exercises.lesson',
+                'exercises.type'
+            ])
             ->whereNotIn('id', $existingQuestionIds)
             ->orderBy('id', 'desc')
             ->get();
@@ -59,7 +69,12 @@ class GroupController extends Controller
     {
         // Get all questions for selection (excluding already in group)
         $existingQuestionIds = $group->questions->pluck('id')->toArray();
-        $availableQuestions = \App\Models\Question::with(['exercise.lesson', 'exercise.type'])
+        $availableQuestions = \App\Models\Question::with([
+                'exercise.lesson',
+                'exercise.type',
+                'exercises.lesson',
+                'exercises.type'
+            ])
             ->whereNotIn('id', $existingQuestionIds)
             ->orderBy('id', 'desc')
             ->get();

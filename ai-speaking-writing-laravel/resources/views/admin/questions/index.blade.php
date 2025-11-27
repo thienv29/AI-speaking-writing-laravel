@@ -144,8 +144,20 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $question->order_index ?? '—' }}</td>
                         <td class="px-6 py-4 text-sm text-gray-900">{{ Str::limit($question->prompt_text, 50) }}</td>
                         <td class="px-6 py-4 text-sm text-gray-500">
-                            {{ $question->exercise->title ?? '—' }}<br>
-                            <span class="text-xs text-gray-400">{{ $question->exercise->lesson->title ?? '' }}</span>
+                            @if($question->exercises->count())
+                                <div class="flex flex-col gap-1">
+                                    @foreach($question->exercises as $exercise)
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span>{{ $exercise->title }}</span>
+                                            <span class="text-xs text-gray-400">
+                                                {{ $exercise->lesson->title ?? '' }} • {{ $exercise->type->code ?? '' }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-gray-400">—</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500">
                             @if($question->groups->count() > 0)

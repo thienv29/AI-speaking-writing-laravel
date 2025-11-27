@@ -13,7 +13,7 @@
     ]
   },
   "resources/js/admin/exercises/importExcel.js": {
-    "file": "assets/importExcel-CRmukwDm.js",
+    "file": "assets/importExcel-DWpPyxGu.js",
     "name": "importExcel",
     "src": "resources/js/admin/exercises/importExcel.js",
     "isDynamicEntry": true,
@@ -23,7 +23,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B0u7gziU.js",
+    "file": "assets/app-D9I7ACQ2.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -34,7 +34,7 @@
     ]
   },
   "resources/js/user/questionPage/main.js": {
-    "file": "assets/main-BdCuo87e.js",
+    "file": "assets/main-DvGW2Jn0.js",
     "name": "main",
     "src": "resources/js/user/questionPage/main.js",
     "isDynamicEntry": true,

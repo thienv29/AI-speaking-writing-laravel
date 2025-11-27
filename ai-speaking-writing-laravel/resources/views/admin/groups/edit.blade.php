@@ -51,6 +51,9 @@
             <div class="mb-4 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
                 @if($availableQuestions->count() > 0)
                     @foreach($availableQuestions as $question)
+                        @php
+                            $exercise = $question->exercise ?? $question->exercises->first();
+                        @endphp
                         <label class="flex items-start p-2 hover:bg-gray-50 rounded cursor-pointer question-option" data-id="{{ $question->id }}" data-text="{{ strtolower($question->prompt_text ?? '') }}">
                             <input type="checkbox" name="question_ids[]" value="{{ $question->id }}" 
                                 class="mt-1 mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
@@ -59,7 +62,7 @@
                                     ID: {{ $question->id }} - {{ Str::limit($question->prompt_text, 60) }}
                                 </div>
                                 <div class="text-xs text-gray-500 mt-1">
-                                    {{ $question->exercise->type->code ?? 'N/A' }} • {{ $question->exercise->lesson->title ?? 'N/A' }}
+                                    {{ $exercise->type->code ?? 'N/A' }} • {{ $exercise->lesson->title ?? 'N/A' }}
                                 </div>
                             </div>
                         </label>

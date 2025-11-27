@@ -37,6 +37,13 @@ class Exercise extends Model
 
     public function questions()
     {
-        return $this->hasMany(Question::class, 'exercise_id');
+        return $this->belongsToMany(
+            Question::class,
+            'exercise_question',
+            'exercise_id',
+            'question_id'
+        )->withPivot('order_index')
+        ->orderBy('exercise_question.order_index')
+        ->withTimestamps();
     }
 }

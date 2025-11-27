@@ -138,6 +138,9 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($attempts as $attempt)
+                @php
+                    $exercise = optional($attempt->question)->exercise ?? optional($attempt->question)->exercises->first();
+                @endphp
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attempt->id }}</td>
                     <td class="px-6 py-4 text-sm text-gray-900">
@@ -151,8 +154,8 @@
                             <div class="font-medium">#{{ $attempt->question->id ?? 'N/A' }}</div>
                             <div class="text-xs text-gray-500">{{ Str::limit($attempt->question->prompt_text ?? 'N/A', 40) }}</div>
                             <div class="text-xs text-gray-400">
-                                {{ $attempt->question->exercise->title ?? 'N/A' }} 
-                                ({{ $attempt->question->exercise->type->code ?? 'N/A' }})
+                                {{ $exercise->title ?? 'N/A' }} 
+                                ({{ $exercise->type->code ?? 'N/A' }})
                             </div>
                         </div>
                     </td>

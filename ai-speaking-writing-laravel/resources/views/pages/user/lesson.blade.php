@@ -40,13 +40,21 @@
                         <p class="text-lg">{{ $lesson->description }}</p>
                         <div>
                             @php
+                                $firstExercise = $lesson->exercises->first();
                                 $firstQuestionId = null;
-                                if ($lesson->exercises->isNotEmpty() && $lesson->exercises->first()->questions->isNotEmpty()) {
-                                    $firstQuestionId = $lesson->exercises->first()->questions->first()->id;
+                                $firstExerciseId = null;
+                                $firstExerciseType = null;
+                                if ($firstExercise && $firstExercise->questions->isNotEmpty()) {
+                                    $firstQuestionId = $firstExercise->questions->first()->id;
+                                    $firstExerciseId = $firstExercise->id;
+                                    $firstExerciseType = $firstExercise->type->code ?? '';
                                 }
                             @endphp
-                            @if($firstQuestionId)
-                                <a href="{{ route('writing.embed', ['id' => $firstQuestionId]) }}"
+                            @if($firstQuestionId && $firstExerciseId)
+                                @php
+                                    $routeName = str_starts_with($firstExerciseType, 'W') ? 'embed.writing' : 'embed.speaking';
+                                @endphp
+                                <a href="{{ route($routeName, ['exercise' => $firstExerciseId, 'questionId' => $firstQuestionId]) }}"
                                     class="bg-orange-400 text-white font-semibold rounded-full hover:bg-orange-500 transition-colors px-6 py-4">
                                     Bắt đầu làm bài
                                 </a>
@@ -68,9 +76,11 @@
                         <div class="exercise-info">
                             @php
                                 $firstQuestionId = $exercise->questions->isNotEmpty() ? $exercise->questions->first()->id : null;
+                                $exerciseType = $exercise->type->code ?? '';
+                                $routeName = str_starts_with($exerciseType, 'W') ? 'embed.writing' : 'embed.speaking';
                             @endphp
                             @if($firstQuestionId)
-                                <a href="{{ route('writing.embed', ['id' => $firstQuestionId]) }}" class="exercise-title">
+                                <a href="{{ route($routeName, ['exercise' => $exercise->id, 'questionId' => $firstQuestionId]) }}" class="exercise-title">
                                     {{ $exercise->title }}
                                 </a>
                             @else

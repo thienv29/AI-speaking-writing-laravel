@@ -8,6 +8,7 @@ use App\Models\Exercise;
 use App\Models\ExerciseType;
 use App\Models\Lesson;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
 class WritingController extends Controller
 {
@@ -177,53 +178,131 @@ class WritingController extends Controller
     }
     
     /**
-     * Display a specific writing question in embed mode (for iframe)
+     * Redirect old embed route to new separated routes
+     * DEPRECATED: Use /embed-writing/exercises/{exercise} or /embed-speaking/exercises/{exercise}
      * 
-     * @param int $id Question ID or Exercise ID
-     * @return \Illuminate\View\View
+     * @param int $id Question ID
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function embed($id)
     {
         try {
-            // Try to find by question ID first
-            $question = Question::with([
-                'exercise' => function ($query) {
-                    $query->with(['type', 'lesson']);
-                }
-            ])->find($id);
+            // Find question to get exercise (many-to-many relationship)
+            $question = Question::with('exercises.type')->find($id);
             
-            // If not found, try treating as exercise ID
-            if (!$question) {
-                $exercise = Exercise::with(['type', 'lesson'])->find($id);
-                
-                if (!$exercise) {
-                    abort(404, 'Question or exercise not found');
-                }
-                
-                // Get first question for this exercise
-                $question = Question::where('exercise_id', $id)
-                    ->orderBy('order_index')
-                    ->with(['exercise' => function ($query) {
-                        $query->with(['type', 'lesson']);
-                    }])
-                    ->first();
-                
-                if (!$question) {
-                    abort(404, 'No questions found for this exercise');
-                }
+            if (!$question || $question->exercises->isEmpty()) {
+                abort(404, 'Question not found');
             }
             
-            $exercise = $question->exercise;
+            // Get first exercise (or primary exercise if exists)
+            $exercise = $question->exercise ?? $question->exercises->first();
+            $exerciseType = $exercise->type;
+            $typeCode = strtoupper($exerciseType->code ?? '');
+            
+            // Redirect to appropriate route based on exercise type
+            if (str_starts_with($typeCode, 'W')) {
+                return redirect()->route('embed.writing', [
+                    'exercise' => $exercise->id,
+                    'questionId' => $question->id
+                ]);
+            } elseif (str_starts_with($typeCode, 'S')) {
+                return redirect()->route('embed.speaking', [
+                    'exercise' => $exercise->id,
+                    'questionId' => $question->id
+                ]);
+            }
+            
+            abort(400, 'Invalid exercise type');
+        } catch (\Throwable $e) {
+            Log::error('Embed redirect error', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            
+            if ($e->getCode() === 404 || $e->getCode() === 400) {
+                abort($e->getCode(), $e->getMessage());
+            }
+            
+            abort(500, 'Unable to redirect. Please try again later.');
+        }
+    }
+    
+    /**
+     * Display writing exercise in embed mode (for iframe)
+     * 
+     * @param Exercise $exercise
+     * @param Request $request
+     * @return \Illuminate\View\View
+     */
+    public function embedWriting(Exercise $exercise, Request $request)
+    {
+        return $this->embedTest($exercise, $request, 'writing');
+    }
+    
+    /**
+     * Display speaking exercise in embed mode (for iframe)
+     * 
+     * @param Exercise $exercise
+     * @param Request $request
+     * @return \Illuminate\View\View
+     */
+    public function embedSpeaking(Exercise $exercise, Request $request)
+    {
+        return $this->embedTest($exercise, $request, 'speaking');
+    }
+    
+    /**
+     * Common method to handle embed for both writing and speaking
+     * Based on embed() method but with separate views
+     * 
+     * @param Exercise $exercise
+     * @param Request $request
+     * @param string $type 'writing' or 'speaking'
+     * @return \Illuminate\View\View
+     */
+    private function embedTest(Exercise $exercise, Request $request, string $type)
+    {
+        try {
+            // Load exercise with relationships
+            $exercise->load(['type', 'lesson', 'questions' => function ($q) {
+                $q->orderBy('order_index');
+            }]);
+            
             $exerciseType = $exercise->type;
             $lesson = $exercise->lesson;
             
-            // Get all questions for navigation (optional)
-            $allQuestions = Question::where('exercise_id', $exercise->id)
-                ->orderBy('order_index')
-                ->get(['id', 'order_index']);
+            // Get question from query or use first question
+            $questionId = $request->query('questionId');
+            $question = $questionId 
+                ? $exercise->questions()->where('questions.id', $questionId)->first()
+                : $exercise->questions()->first();
+            
+            if (!$question) {
+                abort(404, 'Câu hỏi không tồn tại trong exercise này.');
+            }
+            
+            // Load question with exercises relationship (many-to-many)
+            $question->load(['exercises' => function ($query) {
+                $query->with(['type', 'lesson']);
+            }]);
+            
+            // Use the current exercise (already loaded)
+            $exerciseType = $exercise->type;
+            $lesson = $exercise->lesson;
+            
+            // Get all questions for navigation (from pivot with order_index)
+            $allQuestions = $exercise->questions()
+                ->select('questions.id', 'exercise_question.order_index')
+                ->get()
+                ->map(function ($q) {
+                    return (object) [
+                        'id' => $q->id,
+                        'order_index' => $q->pivot->order_index ?? $q->order_index ?? 0
+                    ];
+                });
             
             // Bao gồm cả Writing và Speaking types, sắp xếp W trước, S sau
-            $supportedTypeCodes = array_unique(array_merge(ExerciseTypes::writingTypes(), ['SPS', 'SPW']));
+            $supportedTypeCodes = array_unique(array_merge(ExerciseTypes::writingTypes(), ExerciseTypes::speakingTypes()));
             $supportedTypeIds = ExerciseType::whereIn('code', $supportedTypeCodes)
                 ->pluck('id', 'code');
             
@@ -232,7 +311,7 @@ class WritingController extends Controller
                     'type:id,code,name',
                     'lesson:id,title',
                     'questions' => function ($q) {
-                        $q->orderBy('order_index')->select('id', 'exercise_id', 'order_index');
+                        $q->orderByPivot('order_index')->select('questions.id', 'exercise_question.order_index');
                     }
                 ])
                 ->orderBy('order_index')
@@ -256,7 +335,7 @@ class WritingController extends Controller
                             }
                             
                             $exercises = $lessonExercises
-                                ->sortBy('order_index') // Sắp xếp exercises theo order_index
+                                ->sortBy('order_index')
                                 ->map(function ($exerciseItem) {
                                     $firstQuestion = $exerciseItem->questions->first();
                                     return [
@@ -297,14 +376,13 @@ class WritingController extends Controller
                 })
                 ->filter()
                 ->sortBy(function ($typeData) {
-                    // Sắp xếp: W types trước, S types sau
                     $code = $typeData['code'] ?? '';
                     if (strpos($code, 'W') === 0) {
-                        return '0_' . $code; // W types: 0_WAQ, 0_WCS, 0_WSG
+                        return '0_' . $code;
                     } elseif (strpos($code, 'S') === 0) {
-                        return '1_' . $code; // S types: 1_SPS, 1_SPW
+                        return '1_' . $code;
                     }
-                    return '2_' . $code; // Others
+                    return '2_' . $code;
                 })
                 ->values();
             
@@ -327,10 +405,12 @@ class WritingController extends Controller
                 ];
             });
             
-            // Determine previous/next question ids
-            $previous = Question::where('exercise_id', $question->exercise_id)
-                ->where('order_index', '<', $question->order_index)
-                ->orderBy('order_index', 'desc')
+            // Determine previous/next question ids (using pivot order_index)
+            $currentOrderIndex = $question->pivot->order_index ?? $question->order_index ?? 0;
+            
+            $previous = $exercise->questions()
+                ->wherePivot('order_index', '<', $currentOrderIndex)
+                ->orderByPivot('order_index', 'desc')
                 ->first();
 
             if (!$previous) {
@@ -340,15 +420,15 @@ class WritingController extends Controller
                     ->first();
 
                 if ($previousExercise) {
-                    $previous = Question::where('exercise_id', $previousExercise->id)
-                        ->orderBy('order_index', 'desc')
+                    $previous = $previousExercise->questions()
+                        ->orderByPivot('order_index', 'desc')
                         ->first();
                 }
             }
 
-            $next = Question::where('exercise_id', $question->exercise_id)
-                ->where('order_index', '>', $question->order_index)
-                ->orderBy('order_index', 'asc')
+            $next = $exercise->questions()
+                ->wherePivot('order_index', '>', $currentOrderIndex)
+                ->orderByPivot('order_index', 'asc')
                 ->first();
 
             if (!$next) {
@@ -358,15 +438,17 @@ class WritingController extends Controller
                     ->first();
 
                 if ($nextExercise) {
-                    $next = Question::where('exercise_id', $nextExercise->id)
-                        ->orderBy('order_index', 'asc')
+                    $next = $nextExercise->questions()
+                        ->orderByPivot('order_index', 'asc')
                         ->first();
                 }
             }
 
             $question->setAttribute('prev_question_id', $previous ? $previous->id : null);
             $question->setAttribute('next_question_id', $next ? $next->id : null);
-            $question->exercise->setRelation('questions', $allQuestions);
+            // Set exercise relationship for backward compatibility
+            $question->setRelation('exercise', $exercise);
+            $exercise->setRelation('questions', $allQuestions);
 
             $navigationPayload = $navigationData
                 ->map(function ($typeEntry) {
@@ -401,8 +483,11 @@ class WritingController extends Controller
             
             $navigationData = $navigationPayload;
             
+            // Choose view based on type
+            $viewName = $type === 'writing' ? 'pages.user.embed-writing' : 'pages.user.embed-speaking';
+            
             // Set headers to allow iframe embedding
-            $response = response()->view('pages.user.embed', compact(
+            $response = response()->view($viewName, compact(
                 'question',
                 'exercise',
                 'exerciseType',
@@ -417,7 +502,6 @@ class WritingController extends Controller
             $response->headers->remove('X-Frame-Options');
             
             // Set Content-Security-Policy to allow embedding
-            // Allow embedding from any origin, but restrict script sources to same origin
             $response->headers->set('Content-Security-Policy', "frame-ancestors *; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';");
             
             // Allow CORS for API calls from iframe
@@ -427,8 +511,10 @@ class WritingController extends Controller
             
             return $response;
         } catch (\Throwable $e) {
-            Log::error('Writing embed error', [
-                'id' => $id,
+            Log::error('Embed error', [
+                'exercise_id' => $exercise->id ?? null,
+                'question_id' => $request->query('questionId') ?? null,
+                'type' => $type,
                 'error' => $e->getMessage()
             ]);
             

@@ -28,6 +28,25 @@ class Question extends Model
         'starter_text'=> null
     ];
 
+    /**
+     * Many-to-Many relationship with Exercise
+     */
+    public function exercises()
+    {
+        return $this->belongsToMany(
+            Exercise::class,
+            'exercise_question',
+            'question_id',
+            'exercise_id'
+        )->withPivot('order_index')
+        ->orderBy('exercise_question.order_index')
+        ->withTimestamps();
+    }
+
+    /**
+     * Primary exercise relationship (backward compatibility)
+     * Keeps supporting legacy code that expects question->exercise
+     */
     public function exercise()
     {
         return $this->belongsTo(Exercise::class, 'exercise_id');

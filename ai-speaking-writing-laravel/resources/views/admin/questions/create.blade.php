@@ -31,16 +31,19 @@
             @endif
             
             <div class="mb-4">
-                <label for="exercise_id" class="block text-sm font-medium text-gray-700 mb-2">Bài tập *</label>
-                <select id="exercise_id" name="exercise_id" required
+                <label for="exercise_ids" class="block text-sm font-medium text-gray-700 mb-2">Bài tập (có thể chọn nhiều) *</label>
+                <select id="exercise_ids" name="exercise_ids[]" multiple required size="6"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Chọn bài tập</option>
+                    @php
+                        $selectedExercises = old('exercise_ids', request('exercise_id') ? [request('exercise_id')] : []);
+                    @endphp
                     @foreach($exercises as $exercise)
-                        <option value="{{ $exercise->id }}" {{ old('exercise_id', request('exercise_id')) == $exercise->id ? 'selected' : '' }}>
+                        <option value="{{ $exercise->id }}" {{ in_array($exercise->id, $selectedExercises) ? 'selected' : '' }}>
                             {{ $exercise->title }} ({{ $exercise->lesson->title ?? 'N/A' }} - {{ $exercise->type->code ?? 'N/A' }})
                         </option>
                     @endforeach
                 </select>
+                <p class="mt-1 text-sm text-gray-500">Giữ Ctrl (Cmd trên Mac) để chọn nhiều bài tập. Câu hỏi sẽ xuất hiện trong tất cả bài tập đã chọn.</p>
             </div>
 
             <div class="mb-4">
