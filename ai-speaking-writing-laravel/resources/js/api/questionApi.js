@@ -102,9 +102,13 @@ const questionApi = {
     }
   },
 
-  async getLessonStatistics(lessonId, userId) {
+  async getLessonStatistics(lessonId, userId, resetTimestamp = null) {
+    const params = { user_id: userId };
+    if (resetTimestamp) {
+      params.reset_timestamp = resetTimestamp;
+    }
     const res = await axiosClient.get(API_ROUTES.question.getLessonStatistics(lessonId), {
-      params: { user_id: userId }
+      params
     });
     return res.data;
   },

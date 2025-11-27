@@ -231,18 +231,29 @@ class AttemptController extends Controller
         try {
             $userId = $request->input('user_id', 2); // Default to user_id 2
             
-            // Get all questions in this lesson
+            // Get all questions in this lesson (across all exercises)
             $lesson = \App\Models\Lesson::with(['questions' => function($q) {
                 $q->orderBy('order_index');
             }])->findOrFail($lessonId);
             
+            // Count total questions in the lesson (all exercises combined)
             $totalQuestions = $lesson->questions->count();
             $questionIds = $lesson->questions->pluck('id');
             
+            // Get reset timestamp if provided (for reset mode)
+            $resetTimestamp = $request->input('reset_timestamp');
+            
             // Get all attempts for this lesson by this user
-            $attempts = Attempt::where('user_id', $userId)
-                ->whereIn('question_id', $questionIds)
-                ->with('question:id,order_index')
+            $attemptsQuery = Attempt::where('user_id', $userId)
+                ->whereIn('question_id', $questionIds);
+            
+            // If reset timestamp is provided, only count attempts created AFTER reset
+            if ($resetTimestamp) {
+                $resetDate = date('Y-m-d H:i:s', $resetTimestamp / 1000); // Convert JS timestamp (ms) to PHP datetime
+                $attemptsQuery->where('created_at', '>', $resetDate);
+            }
+            
+            $attempts = $attemptsQuery->with('question:id,order_index')
                 ->orderBy('created_at', 'desc')
                 ->get();
             
@@ -252,6 +263,7 @@ class AttemptController extends Controller
                     return $questionAttempts->first(); // Get latest attempt
                 });
             
+            // Count how many questions have been completed (have at least one attempt)
             $completedQuestions = $latestAttempts->count();
             $totalScore = $latestAttempts->sum(function($attempt) {
                 return $attempt->score ?? 0;

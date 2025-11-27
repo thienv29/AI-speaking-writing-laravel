@@ -43,7 +43,19 @@
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">Nhóm</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $question->group->name ?? '—' }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">
+                    @if($question->groups->count() > 0)
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($question->groups as $group)
+                                <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                                    {{ $group->name }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @else
+                        —
+                    @endif
+                </dd>
             </div>
             <div class="sm:col-span-2">
                 <dt class="text-sm font-medium text-gray-500">Đề bài</dt>

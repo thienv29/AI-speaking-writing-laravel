@@ -42,15 +42,29 @@ class GroupController extends Controller
     public function show(Group $group)
     {
         $group->load(['questions' => function($query) {
-            $query->orderBy('order_index');
+            $query->with(['exercise.lesson', 'exercise.type'])->orderBy('order_index');
         }]);
 
-        return view('admin.groups.show', compact('group'));
+        // Get all questions for selection (excluding already in group)
+        $existingQuestionIds = $group->questions->pluck('id')->toArray();
+        $availableQuestions = \App\Models\Question::with(['exercise.lesson', 'exercise.type'])
+            ->whereNotIn('id', $existingQuestionIds)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.groups.show', compact('group', 'availableQuestions'));
     }
 
     public function edit(Group $group)
     {
-        return view('admin.groups.edit', compact('group'));
+        // Get all questions for selection (excluding already in group)
+        $existingQuestionIds = $group->questions->pluck('id')->toArray();
+        $availableQuestions = \App\Models\Question::with(['exercise.lesson', 'exercise.type'])
+            ->whereNotIn('id', $existingQuestionIds)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('admin.groups.edit', compact('group', 'availableQuestions'));
     }
 
     public function update(Request $request, Group $group)
@@ -64,6 +78,31 @@ class GroupController extends Controller
         ]);
 
         return redirect()->route('admin.groups.index')->with('success', 'Nhóm câu hỏi đã được cập nhật thành công!');
+    }
+
+    public function addQuestions(Request $request, Group $group)
+    {
+        $request->validate([
+            'question_ids' => 'required|array|min:1',
+            'question_ids.*' => 'exists:questions,id',
+        ]);
+
+        $questionIds = $request->input('question_ids');
+        
+        // Add questions to group (sync without detaching to keep existing)
+        $group->questions()->syncWithoutDetaching($questionIds);
+
+        $count = count($questionIds);
+        return redirect()->route('admin.groups.show', $group)
+            ->with('success', "Đã thêm {$count} câu hỏi vào nhóm thành công!");
+    }
+
+    public function removeQuestion(Group $group, $questionId)
+    {
+        $group->questions()->detach($questionId);
+
+        return redirect()->route('admin.groups.show', $group)
+            ->with('success', 'Đã xóa câu hỏi khỏi nhóm thành công!');
     }
 
     public function destroy(Group $group)

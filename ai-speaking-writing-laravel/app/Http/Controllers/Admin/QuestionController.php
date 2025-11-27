@@ -11,7 +11,7 @@ class QuestionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Question::with(['exercise.lesson', 'exercise.type', 'group']);
+        $query = Question::with(['exercise.lesson', 'exercise.type', 'groups']);
 
         // Filter by exercise
         if ($request->filled('exercise_id')) {
@@ -32,9 +32,11 @@ class QuestionController extends Controller
             });
         }
 
-        // Filter by group
+        // Filter by group (many-to-many)
         if ($request->filled('group_id')) {
-            $query->where('group_id', $request->group_id);
+            $query->whereHas('groups', function($q) use ($request) {
+                $q->where('groups.id', $request->group_id);
+            });
         }
 
         // Search by prompt_text
@@ -65,7 +67,8 @@ class QuestionController extends Controller
     {
         $validated = $request->validate([
             'exercise_id' => 'required|exists:exercises,id',
-            'group_id' => 'nullable|exists:groups,id',
+            'group_ids' => 'nullable|array',
+            'group_ids.*' => 'exists:groups,id',
             'prompt_text' => 'required|string',
             'target_text' => 'nullable|string',
             'starter_text' => 'nullable|string',
@@ -77,7 +80,16 @@ class QuestionController extends Controller
         $maxOrder = Question::where('exercise_id', $validated['exercise_id'])->max('order_index');
         $validated['order_index'] = ($maxOrder !== null) ? $maxOrder + 1 : 1;
 
-        Question::create($validated);
+        // Remove group_ids from validated (not a column in questions table)
+        $groupIds = $validated['group_ids'] ?? [];
+        unset($validated['group_ids']);
+
+        $question = Question::create($validated);
+        
+        // Sync groups (many-to-many)
+        if (!empty($groupIds)) {
+            $question->groups()->sync($groupIds);
+        }
 
         // Giữ lại các filter parameters khi redirect (nếu có từ form)
         $queryParams = $request->only(['search', 'lesson_id', 'exercise_id', 'type_id', 'page']);
@@ -89,7 +101,7 @@ class QuestionController extends Controller
 
     public function show(Question $question)
     {
-        $question->load(['exercise.lesson', 'exercise.type', 'group']);
+        $question->load(['exercise.lesson', 'exercise.type', 'groups']);
         return view('admin.questions.show', compact('question'));
     }
 
@@ -106,7 +118,8 @@ class QuestionController extends Controller
     {
         $validated = $request->validate([
             'exercise_id' => 'required|exists:exercises,id',
-            'group_id' => 'nullable|exists:groups,id',
+            'group_ids' => 'nullable|array',
+            'group_ids.*' => 'exists:groups,id',
             'prompt_text' => 'required|string',
             'target_text' => 'nullable|string',
             'starter_text' => 'nullable|string',
@@ -115,7 +128,14 @@ class QuestionController extends Controller
             'order_index' => 'nullable|integer',
         ]);
 
+        // Remove group_ids from validated (not a column in questions table)
+        $groupIds = $validated['group_ids'] ?? [];
+        unset($validated['group_ids']);
+
         $question->update($validated);
+        
+        // Sync groups (many-to-many)
+        $question->groups()->sync($groupIds);
 
         // Giữ lại các filter parameters khi redirect (nếu có từ form)
         $queryParams = $request->only(['search', 'lesson_id', 'exercise_id', 'type_id', 'page']);
@@ -164,5 +184,61 @@ class QuestionController extends Controller
             });
 
         return response()->json($questions);
+    }
+
+    public function bulkAssignGroup(Request $request)
+    {
+        $request->validate([
+            'question_ids' => 'required|array|min:1',
+            'question_ids.*' => 'exists:questions,id',
+            'group_ids' => 'nullable|array',
+            'group_ids.*' => 'exists:groups,id',
+        ]);
+
+        $questionIds = $request->input('question_ids');
+        $groupIds = $request->input('group_ids', []);
+
+        $questions = Question::whereIn('id', $questionIds)->get();
+        
+        foreach ($questions as $question) {
+            if (empty($groupIds)) {
+                // Remove all groups
+                $question->groups()->detach();
+            } else {
+                // Sync groups (add new, keep existing)
+                $question->groups()->syncWithoutDetaching($groupIds);
+            }
+        }
+
+        $count = count($questionIds);
+        $groupCount = count($groupIds);
+        $message = $groupCount > 0
+            ? "Đã gán {$count} câu hỏi vào {$groupCount} nhóm thành công!"
+            : "Đã xóa tất cả nhóm khỏi {$count} câu hỏi thành công!";
+
+        // Giữ lại các filter parameters khi redirect
+        $queryParams = $request->only(['search', 'lesson_id', 'exercise_id', 'type_id', 'page']);
+        $queryParams = array_filter($queryParams);
+
+        return redirect()->route('admin.questions.index', $queryParams)
+            ->with('success', $message);
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'question_ids' => 'required|array|min:1',
+            'question_ids.*' => 'exists:questions,id',
+        ]);
+
+        $questionIds = $request->input('question_ids');
+        $count = Question::whereIn('id', $questionIds)->delete();
+
+        // Giữ lại các filter parameters khi redirect
+        $queryParams = $request->only(['search', 'lesson_id', 'exercise_id', 'type_id', 'page']);
+        $queryParams = array_filter($queryParams);
+
+        return redirect()->route('admin.questions.index', $queryParams)
+            ->with('success', "Đã xóa {$count} câu hỏi thành công!");
     }
 }

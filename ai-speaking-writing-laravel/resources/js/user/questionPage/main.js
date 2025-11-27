@@ -162,6 +162,17 @@ function clearStoredAnswer(questionId) {
     }
 }
 
+function clearStoredAnswersForExercise() {
+    if (!Array.isArray(exerciseQuestions) || !exerciseQuestions.length) {
+        return;
+    }
+    exerciseQuestions.forEach((item) => {
+        if (item?.id) {
+            clearStoredAnswer(item.id);
+        }
+    });
+}
+
 function hydrateStoredAnswer() {
     const type = getExerciseType(question);
     if (!type.isWriting) return;
@@ -1070,10 +1081,17 @@ async function checkAndShowLessonStatistics() {
             return;
         }
         
+        // Check reset mode
+        const resetMode = getResetMode(lessonId);
+        
+        if (resetMode.isActive) {
+            console.log(`Reset mode active for lesson ${lessonId} - only counting attempts after reset timestamp: ${resetMode.timestamp}`);
+        }
+        
         console.log('Checking lesson statistics for lesson_id:', lessonId, 'user_id:', userId);
         
-        // Get lesson statistics
-        const response = await questionApi.getLessonStatistics(lessonId, userId);
+        // Get lesson statistics with reset timestamp if in reset mode
+        const response = await questionApi.getLessonStatistics(lessonId, userId, resetMode.timestamp);
         
         console.log('Statistics response:', response);
         
@@ -1083,21 +1101,92 @@ async function checkAndShowLessonStatistics() {
             console.log('Statistics data:', stats);
             console.log('Completed:', stats.completed_questions, 'Total:', stats.total_questions);
             
-            // Show statistics if all questions are completed
-            if (stats.completed_questions > 0 && stats.completed_questions === stats.total_questions) {
+            const isCompleted = stats.completed_questions > 0 && stats.completed_questions === stats.total_questions;
+            
+            // Reset mode: only show statistics if all questions completed again with NEW attempts
+            if (resetMode.isActive && isCompleted) {
+                console.log('All questions completed again after reset! Removing flag and showing statistics');
+                clearResetMode(lessonId);
+                showLessonStatistics(stats);
+            } 
+            // Reset mode: hide statistics until all questions completed again
+            else if (resetMode.isActive) {
+                console.log('Reset mode: hiding statistics until all questions are completed again');
+                hideStatisticsSection();
+                toggleAnswerWrappers(getExerciseTypeFromQuestion(), true);
+            }
+            // Normal mode: show statistics if all questions completed
+            else if (isCompleted) {
                 console.log('All questions completed! Showing statistics section');
                 showLessonStatistics(stats);
             } else {
                 console.log('Not all questions completed yet. Completed:', stats.completed_questions, 'Total:', stats.total_questions);
-                // Hide statistics section if not completed
-                const statisticsSection = document.getElementById('lessonStatisticsSection');
-                if (statisticsSection) {
-                    statisticsSection.style.display = 'none';
-                }
+                hideStatisticsSection();
             }
         }
     } catch (error) {
         console.error('Error getting lesson statistics:', error);
+    }
+}
+
+// Store exercise type before hiding wrappers
+let savedExerciseType = null;
+
+// Helper: Get exercise type (writing/speaking)
+function getExerciseTypeFromQuestion() {
+    if (question?.exercise?.type) {
+        const typeCode = (question.exercise.type.code || '').toUpperCase();
+        return typeCode.startsWith('W') ? 'writing' : 'speaking';
+    }
+    return 'writing'; // default
+}
+
+// Helper: Get reset mode flags
+function getResetMode(lessonId) {
+    const skipFlag = sessionStorage.getItem(`skipStatisticsCheck_${lessonId}`);
+    const resetTimestamp = sessionStorage.getItem(`skipStatisticsCheck_${lessonId}_timestamp`);
+    return {
+        isActive: skipFlag === 'true' && resetTimestamp,
+        timestamp: resetTimestamp ? parseInt(resetTimestamp) : null
+    };
+}
+
+// Helper: Clear reset mode flags
+function clearResetMode(lessonId) {
+    sessionStorage.removeItem(`skipStatisticsCheck_${lessonId}`);
+    sessionStorage.removeItem(`skipStatisticsCheck_${lessonId}_timestamp`);
+}
+
+// Helper: Set reset mode with timestamp
+function setResetMode(lessonId) {
+    const resetTimestamp = Date.now();
+    sessionStorage.setItem(`skipStatisticsCheck_${lessonId}`, 'true');
+    sessionStorage.setItem(`skipStatisticsCheck_${lessonId}_timestamp`, resetTimestamp.toString());
+    return resetTimestamp;
+}
+
+// Helper: Show/hide answer wrappers based on exercise type
+function toggleAnswerWrappers(exerciseType, show = true) {
+    const writingWrapper = document.getElementById('writingAnswerWrapper');
+    const speakingWrapper = document.getElementById('speakingAnswerWrapper');
+    const bottomNav = document.querySelector('.bottom-navigation');
+    
+    if (show) {
+        if (writingWrapper) writingWrapper.style.display = exerciseType === 'writing' ? '' : 'none';
+        if (speakingWrapper) speakingWrapper.style.display = exerciseType === 'speaking' ? '' : 'none';
+        if (bottomNav) bottomNav.style.display = '';
+    } else {
+        if (writingWrapper) writingWrapper.style.display = 'none';
+        if (speakingWrapper) speakingWrapper.style.display = 'none';
+        if (bottomNav) bottomNav.style.display = 'none';
+    }
+}
+
+// Helper: Hide statistics section
+function hideStatisticsSection() {
+    const statisticsSection = document.getElementById('lessonStatisticsSection');
+    if (statisticsSection) {
+        statisticsSection.style.display = 'none';
     }
 }
 
@@ -1109,6 +1198,9 @@ function showLessonStatistics(stats) {
         console.warn('Statistics section elements not found');
         return;
     }
+    
+    // Save exercise type before hiding wrappers
+    savedExerciseType = getExerciseTypeFromQuestion();
     
     // Calculate percentage
     const percentage = stats.total_questions > 0 
@@ -1145,13 +1237,14 @@ function showLessonStatistics(stats) {
     
     if (statisticsSection) {
         statisticsSection.style.display = 'block';
+        toggleAnswerWrappers(savedExerciseType, false);
     }
     
     // Reset button
     const resetBtn = document.getElementById('reset-lesson-btn');
     if (resetBtn) {
         resetBtn.addEventListener('click', async () => {
-            if (confirm('Bạn có chắc muốn làm lại bài học này? Tất cả kết quả sẽ bị xóa.')) {
+            if (confirm('Bạn có muốn làm lại bài học này từ đầu?')) {
                 await resetLessonAttempts(stats.lesson_id);
             }
         });
@@ -1163,13 +1256,32 @@ async function resetLessonAttempts(lessonId) {
         const response = await questionApi.deleteLessonAttempts(lessonId, userId);
         
         if (response.status === 'success') {
-            // Hide statistics section
-            const statisticsSection = document.getElementById('lessonStatisticsSection');
-            if (statisticsSection) {
-                statisticsSection.style.display = 'none';
+            hideStatisticsSection();
+            toggleAnswerWrappers(savedExerciseType || getExerciseTypeFromQuestion(), true);
+            
+            // Clear result displays
+            if (resultCard) resultCard.style.display = 'none';
+            if (resultPopup) resultPopup.classList.remove('active');
+            if (answerField) answerField.value = '';
+            clearStoredAnswersForExercise();
+            resetAnswer();
+            
+            // Set reset mode with timestamp
+            setResetMode(lessonId);
+            
+            // Navigate to first question of the lesson
+            // Get first question from navigation data
+            if (window.appData && window.appData.navigation) {
+                const navigation = window.appData.navigation;
+                const firstQuestion = navigation.find(nav => nav.lesson_id === lessonId);
+                if (firstQuestion && firstQuestion.first_question_id) {
+                    // Navigate to first question
+                    window.location.href = `/embed/question/${firstQuestion.first_question_id}`;
+                    return;
+                }
             }
             
-            // Reload page to reset counters
+            // Fallback: reload page but skip statistics check
             window.location.reload();
         } else {
             alert('Có lỗi xảy ra khi reset bài học. Vui lòng thử lại.');

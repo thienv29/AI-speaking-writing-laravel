@@ -3,7 +3,7 @@
 @section('title', 'Quản lý Kết quả')
 
 @section('content')
-<div class="px-4 py-6 sm:px-0">
+<div class="px-4 py-6">
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">Quản lý Kết quả</h1>

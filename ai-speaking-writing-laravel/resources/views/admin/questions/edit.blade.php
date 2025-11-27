@@ -44,16 +44,17 @@
             </div>
 
             <div class="mb-4">
-                <label for="group_id" class="block text-sm font-medium text-gray-700 mb-2">Nhóm câu hỏi</label>
-                <select id="group_id" name="group_id"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Không thuộc nhóm nào</option>
+                <label for="group_ids" class="block text-sm font-medium text-gray-700 mb-2">Nhóm câu hỏi (có thể chọn nhiều)</label>
+                <select id="group_ids" name="group_ids[]" multiple
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    size="5">
                     @foreach($groups as $group)
-                        <option value="{{ $group->id }}" {{ old('group_id', $question->group_id) == $group->id ? 'selected' : '' }}>
+                        <option value="{{ $group->id }}" {{ in_array($group->id, old('group_ids', $question->groups->pluck('id')->toArray())) ? 'selected' : '' }}>
                             {{ $group->name }}
                         </option>
                     @endforeach
                 </select>
+                <p class="mt-1 text-sm text-gray-500">Giữ Ctrl (Cmd trên Mac) để chọn nhiều nhóm</p>
             </div>
 
             <div class="mb-4">

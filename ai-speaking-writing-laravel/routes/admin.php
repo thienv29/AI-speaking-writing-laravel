@@ -27,6 +27,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     
     // Questions
     Route::resource('questions', QuestionController::class);
+    Route::post('questions/bulk-assign-group', [QuestionController::class, 'bulkAssignGroup'])->name('questions.bulk-assign-group');
+    Route::post('questions/bulk-delete', [QuestionController::class, 'bulkDelete'])->name('questions.bulk-delete');
     
     // Exercise Types (optional - for reference)
     Route::get('exercise-types', [ExerciseTypeController::class, 'index'])->name('exercise-types.index');
@@ -36,7 +38,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Groups
     Route::resource('groups', GroupController::class);
-    Route::post('groups/{group}/add-question', [GroupController::class, 'addQuestion'])->name('groups.add-question');
+    Route::post('groups/{group}/add-questions', [GroupController::class, 'addQuestions'])->name('groups.add-questions');
     Route::delete('groups/{group}/questions/{questionId}', [GroupController::class, 'removeQuestion'])->name('groups.remove-question');
     Route::get('questions/search', [QuestionController::class, 'search'])->name('questions.search');
 });

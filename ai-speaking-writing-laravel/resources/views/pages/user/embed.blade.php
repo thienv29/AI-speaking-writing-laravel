@@ -768,14 +768,16 @@
         }
         
         /* Statistics Popup Styles */
-        /* Lesson Statistics Section (not popup) */
+        /* Lesson Statistics Section (not popup) - Inside question panel */
         .lesson-statistics-section {
-            margin-top: 24px;
+            margin: 16px 0;
             padding: 20px;
             background: linear-gradient(135deg, #eff6ff, #dbeafe);
             border-radius: 12px;
             border: 2px solid #3b82f6;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            width: 100%;
+            box-sizing: border-box;
         }
         
         .statistics-header {
@@ -937,6 +939,11 @@
                     @include('components.user.speaking-answer', ['question' => $question])
                 </div>
 
+                <!-- Lesson Statistics Section - Inside question panel -->
+                <div class="lesson-statistics-section" id="lessonStatisticsSection" style="display: none;">
+                    <div id="lessonStatisticsContent"></div>
+                </div>
+
                 <div class="bottom-navigation">
                     <button id="prevQuestionBtn" class="nav-arrow-btn" type="button" title="Câu trước">
                         <span class="nav-arrow-icon">←</span>
@@ -947,11 +954,6 @@
                         <span class="nav-arrow-text">Câu sau</span>
                         <span class="nav-arrow-icon">→</span>
                     </button>
-                </div>
-
-                <!-- Lesson Statistics Section -->
-                <div class="lesson-statistics-section" id="lessonStatisticsSection" style="display: none;">
-                    <div id="lessonStatisticsContent"></div>
                 </div>
             </main>
         </div>
