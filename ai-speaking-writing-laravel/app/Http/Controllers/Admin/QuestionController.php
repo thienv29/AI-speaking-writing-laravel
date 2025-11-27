@@ -136,6 +136,7 @@ class QuestionController extends Controller
 
     public function edit(Question $question)
     {
+        $question->loadMissing(['exercises', 'groups']);
         $exercises = Exercise::with(['lesson', 'type'])
             ->orderBy('id', 'desc')
             ->get();
