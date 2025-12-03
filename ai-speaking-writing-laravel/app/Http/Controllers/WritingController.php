@@ -178,56 +178,6 @@ class WritingController extends Controller
     }
     
     /**
-     * Redirect old embed route to new separated routes
-     * DEPRECATED: Use /embed-writing/exercises/{exercise} or /embed-speaking/exercises/{exercise}
-     * 
-     * @param int $id Question ID
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function embed($id)
-    {
-        try {
-            // Find question to get exercise (many-to-many relationship)
-            $question = Question::with('exercises.type')->find($id);
-            
-            if (!$question || $question->exercises->isEmpty()) {
-                abort(404, 'Question not found');
-            }
-            
-            // Get first exercise (or primary exercise if exists)
-            $exercise = $question->exercise ?? $question->exercises->first();
-            $exerciseType = $exercise->type;
-            $typeCode = strtoupper($exerciseType->code ?? '');
-            
-            // Redirect to appropriate route based on exercise type
-            if (str_starts_with($typeCode, 'W')) {
-                return redirect()->route('embed.writing', [
-                    'exercise' => $exercise->id,
-                    'questionId' => $question->id
-                ]);
-            } elseif (str_starts_with($typeCode, 'S')) {
-                return redirect()->route('embed.speaking', [
-                    'exercise' => $exercise->id,
-                    'questionId' => $question->id
-                ]);
-            }
-            
-            abort(400, 'Invalid exercise type');
-        } catch (\Throwable $e) {
-            Log::error('Embed redirect error', [
-                'id' => $id,
-                'error' => $e->getMessage()
-            ]);
-            
-            if ($e->getCode() === 404 || $e->getCode() === 400) {
-                abort($e->getCode(), $e->getMessage());
-            }
-            
-            abort(500, 'Unable to redirect. Please try again later.');
-        }
-    }
-    
-    /**
      * Display writing exercise in embed mode (for iframe)
      * 
      * @param Exercise $exercise

@@ -77,7 +77,7 @@ const currentQuestionIndex = Math.max(
 
 // Helper function to build embed URL from question_id or exercise_id
 function buildEmbedUrl(questionId, exerciseId = null, exerciseType = null) {
-    // If we have exercise_id and type, use new route
+    // Use new route format: /embed-writing/exercises/{exercise} or /embed-speaking/exercises/{exercise}
     const finalExerciseId = exerciseId || question?.exercise?.id || currentContext.exercise_id;
     const finalExerciseType = exerciseType || question?.exercise?.type?.code || currentContext.type;
     
@@ -88,8 +88,9 @@ function buildEmbedUrl(questionId, exerciseId = null, exerciseType = null) {
         return questionId ? `${url}?questionId=${questionId}` : url;
     }
     
-    // Fallback to old route (will redirect)
-    return `/embed/question/${questionId}`;
+    // If we don't have exercise info, we can't build the URL
+    console.warn('Cannot build embed URL: missing exercise_id or exercise_type');
+    return null;
 }
 
 const ANSWER_STORAGE_NAMESPACE = `questionAnswers:${userId || 'guest'}`;
@@ -331,7 +332,10 @@ function initNavigationSelectors() {
             }
             
             const questionId = Navigation.getFirstQuestionIdFromLesson(activeTypeCode, activeLessonId, navigationData);
-            if (questionId) window.location.assign(`/embed/question/${questionId}`);
+            if (questionId) {
+                // Redirect to /questions/{id} which will automatically redirect to new embed route
+                window.location.assign(`/questions/${questionId}`);
+            }
         });
     }
 }

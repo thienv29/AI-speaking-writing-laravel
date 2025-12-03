@@ -12,10 +12,24 @@ Thư mục này chứa ví dụ tối giản để nhúng trang làm bài vào w
    ```bash
    serve embed-demo -l 5174
    ```
-3. Truy cập `http://localhost:5174` và nhấn **Mở bài tập**.
+3. Truy cập `http://localhost:5174` và nhấn **Tải** hoặc **Popup**.
 
 > Lưu ý: Ứng dụng Laravel chính (chạy qua Docker) phải đang chạy tại `http://localhost:8000` để iframe load được nội dung.
 
+## Cách sử dụng
+
+- **Exercise ID**: ID của exercise (bắt buộc)
+- **Question ID**: ID của câu hỏi cụ thể (tùy chọn, nếu không có sẽ hiển thị câu hỏi đầu tiên)
+
+## Routes
+
+Trang demo sử dụng route mới:
+- Writing: `/embed-writing/exercises/{exercise_id}?questionId={question_id}`
+- Speaking: `/embed-speaking/exercises/{exercise_id}?questionId={question_id}`
+
+Mặc định sử dụng route Writing. Để đổi sang Speaking, sửa trong `modal.js`:
+- Đổi `embed-writing` thành `embed-speaking` trong hàm `buildUrl()`
+
 ## Tùy chỉnh
 - Thay đổi URL embed trong `modal.js` nếu cần (biến `BASE_URL`).
-- Có thể thêm dropdown chọn lesson/question theo nhu cầu thực tế.
+- Đổi route từ `embed-writing` sang `embed-speaking` nếu cần.

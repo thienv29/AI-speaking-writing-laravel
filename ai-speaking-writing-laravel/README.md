@@ -49,7 +49,8 @@ Docker entrypoint script sẽ tự động:
 - Main app: http://localhost:8000
 - Admin panel: http://localhost:8000/admin
 - phpMyAdmin: http://localhost:8081
-- Embed page: http://localhost:8000/embed/question/{id}
+- Embed Writing: http://localhost:8000/embed-writing/exercises/{exercise_id}?questionId={question_id}
+- Embed Speaking: http://localhost:8000/embed-speaking/exercises/{exercise_id}?questionId={question_id}
 
 **Kiểm tra logs:**
 ```bash
@@ -173,23 +174,41 @@ public/
 
 ## Embed Feature (Iframe)
 
-The app supports embedding writing exercises into other websites using iframe.
+The app supports embedding writing and speaking exercises into other websites using iframe.
 
-### Route
+### Routes
 
+**Writing Exercises:**
 ```
-http://localhost:8000/embed/question/{question_id}
+http://localhost:8000/embed-writing/exercises/{exercise_id}?questionId={question_id}
 ```
+
+**Speaking Exercises:**
+```
+http://localhost:8000/embed-speaking/exercises/{exercise_id}?questionId={question_id}
+```
+
+**Note:** The `questionId` parameter is optional. If omitted, the first question of the exercise will be displayed.
 
 ### Usage Example
 
 ```html
+<!-- Writing Exercise -->
 <iframe 
-    src="http://localhost:8000/embed/question/1" 
+    src="http://localhost:8000/embed-writing/exercises/1?questionId=10" 
     width="100%" 
     height="800px"
     frameborder="0"
     allow="clipboard-read; clipboard-write">
+</iframe>
+
+<!-- Speaking Exercise -->
+<iframe 
+    src="http://localhost:8000/embed-speaking/exercises/3?questionId=15" 
+    width="100%" 
+    height="800px"
+    frameborder="0"
+    allow="microphone">
 </iframe>
 ```
 
