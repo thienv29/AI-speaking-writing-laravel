@@ -31,10 +31,13 @@
             </div>
             <div class="sm:col-span-2">
                 <dt class="text-sm font-medium text-gray-500">Bài tập</dt>
+                @php
+                    $exercises = $question->exercises ?? collect();
+                @endphp
                 <dd class="mt-1 text-sm text-gray-900">
-                    @if($question->exercises->count())
+                    @if($exercises->count())
                         <div class="flex flex-col gap-2">
-                            @foreach($question->exercises as $exercise)
+                            @foreach($exercises as $exercise)
                                 <div class="border border-gray-200 rounded-lg px-3 py-2">
                                     <div class="font-medium">{{ $exercise->title }}</div>
                                     <div class="text-xs text-gray-500">

@@ -28,9 +28,8 @@ class AttemptController extends Controller
         try {
             $q = Attempt::query()
                 ->with([
-                    'question:id,exercise_id,order_index',
-                    'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
-                    'question.exercises:id,lesson_id,type_id,title',
+                    'question:id,order_index',
+                    'question.exercises:id,lesson_id,type_id,title,instruction,difficulty,order_index',
                     'user:id,name,email'
                 ])
                 ->orderByDesc('id');
@@ -97,9 +96,9 @@ class AttemptController extends Controller
             }
 
             // Xác định loại bài tập dựa trên exercise type code
-            $question = \App\Models\Question::with(['exercise.type', 'exercises.type'])->findOrFail($questionId);
-            $exerciseType = $question->exercise->type ?? optional($question->exercises->first())->type;
-            $exerciseTypeCode = $exerciseType->code ?? '';
+            $question = \App\Models\Question::with('exercises.type')->findOrFail($questionId);
+            $exercise = $question->exercises->first();
+            $exerciseTypeCode = $exercise->type->code ?? '';
             
             // Writing exercises: WAQ, WCS, WSG
             // Speaking exercises: SPS, SPW
@@ -162,9 +161,8 @@ class AttemptController extends Controller
     {
         try {
             $attempt->load(['user:id,name,email', 
-            'question:id,exercise_id,order_index',
-            'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
-            'question.exercises:id,title']);
+            'question:id,order_index',
+            'question.exercises:id,lesson_id,type_id,title,instruction,difficulty,order_index']);
 
             return response()->json([
                 'status' => 'success',

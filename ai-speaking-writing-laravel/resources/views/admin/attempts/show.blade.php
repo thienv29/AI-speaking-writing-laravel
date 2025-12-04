@@ -34,7 +34,7 @@
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Câu hỏi</h3>
                 <div class="bg-gray-50 p-4 rounded-lg">
                     @php
-                        $exercise = optional($attempt->question)->exercise ?? optional($attempt->question)->exercises->first();
+                        $exercise = optional($attempt->question)->exercises->first();
                     @endphp
                     <p class="text-sm text-gray-900"><strong>ID:</strong> {{ $attempt->question_id }}</p>
                     <p class="text-sm text-gray-900"><strong>Đề bài:</strong> {{ $attempt->question->prompt_text ?? 'N/A' }}</p>
@@ -57,15 +57,37 @@
                     @if($attempt->user_audio_url)
                         <div class="mt-2">
                             <p class="text-sm text-gray-500 mb-2">Audio:</p>
-                            <audio controls class="w-full max-w-md">
-                                <source src="{{ $attempt->user_audio_url }}" type="audio/mpeg">
-                                <source src="{{ $attempt->user_audio_url }}" type="audio/wav">
-                                <source src="{{ $attempt->user_audio_url }}" type="audio/webm">
+                            @php
+                                $audioUrl = $attempt->user_audio_url;
+                                // Xử lý URL: Storage::url() trả về /storage/path
+                                if (str_starts_with($audioUrl, 'blob:')) {
+                                    // Blob URL - giữ nguyên
+                                    $audioUrl = $audioUrl;
+                                } elseif (str_starts_with($audioUrl, '/storage/')) {
+                                    // Storage URL - convert sang full URL
+                                    $audioUrl = asset($audioUrl);
+                                } elseif (str_starts_with($audioUrl, 'storage/')) {
+                                    // Storage path without leading slash
+                                    $audioUrl = asset('/' . $audioUrl);
+                                } elseif (!str_starts_with($audioUrl, 'http://') && !str_starts_with($audioUrl, 'https://')) {
+                                    // Relative path - assume storage
+                                    $audioUrl = asset('storage/' . ltrim($audioUrl, '/'));
+                                }
+                            @endphp
+                            <audio controls preload="metadata" class="w-full max-w-md" crossorigin="anonymous">
+                                <source src="{{ $audioUrl }}" type="audio/mpeg">
+                                <source src="{{ $audioUrl }}" type="audio/wav">
+                                <source src="{{ $audioUrl }}" type="audio/webm">
+                                <source src="{{ $audioUrl }}" type="audio/ogg">
+                                <source src="{{ $audioUrl }}" type="audio/mp4">
                                 Trình duyệt không hỗ trợ phát audio.
                             </audio>
-                            <a href="{{ $attempt->user_audio_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
-                                Tải xuống audio
-                            </a>
+                            <div class="mt-2">
+                                <a href="{{ $audioUrl }}" download class="text-blue-600 hover:text-blue-800 text-sm inline-block">
+                                    📥 Tải xuống audio
+                                </a>
+                                <span class="text-xs text-gray-400 ml-2">({{ $audioUrl }})</span>
+                            </div>
                         </div>
                     @endif
                 </div>

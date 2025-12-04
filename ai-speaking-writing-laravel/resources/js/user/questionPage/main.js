@@ -68,7 +68,23 @@ const speakingPlaybackEl = document.getElementById('playback');
 const navigationData = Array.isArray(window.appData.navigation) ? window.appData.navigation : [];
 const currentContext = window.appData.current || {};
 
-const exerciseQuestions = Array.isArray(question?.exercise?.questions) ? question.exercise.questions : [];
+// Get questions from allQuestions if available, otherwise try to get from exercise relationship
+let exerciseQuestions = [];
+if (window.appData.allQuestions && Array.isArray(window.appData.allQuestions)) {
+    exerciseQuestions = window.appData.allQuestions;
+} else if (Array.isArray(question?.exercises?.[0]?.questions)) {
+    exerciseQuestions = question.exercises[0].questions;
+} else if (currentContext.exercise_id) {
+    // Fallback: try to get from navigation data
+    const exerciseNav = navigationData
+        .flatMap(type => type.lessons || [])
+        .flatMap(lesson => lesson.exercises || [])
+        .find(ex => ex.id === currentContext.exercise_id);
+    if (exerciseNav && exerciseNav.questions) {
+        exerciseQuestions = exerciseNav.questions;
+    }
+}
+
 const totalQuestions = exerciseQuestions.length;
 const currentQuestionIndex = Math.max(
     0,
@@ -78,8 +94,8 @@ const currentQuestionIndex = Math.max(
 // Helper function to build embed URL from question_id or exercise_id
 function buildEmbedUrl(questionId, exerciseId = null, exerciseType = null) {
     // Use new route format: /embed-writing/exercises/{exercise} or /embed-speaking/exercises/{exercise}
-    const finalExerciseId = exerciseId || question?.exercise?.id || currentContext.exercise_id;
-    const finalExerciseType = exerciseType || question?.exercise?.type?.code || currentContext.type;
+    const finalExerciseId = exerciseId || question?.exercises?.[0]?.id || currentContext.exercise_id;
+    const finalExerciseType = exerciseType || question?.exercises?.[0]?.type?.code || currentContext.type;
     
     if (finalExerciseId && finalExerciseType) {
         const typeCode = String(finalExerciseType).toUpperCase();
@@ -210,9 +226,9 @@ function hydrateStoredAnswer() {
     }
 }
 
-let activeTypeCode = currentContext.type || (question?.exercise?.type?.code ?? (navigationData[0]?.code ?? null));
-let activeLessonId = toNumber(currentContext.lesson_id ?? question?.exercise?.lesson_id);
-let activeExerciseId = toNumber(currentContext.exercise_id ?? question?.exercise?.id);
+let activeTypeCode = currentContext.type || (question?.exercises?.[0]?.type?.code ?? (navigationData[0]?.code ?? null));
+let activeLessonId = toNumber(currentContext.lesson_id ?? question?.exercises?.[0]?.lesson_id);
+let activeExerciseId = toNumber(currentContext.exercise_id ?? question?.exercises?.[0]?.id);
 
 // Navigation functions đã được tách ra navigation.js
 
@@ -343,7 +359,7 @@ function initNavigationSelectors() {
 function hydrateQuestionContent() {
     if (!question) return;
 
-    const exercise = question.exercise || {};
+    const exercise = question?.exercises?.[0] || {};
     const exerciseType = exercise.type || {};
     const lesson = exercise.lesson || {};
     const type = getExerciseType(question);
@@ -1104,7 +1120,7 @@ function renderResult(data) {
 
 async function checkAndShowLessonStatistics() {
     try {
-        const lessonId = question?.exercise?.lesson_id;
+        const lessonId = currentContext.lesson_id || question?.exercises?.[0]?.lesson_id;
         
         if (!lessonId) {
             console.log('No lesson_id found, skipping statistics check');
@@ -1143,7 +1159,9 @@ async function checkAndShowLessonStatistics() {
             else if (resetMode.isActive) {
                 console.log('Reset mode: hiding statistics until all questions are completed again');
                 hideStatisticsSection();
-                toggleAnswerWrappers(getExerciseTypeFromQuestion(), true);
+                // Ensure answer wrapper is shown
+                const exerciseType = getExerciseTypeFromQuestion();
+                toggleAnswerWrappers(exerciseType, true);
             }
             // Normal mode: show statistics if all questions completed
             else if (isCompleted) {
@@ -1152,6 +1170,9 @@ async function checkAndShowLessonStatistics() {
             } else {
                 console.log('Not all questions completed yet. Completed:', stats.completed_questions, 'Total:', stats.total_questions);
                 hideStatisticsSection();
+                // Ensure answer wrapper is shown when not completed
+                const exerciseType = getExerciseTypeFromQuestion();
+                toggleAnswerWrappers(exerciseType, true);
             }
         }
     } catch (error) {
@@ -1164,11 +1185,34 @@ let savedExerciseType = null;
 
 // Helper: Get exercise type (writing/speaking)
 function getExerciseTypeFromQuestion() {
-    if (question?.exercise?.type) {
-        const typeCode = (question.exercise.type.code || '').toUpperCase();
-        return typeCode.startsWith('W') ? 'writing' : 'speaking';
+    // Try from currentContext first (most reliable)
+    if (currentContext.type) {
+        const typeCode = (currentContext.type || '').toUpperCase();
+        if (typeCode.startsWith('W')) return 'writing';
+        if (typeCode.startsWith('S')) return 'speaking';
     }
-    return 'writing'; // default
+    
+    // Try from question.exercises[0]
+    const exercise = question?.exercises?.[0];
+    if (exercise?.type) {
+        const typeCode = (exercise.type.code || '').toUpperCase();
+        if (typeCode.startsWith('W')) return 'writing';
+        if (typeCode.startsWith('S')) return 'speaking';
+    }
+    
+    // Try from navigation data
+    if (navigationData && navigationData.length > 0) {
+        const firstType = navigationData[0];
+        if (firstType?.code) {
+            const typeCode = (firstType.code || '').toUpperCase();
+            if (typeCode.startsWith('W')) return 'writing';
+            if (typeCode.startsWith('S')) return 'speaking';
+        }
+    }
+    
+    // Default fallback
+    console.warn('Could not determine exercise type, defaulting to writing');
+    return 'writing';
 }
 
 // Helper: Get reset mode flags
@@ -1201,9 +1245,17 @@ function toggleAnswerWrappers(exerciseType, show = true) {
     const speakingWrapper = document.getElementById('speakingAnswerWrapper');
     const bottomNav = document.querySelector('.bottom-navigation');
     
+    console.log('toggleAnswerWrappers:', { exerciseType, show, writingWrapper: !!writingWrapper, speakingWrapper: !!speakingWrapper });
+    
     if (show) {
-        if (writingWrapper) writingWrapper.style.display = exerciseType === 'writing' ? '' : 'none';
-        if (speakingWrapper) speakingWrapper.style.display = exerciseType === 'speaking' ? '' : 'none';
+        if (writingWrapper) {
+            writingWrapper.style.display = exerciseType === 'writing' ? '' : 'none';
+            console.log('Writing wrapper display:', writingWrapper.style.display);
+        }
+        if (speakingWrapper) {
+            speakingWrapper.style.display = exerciseType === 'speaking' ? '' : 'none';
+            console.log('Speaking wrapper display:', speakingWrapper.style.display);
+        }
         if (bottomNav) bottomNav.style.display = '';
     } else {
         if (writingWrapper) writingWrapper.style.display = 'none';
@@ -1301,14 +1353,23 @@ async function resetLessonAttempts(lessonId) {
             
             // Navigate to first question of the lesson
             // Get first question from navigation data
-            if (window.appData && window.appData.navigation) {
+            if (window.appData && window.appData.navigation && Array.isArray(window.appData.navigation)) {
                 const navigation = window.appData.navigation;
-                const firstQuestion = navigation.find(nav => nav.lesson_id === lessonId);
-                if (firstQuestion && firstQuestion.first_question_id) {
-                    // Navigate to first question
-                    const url = buildEmbedUrl(firstQuestion.first_question_id);
-                    window.location.href = url;
-                    return;
+                // Find lesson in navigation data structure: types -> lessons -> exercises
+                for (const typeData of navigation) {
+                    if (typeData.lessons && Array.isArray(typeData.lessons)) {
+                        const lesson = typeData.lessons.find(l => l.id === lessonId);
+                        if (lesson && lesson.exercises && Array.isArray(lesson.exercises) && lesson.exercises.length > 0) {
+                            const firstExercise = lesson.exercises[0];
+                            if (firstExercise && firstExercise.first_question_id) {
+                                // Navigate to first question of first exercise
+                                const exerciseType = typeData.code?.startsWith('W') ? 'writing' : 'speaking';
+                                const url = buildEmbedUrl(firstExercise.first_question_id, firstExercise.id, exerciseType);
+                                window.location.href = url;
+                                return;
+                            }
+                        }
+                    }
                 }
             }
             
@@ -1465,7 +1526,8 @@ function initEventListeners() {
     }
 
     // Enter key to submit (for writing exercises)
-    if (answerField && question?.exercise?.type?.code?.includes('W')) {
+    const exerciseTypeCode = question?.exercises?.[0]?.type?.code || currentContext.type;
+    if (answerField && exerciseTypeCode?.includes('W')) {
         answerField.addEventListener('keydown', (e) => {
             // Submit on Enter, but allow Shift+Enter for new line
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1479,7 +1541,7 @@ function initEventListeners() {
     }
 
     // Enter key for WCS suffix field
-    if (answerSuffixEl && question?.exercise?.type?.code === 'WCS') {
+    if (answerSuffixEl && exerciseTypeCode === 'WCS') {
         answerSuffixEl.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -1499,6 +1561,10 @@ async function initQuestionPage() {
     setNavigationBtnUrl();
     if (sampleAudioBtn)  setSampleAudio();
     initNavigationSelectors();
+    
+    // Ensure answer wrapper is visible on page load
+    const exerciseType = getExerciseTypeFromQuestion();
+    toggleAnswerWrappers(exerciseType, true);
     
     // Check and show lesson statistics on page load if already completed
     await checkAndShowLessonStatistics();

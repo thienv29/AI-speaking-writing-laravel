@@ -13,35 +13,7 @@ Route::get('/', function () {
 Route::get('/writing', [WritingController::class, 'index'])->name('writing.index');
 Route::get('/lessons', [LessonController::class, 'indexWeb'])->name('user.lessons');
 Route::get('/lessons/{id}', [LessonController::class, 'showWeb'])->name('user.lesson');
-Route::get('/questions/{id}', function ($id) {
-    // Redirect to new embed route based on question's exercise
-    $question = \App\Models\Question::with('exercises.type')->find($id);
-    if (!$question || $question->exercises->isEmpty()) {
-        abort(404, 'Question not found');
-    }
-    $exercise = $question->exercises->first();
-    $typeCode = strtoupper($exercise->type->code ?? '');
-    $routeName = str_starts_with($typeCode, 'W') ? 'embed.writing' : 'embed.speaking';
-    return redirect()->route($routeName, [
-        'exercise' => $exercise->id,
-        'questionId' => $question->id
-    ]);
-})->name('user.question');
-
-Route::get('/writing/question/{id}', function ($id) {
-    // Redirect to new embed route based on question's exercise
-    $question = \App\Models\Question::with('exercises.type')->find($id);
-    if (!$question || $question->exercises->isEmpty()) {
-        abort(404, 'Question not found');
-    }
-    $exercise = $question->exercises->first();
-    $typeCode = strtoupper($exercise->type->code ?? '');
-    $routeName = str_starts_with($typeCode, 'W') ? 'embed.writing' : 'embed.speaking';
-    return redirect()->route($routeName, [
-        'exercise' => $exercise->id,
-        'questionId' => $question->id
-    ]);
-})->name('writing.question');
+// Old routes removed - use embed.writing or embed.speaking directly
 
 // ============================================
 // EMBED ROUTES (for iframe)

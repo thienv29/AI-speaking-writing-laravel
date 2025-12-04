@@ -31,7 +31,10 @@ class TemplateValidatorService
      */
     public function getTemplateHint(Question $question): ?string
     {
-        $exercise = $question->relationLoaded('exercise') ? $question->exercise : $question->exercise()->with('type')->first();
+        if (!$question->relationLoaded('exercises')) {
+            $question->load('exercises.type');
+        }
+        $exercise = $question->exercises->first();
         $exerciseType = $exercise && $exercise->relationLoaded('type') ? $exercise->type : ($exercise ? $exercise->type : null);
         $code = strtoupper($exerciseType->code ?? '');
 

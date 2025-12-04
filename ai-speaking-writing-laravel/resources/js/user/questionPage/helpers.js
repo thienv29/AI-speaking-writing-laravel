@@ -2,9 +2,24 @@
 import confetti from 'canvas-confetti';
 
 export function getExerciseType(question) {
-    const code = (question?.exercise?.type?.code || '').toString().toUpperCase();
+    // Try from currentContext first (most reliable)
+    let code = '';
+    if (typeof window !== 'undefined' && window.appData?.current?.type) {
+        code = (window.appData.current.type || '').toString().toUpperCase();
+    }
+    
+    // Fallback to question.exercises[0] (Many-to-Many)
+    if (!code && question?.exercises?.[0]?.type?.code) {
+        code = (question.exercises[0].type.code || '').toString().toUpperCase();
+    }
+    
+    // Legacy fallback (should not happen after migration)
+    if (!code && question?.exercise?.type?.code) {
+        code = (question.exercise.type.code || '').toString().toUpperCase();
+    }
+    
     return {
-        code,
+        code: code || 'UNKNOWN',
         isWriting: code.startsWith('W'),
         isSpeaking: code.startsWith('S'),
         isWcs: code === 'WCS',

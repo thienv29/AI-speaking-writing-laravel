@@ -20,8 +20,6 @@ class AttemptController extends Controller
     {
         $query = Attempt::with([
             'user',
-            'question.exercise.type',
-            'question.exercise.lesson',
             'question.exercises.type',
             'question.exercises.lesson'
         ]);
@@ -102,9 +100,9 @@ class AttemptController extends Controller
 
         // Get filter options
         $users = User::orderBy('name')->get(['id', 'name', 'email']);
-        $questions = Question::with(['exercise.type', 'exercise.lesson', 'exercises.type', 'exercises.lesson'])
+        $questions = Question::with(['exercises.type', 'exercises.lesson'])
             ->orderBy('id')
-            ->get(['id', 'exercise_id', 'prompt_text']);
+            ->get(['id', 'prompt_text']);
         $exercises = Exercise::with('type', 'lesson')
             ->orderBy('title')
             ->get(['id', 'type_id', 'lesson_id', 'title']);
@@ -128,8 +126,6 @@ class AttemptController extends Controller
     {
         $attempt->load([
             'user',
-            'question.exercise.type',
-            'question.exercise.lesson',
             'question.exercises.type',
             'question.exercises.lesson'
         ]);

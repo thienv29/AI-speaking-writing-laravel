@@ -33,7 +33,7 @@ class WritingController extends Controller
             ->with(['exercises' => function ($query) use ($writingTypes) {
                 $query->whereIn('type_id', $writingTypes)
                     ->with(['type', 'questions' => function ($q) {
-                        $q->orderBy('order_index');
+                        $q->orderByPivot('order_index');
                     }])
                     ->orderBy('order_index');
             }])
@@ -117,67 +117,6 @@ class WritingController extends Controller
     }
     
     /**
-     * Display exercises for a specific lesson
-     * Shows all lessons with cards (like index page)
-     * 
-     * @param int|null $id Lesson ID (ignored, shows all lessons)
-     * @return \Illuminate\View\View
-     */
-    public function showLesson($id = null)
-    {
-        try {
-            $writingTypes = $this->getWritingTypeIds();
-            $allLessons = $this->getLessonsWithWritingExercises($writingTypes)
-                ->sortBy(['level', 'title'])
-                ->values();
-            
-            return view('pages.user.lesson', compact('allLessons'));
-        } catch (\Throwable $e) {
-            Log::error('Writing lesson error', ['error' => $e->getMessage()]);
-            abort(500, 'Unable to load lesson exercises. Please try again later.');
-        }
-    }
-    
-    /**
-     * Display exercises detail for a specific lesson
-     * 
-     * @param int $id Lesson ID
-     * @return \Illuminate\View\View
-     */
-    public function showLessonExercises($id)
-    {
-        try {
-            $writingTypes = $this->getWritingTypeIds();
-            $lesson = Lesson::with(['exercises' => function ($query) use ($writingTypes) {
-                $query->whereIn('type_id', $writingTypes)
-                    ->with(['type', 'questions' => function ($q) {
-                        $q->orderBy('order_index');
-                    }])
-                    ->orderBy('order_index');
-            }])->findOrFail($id);
-            
-            $exercises = $this->formatExercises($lesson->exercises, true);
-            
-            if ($exercises->isEmpty()) {
-                abort(404, 'No writing exercises found for this lesson');
-            }
-            
-            return view('pages.user.lesson-exercises', compact('lesson', 'exercises'));
-        } catch (\Throwable $e) {
-            Log::error('Writing lesson exercises error', [
-                'lesson_id' => $id,
-                'error' => $e->getMessage()
-            ]);
-            
-            if ($e->getCode() === 404) {
-                abort(404, $e->getMessage());
-            }
-            
-            abort(500, 'Unable to load lesson exercises. Please try again later.');
-        }
-    }
-    
-    /**
      * Display writing exercise in embed mode (for iframe)
      * 
      * @param Exercise $exercise
@@ -203,7 +142,6 @@ class WritingController extends Controller
     
     /**
      * Common method to handle embed for both writing and speaking
-     * Based on embed() method but with separate views
      * 
      * @param Exercise $exercise
      * @param Request $request
@@ -215,7 +153,7 @@ class WritingController extends Controller
         try {
             // Load exercise with relationships
             $exercise->load(['type', 'lesson', 'questions' => function ($q) {
-                $q->orderBy('order_index');
+                $q->orderByPivot('order_index');
             }]);
             
             $exerciseType = $exercise->type;
@@ -223,9 +161,16 @@ class WritingController extends Controller
             
             // Get question from query or use first question
             $questionId = $request->query('questionId');
-            $question = $questionId 
-                ? $exercise->questions()->where('questions.id', $questionId)->first()
-                : $exercise->questions()->first();
+            
+            if ($questionId) {
+                // Query question and verify it belongs to this exercise
+                $question = \App\Models\Question::whereHas('exercises', function ($q) use ($exercise) {
+                    $q->where('exercises.id', $exercise->id);
+                })->where('questions.id', $questionId)->first();
+            } else {
+                // Get first question from exercise
+                $question = $exercise->questions()->orderByPivot('order_index')->first();
+            }
             
             if (!$question) {
                 abort(404, 'Câu hỏi không tồn tại trong exercise này.');
@@ -396,8 +341,6 @@ class WritingController extends Controller
 
             $question->setAttribute('prev_question_id', $previous ? $previous->id : null);
             $question->setAttribute('next_question_id', $next ? $next->id : null);
-            // Set exercise relationship for backward compatibility
-            $question->setRelation('exercise', $exercise);
             $exercise->setRelation('questions', $allQuestions);
 
             $navigationPayload = $navigationData

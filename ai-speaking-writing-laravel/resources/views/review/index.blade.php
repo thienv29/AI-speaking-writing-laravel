@@ -107,12 +107,18 @@
                                         <small>{{ $attempt->user->email ?? '' }}</small>
                                     </td>
                                     <td class="lesson-cell">
-                                        {{ $attempt->question->exercise->lesson->title ?? '—' }}
+                                        @php
+                                            $exercise = $attempt->question->exercises->first();
+                                        @endphp
+                                        {{ $exercise->lesson->title ?? '—' }}
                                     </td>
                                     <td class="exercise-cell">
-                                        {{ $attempt->question->exercise->title ?? '—' }}
+                                        @php
+                                            $exercise = $attempt->question->exercises->first();
+                                        @endphp
+                                        {{ $exercise->title ?? '—' }}
                                         <br>
-                                        <small class="type-badge">{{ $attempt->question->exercise->type->code ?? '' }}</small>
+                                        <small class="type-badge">{{ $exercise->type->code ?? '' }}</small>
                                     </td>
                                     <td class="question-cell">
                                         {{ Str::limit($attempt->question->prompt_text ?? '—', 50) }}

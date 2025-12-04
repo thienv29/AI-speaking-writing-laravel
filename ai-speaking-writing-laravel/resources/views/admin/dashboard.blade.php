@@ -200,7 +200,7 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($recentAttempts as $attempt)
                     @php
-                        $exercise = optional($attempt->question)->exercise ?? optional($attempt->question)->exercises->first();
+                        $exercise = optional($attempt->question)->exercises->first();
                     @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">

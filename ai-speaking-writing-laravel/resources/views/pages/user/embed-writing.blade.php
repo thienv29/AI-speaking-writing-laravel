@@ -93,7 +93,8 @@
         window.appData = {
             question: @json($question),
             navigation: @json($navigationData ?? []),
-            current: @json($currentContext ?? [])
+            current: @json($currentContext ?? []),
+            allQuestions: @json($allQuestions ?? [])
         };
     </script>
 </body>

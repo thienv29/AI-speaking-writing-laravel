@@ -36,7 +36,7 @@
                 <select id="exercise_ids" name="exercise_ids[]" multiple required size="6"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
                     @php
-                        $selectedExercises = old('exercise_ids', $question->exercises->pluck('id')->toArray());
+                        $selectedExercises = old('exercise_ids', ($question->exercises ?? collect())->pluck('id')->toArray());
                     @endphp
                     @foreach($exercises as $exercise)
                         <option value="{{ $exercise->id }}" {{ in_array($exercise->id, $selectedExercises) ? 'selected' : '' }}>

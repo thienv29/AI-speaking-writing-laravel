@@ -47,7 +47,7 @@ class GroupController extends Controller
                 'exercise.type',
                 'exercises.lesson',
                 'exercises.type'
-            ])->orderBy('exercise_question.order_index');
+            ])->orderBy('questions.id');
         }]);
 
         // Get all questions for selection (excluding already in group)

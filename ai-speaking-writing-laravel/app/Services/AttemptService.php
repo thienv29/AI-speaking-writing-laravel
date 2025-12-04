@@ -25,7 +25,7 @@ class AttemptService
      */
     public function evaluateWritingAttempt(int $questionId, ?int $userId, string $userAnswer): Attempt
     {
-        $question = Question::with(['exercise.type', 'exercise.lesson'])
+        $question = Question::with(['exercises.type', 'exercises.lesson'])
             ->findOrFail($questionId);
 
         $cleanAnswer = trim($userAnswer);
@@ -46,7 +46,7 @@ class AttemptService
             'created_at' => now(),
         ]);
 
-        // Add metadata to response (for backward compatibility)
+        // Add metadata to response
         $metadata = [
             'template_used' => $result['template_used'] ?? null,
             'extracted_value' => $result['extracted_value'] ?? null,
@@ -64,8 +64,9 @@ class AttemptService
 
     public function evaluateSpeakingAttempt(int $questionId, int $userId, string $userAnswer, ?string $userAudioUrl=null): Attempt
     {
-        $question = Question::with('exercise.type')->findOrFail($questionId);
-        $exerciseTypeCode = strtoupper($question->exercise->type->code ?? '');
+        $question = Question::with('exercises.type')->findOrFail($questionId);
+        $exercise = $question->exercises->first();
+        $exerciseTypeCode = strtoupper($exercise->type->code ?? '');
 
         $isCorrect = null;
         $feedback  = null;
@@ -113,8 +114,8 @@ class AttemptService
 
         // Load relations
         $attempt->load([
-            'question:id,exercise_id,order_index',
-            'question.exercise:id,lesson_id,type_id,title,instruction,difficulty,order_index',
+            'question:id,order_index',
+            'question.exercises:id,lesson_id,type_id,title,instruction,difficulty,order_index',
             'user:id,name,email'
         ]);
 
@@ -167,10 +168,12 @@ class AttemptService
             'user:id,name,email',
             'question' => function ($query) {
                 $query->select('id', 'exercise_id', 'order_index', 'prompt_text', 'target_text', 'starter_text')
-                    ->with(['exercise' => function ($exerciseQuery) {
-                        $exerciseQuery->select('id', 'title', 'type_id', 'lesson_id')
-                            ->with(['type:id,code,name', 'lesson:id,title']);
-                    }]);
+                    ->with([
+                        'exercises' => function ($exerciseQuery) {
+                            $exerciseQuery->select('exercises.id', 'exercises.title', 'exercises.type_id', 'exercises.lesson_id')
+                                ->with(['type:id,code,name', 'lesson:id,title']);
+                        }
+                    ]);
             },
         ]);
     }

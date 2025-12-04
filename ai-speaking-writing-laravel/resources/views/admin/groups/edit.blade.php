@@ -52,7 +52,7 @@
                 @if($availableQuestions->count() > 0)
                     @foreach($availableQuestions as $question)
                         @php
-                            $exercise = $question->exercise ?? $question->exercises->first();
+                            $exercise = $question->exercises->first();
                         @endphp
                         <label class="flex items-start p-2 hover:bg-gray-50 rounded cursor-pointer question-option" data-id="{{ $question->id }}" data-text="{{ strtolower($question->prompt_text ?? '') }}">
                             <input type="checkbox" name="question_ids[]" value="{{ $question->id }}" 

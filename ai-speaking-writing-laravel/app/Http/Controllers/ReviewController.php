@@ -18,10 +18,10 @@ class ReviewController extends Controller
     {
         $query = Attempt::with([
             'user:id,name,email',
-            'question:id,exercise_id,prompt_text,order_index',
-            'question.exercise:id,lesson_id,title,type_id',
-            'question.exercise.lesson:id,title,level',
-            'question.exercise.type:id,name,code'
+            'question:id,prompt_text,order_index',
+            'question.exercises:id,lesson_id,title,type_id',
+            'question.exercises.lesson:id,title,level',
+            'question.exercises.type:id,name,code'
         ])
         ->orderByDesc('created_at');
 
@@ -35,13 +35,13 @@ class ReviewController extends Controller
         if ($lessonExerciseFilter) {
             if (str_starts_with($lessonExerciseFilter, 'lesson_')) {
                 $lessonId = str_replace('lesson_', '', $lessonExerciseFilter);
-                $query->whereHas('question.exercise', function($q) use ($lessonId) {
+                $query->whereHas('question.exercises', function($q) use ($lessonId) {
                     $q->where('lesson_id', $lessonId);
                 });
             } elseif (str_starts_with($lessonExerciseFilter, 'exercise_')) {
                 $exerciseId = str_replace('exercise_', '', $lessonExerciseFilter);
-                $query->whereHas('question', function($q) use ($exerciseId) {
-                    $q->where('exercise_id', $exerciseId);
+                $query->whereHas('question.exercises', function($q) use ($exerciseId) {
+                    $q->where('exercises.id', $exerciseId);
                 });
             }
         }

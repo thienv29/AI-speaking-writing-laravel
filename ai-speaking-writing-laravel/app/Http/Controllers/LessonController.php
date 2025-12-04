@@ -123,8 +123,7 @@ class LessonController extends Controller
                     ->with([
                         'type:id,name,code',
                         'questions' => function ($q2) {
-                            $q2->select('id', 'exercise_id', 'prompt_text', 'order_index')
-                                ->orderBy('order_index');
+                            $q2->orderBy('exercise_question.order_index');
                         },
                     ])
                     ->withCount('questions'); 
@@ -157,8 +156,7 @@ class LessonController extends Controller
                     ->with([
                         'type:id,name,code',
                         'questions' => function ($q2) {
-                            $q2->select('id', 'exercise_id', 'prompt_text', 'order_index')
-                                ->orderBy('order_index');
+                            $q2->orderBy('exercise_question.order_index');
                         },
                     ])
                     ->withCount('questions'); 

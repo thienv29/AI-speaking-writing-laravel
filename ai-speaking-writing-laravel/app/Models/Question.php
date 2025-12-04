@@ -43,14 +43,6 @@ class Question extends Model
         ->withTimestamps();
     }
 
-    /**
-     * Primary exercise relationship (backward compatibility)
-     * Keeps supporting legacy code that expects question->exercise
-     */
-    public function exercise()
-    {
-        return $this->belongsTo(Exercise::class, 'exercise_id');
-    }
 
     public function attempts()
     {

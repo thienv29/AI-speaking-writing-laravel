@@ -139,7 +139,7 @@
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($attempts as $attempt)
                 @php
-                    $exercise = optional($attempt->question)->exercise ?? optional($attempt->question)->exercises->first();
+                    $exercise = optional($attempt->question)->exercises->first();
                 @endphp
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $attempt->id }}</td>

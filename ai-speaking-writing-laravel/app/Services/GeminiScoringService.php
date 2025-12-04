@@ -37,9 +37,9 @@ class GeminiScoringService
             return $this->getDefaultResult($userAnswer);
         }
 
-        // Ensure question has exercise relationship loaded
-        if (!$question->relationLoaded('exercise')) {
-            $question->load('exercise.type');
+        // Ensure question has exercises relationship loaded
+        if (!$question->relationLoaded('exercises')) {
+            $question->load('exercises.type');
         }
 
         // Check cache first (avoid API call if cached)
@@ -104,9 +104,9 @@ class GeminiScoringService
                     
                     // Only cache if result is NOT an error
                     if (!$isErrorResult) {
-                        Cache::put($cacheKey, $result, self::CACHE_TTL);
-                        // Update rate limit counters after successful API call
-                        $this->incrementRateLimitCounters();
+                    Cache::put($cacheKey, $result, self::CACHE_TTL);
+                    // Update rate limit counters after successful API call
+                    $this->incrementRateLimitCounters();
                     } else {
                         Log::info('Skipping cache for error result', [
                             'question_id' => $question->id,
@@ -151,9 +151,10 @@ class GeminiScoringService
      */
     private function buildPrompt(Question $question, string $userAnswer): string
     {
-        $exercise = $question->relationLoaded('exercise')
-            ? $question->exercise
-            : $question->exercise()->with('type', 'lesson')->first();
+        if (!$question->relationLoaded('exercises')) {
+            $question->load('exercises.type', 'exercises.lesson');
+        }
+        $exercise = $question->exercises->first();
 
         $exerciseType = $exercise && $exercise->relationLoaded('type')
             ? $exercise->type
@@ -343,9 +344,10 @@ class GeminiScoringService
         $isCorrect = $data['is_correct'] ?? ($score >= 80);
         $feedback = $data['feedback'] ?? 'Vui lòng kiểm tra lại câu trả lời của con nhé.';
 
-        $exercise = $question->relationLoaded('exercise')
-            ? $question->exercise
-            : $question->exercise()->with('type')->first();
+        if (!$question->relationLoaded('exercises')) {
+            $question->load('exercises.type');
+        }
+        $exercise = $question->exercises->first();
 
         $exerciseTypeCode = strtoupper(optional(optional($exercise)->type)->code ?? 'GENERAL');
         $templateUsed = strtolower($data['template_used'] ?? $exerciseTypeCode);

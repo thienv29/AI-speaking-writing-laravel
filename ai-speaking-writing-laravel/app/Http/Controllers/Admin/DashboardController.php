@@ -36,14 +36,14 @@ class DashboardController extends Controller
         $avgScore = $avgScore ? round($avgScore, 1) : 0;
 
         // Attempts by type
-        $attemptsByType = Attempt::with(['question.exercise.type', 'question.exercises.type'])
+        $attemptsByType = Attempt::with('question.exercises.type')
             ->get()
             ->groupBy(function ($attempt) {
-                $exercise = $attempt->question->exercise ?? $attempt->question->exercises->first();
+                $exercise = $attempt->question->exercises->first();
                 return $exercise->type->code ?? 'UNKNOWN';
             })
             ->map(function ($group) {
-                $exercise = $group->first()->question->exercise ?? $group->first()->question->exercises->first();
+                $exercise = $group->first()->question->exercises->first();
                 return [
                     'code' => $exercise->type->code ?? 'UNKNOWN',
                     'name' => $exercise->type->name ?? 'Unknown',
@@ -57,10 +57,9 @@ class DashboardController extends Controller
         // Recent attempts (last 10)
         $recentAttempts = Attempt::with([
             'user:id,name',
-            'question:id,exercise_id,prompt_text',
-            'question.exercise:id,title,type_id',
-            'question.exercise.type:id,code,name',
-            'question.exercises:id,title'
+            'question:id,prompt_text',
+            'question.exercises:id,title,type_id',
+            'question.exercises.type:id,code,name'
         ])
         ->orderByDesc('created_at')
         ->limit(10)
@@ -76,12 +75,8 @@ class DashboardController extends Controller
         
         // Questions without img_url (for speaking)
         $speakingQuestionsWithoutImg = Question::whereNull('img_url')
-            ->where(function ($query) {
-                $query->whereHas('exercise.type', function($q) {
-                    $q->whereIn('code', ['SPS', 'SPW']);
-                })->orWhereHas('exercises.type', function($q) {
-                    $q->whereIn('code', ['SPS', 'SPW']);
-                });
+            ->whereHas('exercises.type', function($q) {
+                $q->whereIn('code', ['SPS', 'SPW']);
             })
             ->count();
 

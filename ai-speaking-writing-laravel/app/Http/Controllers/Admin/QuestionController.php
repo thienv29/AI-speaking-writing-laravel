@@ -15,8 +15,6 @@ class QuestionController extends Controller
         $query = Question::with([
             'exercises.lesson',
             'exercises.type',
-            'exercise.lesson',
-            'exercise.type',
             'groups'
         ]);
 
@@ -74,6 +72,10 @@ class QuestionController extends Controller
 
     public function store(Request $request)
     {
+        if (!$request->filled('exercise_ids') && $request->filled('exercise_id')) {
+            $request->merge(['exercise_ids' => [(int) $request->input('exercise_id')]]);
+        }
+
         $validated = $request->validate([
             'exercise_ids' => 'required|array|min:1',
             'exercise_ids.*' => 'exists:exercises,id',
@@ -96,7 +98,7 @@ class QuestionController extends Controller
         $groupIds = $validated['group_ids'] ?? [];
 
         $question = Question::create([
-            'exercise_id' => $primaryExerciseId,
+            'exercise_id' => $primaryExerciseId, // Primary exercise for reference
             'order_index' => $orderIndex,
             'prompt_text' => $validated['prompt_text'],
             'target_text' => $validated['target_text'] ?? null,
@@ -146,6 +148,10 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question)
     {
+        if (!$request->filled('exercise_ids') && $request->filled('exercise_id')) {
+            $request->merge(['exercise_ids' => [(int) $request->input('exercise_id')]]);
+        }
+
         $validated = $request->validate([
             'exercise_ids' => 'required|array|min:1',
             'exercise_ids.*' => 'exists:exercises,id',
@@ -164,7 +170,7 @@ class QuestionController extends Controller
         $primaryExerciseId = $exerciseIds[0];
 
         $question->update([
-            'exercise_id' => $primaryExerciseId,
+            'exercise_id' => $primaryExerciseId, // Primary exercise for reference
             'prompt_text' => $validated['prompt_text'],
             'target_text' => $validated['target_text'] ?? null,
             'starter_text' => $validated['starter_text'] ?? null,
@@ -231,7 +237,7 @@ class QuestionController extends Controller
             return response()->json([]);
         }
 
-        $questions = Question::with(['exercise.lesson', 'exercise.type', 'exercises.lesson', 'exercises.type'])
+        $questions = Question::with(['exercises.lesson', 'exercises.type'])
             ->where(function($q) use ($query) {
                 $q->where('id', $query)
                   ->orWhere('target_text', 'like', '%' . $query . '%')
@@ -241,7 +247,7 @@ class QuestionController extends Controller
             ->limit(20)
             ->get()
             ->map(function($question) {
-                $exercise = $question->exercise ?? $question->exercises->first();
+                $exercise = $question->exercises->first();
                 return [
                     'id' => $question->id,
                     'text' => $question->target_text ?? $question->starter_text ?? 'Question ' . $question->id,
