@@ -216,6 +216,16 @@ class QuestionController extends Controller
                     ];
                 });
 
+            // Check if current question has attempt for user (if user_id provided)
+            $userId = $request->input('user_id');
+            $hasAttempt = false;
+            if ($userId) {
+                $hasAttempt = $question->attempts()
+                    ->where('user_id', $userId)
+                    ->exists();
+            }
+            $question->has_attempt = $hasAttempt;
+
             $templateHint = $this->templateValidator->getTemplateHint($question);
 
             return response()->json([

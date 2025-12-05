@@ -933,6 +933,8 @@ async function submitAnswer(answerText='', audioBlob=null) {
 
     try {
         const response = await questionApi.evaluateAnswer(userId, question.id, finalAnswer, audioBlob);
+        // Mark question as completed after successful submission
+        markQuestionCompleted(question.id);
         renderResult(response.data);
     } catch (error) {
         showError(error.message);
@@ -1042,7 +1044,13 @@ function renderResult(data) {
 
     // Render to popup
     if (resultPopupContent) {
-        const hasNext = Boolean(question.next_question_id);
+        // Calculate next question from exerciseQuestions array
+        const currentIndex = exerciseQuestions.findIndex((q) => q.id === question.id);
+        const nextQuestionId = (currentIndex >= 0 && currentIndex < exerciseQuestions.length - 1) 
+            ? exerciseQuestions[currentIndex + 1].id 
+            : (question.next_question_id || null);
+        const hasNext = Boolean(nextQuestionId);
+        
         resultPopupContent.innerHTML = `
             <div class="status-row">
                 <span class="status-pill ${statusClass}">✨ ${statusText}</span>
@@ -1066,10 +1074,10 @@ function renderResult(data) {
         }
 
         const popupNextBtn = document.getElementById('popup-next-btn');
-        if (popupNextBtn && question.next_question_id) {
+        if (popupNextBtn && nextQuestionId) {
             popupNextBtn.addEventListener('click', () => {
                 closeResultPopup();
-                handleQuestionSelect(question.next_question_id);
+                handleQuestionSelect(nextQuestionId);
             });
         }
 
@@ -1407,13 +1415,53 @@ function updateQuestionCounters() {
 function setNavigationBtnUrl() {
     if (!prevBtn || !nextBtn) return;
 
-    const hasPrev = Boolean(question.prev_question_id);
-    const hasNext = Boolean(question.next_question_id);
+    // Calculate prev/next from exerciseQuestions array (more reliable)
+    let prevQuestionId = null;
+    let nextQuestionId = null;
+
+    if (Array.isArray(exerciseQuestions) && exerciseQuestions.length > 0) {
+        const currentIndex = exerciseQuestions.findIndex((q) => q.id === question.id);
+        
+        if (currentIndex > 0) {
+            // Previous question exists
+            prevQuestionId = exerciseQuestions[currentIndex - 1].id;
+        }
+        
+        if (currentIndex >= 0 && currentIndex < exerciseQuestions.length - 1) {
+            // Next question exists
+            nextQuestionId = exerciseQuestions[currentIndex + 1].id;
+        }
+    }
+
+    // Fallback to backend values if array calculation fails
+    if (!prevQuestionId && question.prev_question_id) {
+        prevQuestionId = question.prev_question_id;
+    }
+    if (!nextQuestionId && question.next_question_id) {
+        nextQuestionId = question.next_question_id;
+    }
+
+    const hasPrev = Boolean(prevQuestionId);
+    const hasNext = Boolean(nextQuestionId);
+
+    // Check if current question is completed before enabling next
+    const isCurrentCompleted = checkQuestionCompleted(question.id);
+    const canGoNext = hasNext && isCurrentCompleted;
 
     prevBtn.disabled = !hasPrev;
-    prevBtn.dataset.target = hasPrev ? question.prev_question_id : '';
-    nextBtn.disabled = !hasNext;
-    nextBtn.dataset.target = hasNext ? question.next_question_id : '';
+    prevBtn.dataset.target = hasPrev ? prevQuestionId : '';
+    
+    nextBtn.disabled = !canGoNext;
+    nextBtn.dataset.target = canGoNext ? nextQuestionId : '';
+    
+    // Add visual indicator if next is disabled due to incomplete
+    if (nextBtn) {
+        if (hasNext && !isCurrentCompleted) {
+            nextBtn.title = 'Con hãy hoàn thành câu này trước khi chuyển sang câu tiếp theo nhé!';
+        } else {
+            nextBtn.title = '';
+        }
+    }
 
     updateQuestionCounters();
 
@@ -1422,8 +1470,66 @@ function setNavigationBtnUrl() {
     }
 }
 
+// Cache for question completion status
+const questionCompletionCache = new Map();
+
+function checkQuestionCompleted(questionId) {
+    if (!questionId) return false;
+    
+    // Check cache first
+    if (questionCompletionCache.has(questionId)) {
+        return questionCompletionCache.get(questionId);
+    }
+    
+    // Check if question has attempt (from backend data)
+    if (question.id === questionId && question.has_attempt) {
+        questionCompletionCache.set(questionId, true);
+        return true;
+    }
+    
+    // Check from attempts count if available
+    if (question.id === questionId && question.attempts_count > 0) {
+        questionCompletionCache.set(questionId, true);
+        return true;
+    }
+    
+    // Default: assume not completed (will be updated when attempt is submitted)
+    return false;
+}
+
+function markQuestionCompleted(questionId) {
+    if (questionId) {
+        questionCompletionCache.set(questionId, true);
+        // Update navigation buttons after marking as completed
+        setNavigationBtnUrl();
+    }
+}
+
 function handleQuestionSelect(questionId) {
     if (!questionId) return;
+    
+    // Check if trying to go to next question without completing current
+    const currentIndex = exerciseQuestions.findIndex((q) => q.id === question.id);
+    const targetIndex = exerciseQuestions.findIndex((q) => q.id === questionId);
+    
+    if (targetIndex > currentIndex) {
+        // Going forward - check if current is completed
+        const isCurrentCompleted = checkQuestionCompleted(question.id);
+        if (!isCurrentCompleted) {
+            showError('Con hãy hoàn thành câu này trước khi chuyển sang câu tiếp theo nhé!');
+            return;
+        }
+        
+        // Check if all previous questions are completed
+        for (let i = 0; i < targetIndex; i++) {
+            const prevQuestionId = exerciseQuestions[i].id;
+            if (!checkQuestionCompleted(prevQuestionId)) {
+                showError('Con hãy hoàn thành tất cả các câu trước đó trước nhé!');
+                return;
+            }
+        }
+    }
+    
     const url = buildEmbedUrl(questionId);
     window.location.assign(url);
 }
@@ -1558,6 +1664,12 @@ async function initQuestionPage() {
     hydrateStoredAnswer();
     initTranslationFeature();
     initEventListeners();
+    
+    // Initialize question completion status from backend
+    if (question.has_attempt) {
+        markQuestionCompleted(question.id);
+    }
+    
     setNavigationBtnUrl();
     if (sampleAudioBtn)  setSampleAudio();
     initNavigationSelectors();

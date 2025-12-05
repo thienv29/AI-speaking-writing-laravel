@@ -181,6 +181,16 @@ class WritingController extends Controller
                 $query->with(['type', 'lesson']);
             }]);
             
+            // Check if current question has attempt for user (if user_id provided)
+            $userId = $request->input('user_id');
+            $hasAttempt = false;
+            if ($userId) {
+                $hasAttempt = \App\Models\Attempt::where('question_id', $question->id)
+                    ->where('user_id', $userId)
+                    ->exists();
+            }
+            $question->has_attempt = $hasAttempt;
+            
             // Use the current exercise (already loaded)
             $exerciseType = $exercise->type;
             $lesson = $exercise->lesson;
