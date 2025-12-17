@@ -2,10 +2,43 @@
 
 ## Các vấn đề đã được fix
 
-1. ✅ **Build từ code local** thay vì dùng image cũ từ Docker Hub
-2. ✅ **Mount code vào container** để đảm bảo code mới được sử dụng
+1. ✅ **Build image và push lên Docker Hub** - Image mới được build và push lên Docker Hub
+2. ✅ **Sử dụng image từ Docker Hub** - Deploy nhanh hơn, không cần build lại
 3. ✅ **Migrations tự động chạy** với `FORCE_FRESH_MIGRATIONS=true`
 4. ✅ **Seeder tự động xóa data cũ** và tạo data mới đúng cấu trúc
+
+## Build và Push Image lên Docker Hub
+
+### 1. Build và push image mới
+```bash
+cd ai-speaking-writing-laravel
+./build-and-push-image.sh
+```
+
+Script sẽ:
+- Build image từ Dockerfile
+- Hỏi bạn có muốn push lên Docker Hub không
+- Push image lên Docker Hub nếu bạn chọn "y"
+
+### 2. Hoặc build và push thủ công
+```bash
+# Build image
+docker build -t thienv29/iclc-speaking-and-writing-app:latest .
+
+# Push lên Docker Hub
+docker push thienv29/iclc-speaking-and-writing-app:latest
+```
+
+### 3. Tag version cụ thể (khuyến nghị)
+```bash
+# Build với version tag
+docker build -t thienv29/iclc-speaking-and-writing-app:v1.0.0 .
+docker tag thienv29/iclc-speaking-and-writing-app:v1.0.0 thienv29/iclc-speaking-and-writing-app:latest
+
+# Push cả 2 tags
+docker push thienv29/iclc-speaking-and-writing-app:v1.0.0
+docker push thienv29/iclc-speaking-and-writing-app:latest
+```
 
 ## Các bước deploy
 
