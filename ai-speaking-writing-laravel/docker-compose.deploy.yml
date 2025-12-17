@@ -117,6 +117,28 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  ai-speech-service:
+    image: ${SPEECH_SERVICE_IMAGE:-thienv29/ai-speech-service:latest}
+    container_name: iclc-ai-speech-service-deploy
+    restart: unless-stopped
+    ports:
+      - "${SPEECH_SERVICE_PORT:-5001}:8000"
+    volumes:
+      - speech_outputs:/app/outputs
+    networks:
+      - iclc-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.socket(); s.connect(('localhost', 8000)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 networks:
   iclc-network:
     driver: bridge
@@ -127,6 +149,8 @@ volumes:
   app_storage:
     driver: local
   app_bootstrap_cache:
+    driver: local
+  speech_outputs:
     driver: local
 
 
