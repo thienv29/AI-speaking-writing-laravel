@@ -460,15 +460,16 @@ class DatabaseSeeder extends Seeder
             ['prompt' => 'bike', 'target' => 'I ride my bike to school.']
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $wsgWords2[$i]['target'],
-                'prompt_text' => $wsgWords2[$i]['prompt'],
-                'starter_text' => null
-            ]);
-            $ex5_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $wsgWords2[$i]['prompt'], 'target_text' => $wsgWords2[$i]['target']],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex5_2->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['WSG']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
