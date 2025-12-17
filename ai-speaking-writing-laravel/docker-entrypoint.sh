@@ -117,57 +117,34 @@ if [ ! -f ".env" ] && [ -f ".env.example" ]; then
     cp .env.example .env
 fi
 
-# Install Composer dependencies
-# Check if vendor exists and composer.lock is newer than vendor (indicating dependencies changed)
-NEED_COMPOSER_INSTALL=false
+# Install Composer dependencies (only if not already installed in image)
+# Dependencies should be installed during image build, but check anyway
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
-    NEED_COMPOSER_INSTALL=true
-elif [ -f "composer.lock" ] && [ "composer.lock" -nt "vendor/autoload.php" ]; then
-    NEED_COMPOSER_INSTALL=true
-    log_info "composer.lock is newer than vendor, dependencies may have changed"
-fi
-
-if [ "$NEED_COMPOSER_INSTALL" = true ]; then
-    log_info "Installing/Updating Composer dependencies..."
+    log_info "Vendor directory not found, installing Composer dependencies..."
     composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev || {
         log_error "Composer install failed, trying with dev dependencies..."
         composer install --no-interaction --prefer-dist --optimize-autoloader
     }
 else
-    log_info "Composer dependencies up to date"
+    log_info "Composer dependencies already installed (from image build)"
 fi
 
-# Install Node dependencies and build assets
+# Install Node dependencies and build assets (only if not already built in image)
+# Assets should be built during image build, but check anyway
 if [ -f "package.json" ]; then
-    NEED_NPM_INSTALL=false
     if [ ! -d "node_modules" ]; then
-        NEED_NPM_INSTALL=true
-    elif [ -f "package-lock.json" ] && [ "package-lock.json" -nt "node_modules" ]; then
-        NEED_NPM_INSTALL=true
-        log_info "package-lock.json changed, reinstalling npm dependencies"
-    fi
-
-    if [ "$NEED_NPM_INSTALL" = true ]; then
-        log_info "Installing Node dependencies (including dev packages)..."
+        log_info "Node modules not found, installing..."
         if command -v npm >/dev/null 2>&1; then
-            if [ -f "package-lock.json" ]; then
-                npm ci --include=dev --omit=optional || npm install --include=dev --omit=optional
-            else
-                npm install --include=dev --omit=optional
-            fi
-        else
-            log_warn "npm not found, skipping frontend dependency installation"
+            npm ci --omit=optional || npm install --omit=optional
         fi
-    else
-        log_info "Node dependencies up to date"
     fi
 
     if command -v npm >/dev/null 2>&1; then
-        if [ ! -f "public/build/manifest.json" ] || find resources -type f -newer public/build/manifest.json | grep -q .; then
-            log_info "Building frontend assets with Vite..."
+        if [ ! -f "public/build/manifest.json" ]; then
+            log_info "Frontend assets not found, building..."
             npm run build || log_warn "npm build failed, continuing..."
         else
-            log_info "Frontend assets already built"
+            log_info "Frontend assets already built (from image build)"
         fi
     fi
 fi
