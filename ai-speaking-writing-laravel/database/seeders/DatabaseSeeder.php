@@ -140,12 +140,22 @@ class DatabaseSeeder extends Seeder
         //QUESTIONS - Using many-to-many relationship (pivot table)
         $lessonId = $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id;
         
-        // Get exercises for Bài 1
-        $exercise1 = $exercises->where('lesson_id', $lessonId)->where('title', 'Bài tập 1')->first();
-        $exercise2 = $exercises->where('lesson_id', $lessonId)->where('title', 'Bài tập 2')->first();
-        $exercise3 = $exercises->where('lesson_id', $lessonId)->where('title', 'Bài tập 3')->first();
-        $exercise4 = $exercises->where('lesson_id', $lessonId)->where('title', 'Bài tập 4')->first();
-        $exercise5 = $exercises->where('lesson_id', $lessonId)->where('title', 'Bài tập 5')->first();
+        // Get exercises for Bài 1 - use fresh query to ensure we get the models with relationships loaded
+        $exercise1 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 1')->first();
+        $exercise2 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 2')->first();
+        $exercise3 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 3')->first();
+        $exercise4 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 4')->first();
+        $exercise5 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 5')->first();
+        
+        // Validate exercises exist
+        if (!$exercise1 || !$exercise2 || !$exercise3 || !$exercise4 || !$exercise5) {
+            throw new \Exception('One or more exercises not found. Exercise IDs: ' . 
+                ($exercise1 ? $exercise1->id : 'null') . ', ' .
+                ($exercise2 ? $exercise2->id : 'null') . ', ' .
+                ($exercise3 ? $exercise3->id : 'null') . ', ' .
+                ($exercise4 ? $exercise4->id : 'null') . ', ' .
+                ($exercise5 ? $exercise5->id : 'null'));
+        }
         
         $questions = collect([]);
         
@@ -707,17 +717,20 @@ class DatabaseSeeder extends Seeder
         // Add exercises and questions for Bài 2: Hoạt động hàng ngày
         $lesson2Id = $lessons->where('title', 'Bài 2: Hoạt động hàng ngày')->first()->id;
         
-        $exerciseLesson2 = Exercise::create([
-            'type_id' => $types->where('code', 'WAQ')->first()->id,
-            'lesson_id' => $lesson2Id,
-            'title' => 'Luyện viết về hoạt động hàng ngày',
-            'instruction' => 'Trả lời các câu hỏi về thói quen hàng ngày của bạn.',
-            'difficulty' => 'Trung bình',
-            'img_url' => null,
-            'order_index' => 1
-        ]);
-
-        $exercises->push($exerciseLesson2);
+        $exerciseLesson2 = Exercise::where('lesson_id', $lesson2Id)->where('title', 'Luyện viết về hoạt động hàng ngày')->first();
+        
+        if (!$exerciseLesson2) {
+            $exerciseLesson2 = Exercise::create([
+                'type_id' => $types->where('code', 'WAQ')->first()->id,
+                'lesson_id' => $lesson2Id,
+                'title' => 'Luyện viết về hoạt động hàng ngày',
+                'instruction' => 'Trả lời các câu hỏi về thói quen hàng ngày của bạn.',
+                'difficulty' => 'Trung bình',
+                'img_url' => null,
+                'order_index' => 1
+            ]);
+            $exercises->push($exerciseLesson2);
+        }
 
         // Questions for Bài 2 (WAQ) - 10 questions
         $qLesson2_1 = Question::create([
@@ -833,17 +846,20 @@ class DatabaseSeeder extends Seeder
         // Add exercises and questions for Bài 3: Môi trường
         $lesson3Id = $lessons->where('title', 'Bài 3: Môi trường')->first()->id;
         
-        $exerciseLesson3 = Exercise::create([
-            'type_id' => $types->where('code', 'WAQ')->first()->id,
-            'lesson_id' => $lesson3Id,
-            'title' => 'Luyện viết về môi trường',
-            'instruction' => 'Trả lời các câu hỏi về môi trường.',
-            'difficulty' => 'Khó',
-            'img_url' => null,
-            'order_index' => 1
-        ]);
-
-        $exercises->push($exerciseLesson3);
+        $exerciseLesson3 = Exercise::where('lesson_id', $lesson3Id)->where('title', 'Luyện viết về môi trường')->first();
+        
+        if (!$exerciseLesson3) {
+            $exerciseLesson3 = Exercise::create([
+                'type_id' => $types->where('code', 'WAQ')->first()->id,
+                'lesson_id' => $lesson3Id,
+                'title' => 'Luyện viết về môi trường',
+                'instruction' => 'Trả lời các câu hỏi về môi trường.',
+                'difficulty' => 'Khó',
+                'img_url' => null,
+                'order_index' => 1
+            ]);
+            $exercises->push($exerciseLesson3);
+        }
 
         // Questions for Bài 3 (WAQ) - 10 questions
         $qLesson3_1 = Question::create([
