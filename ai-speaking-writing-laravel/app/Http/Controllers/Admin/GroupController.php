@@ -51,8 +51,6 @@ class GroupController extends Controller
         // Get all questions for selection (excluding already in group)
         $existingQuestionIds = $group->questions->pluck('id')->toArray();
         $availableQuestions = \App\Models\Question::with([
-                'exercise.lesson',
-                'exercise.type',
                 'exercises.lesson',
                 'exercises.type'
             ])
@@ -68,8 +66,6 @@ class GroupController extends Controller
         // Get all questions for selection (excluding already in group)
         $existingQuestionIds = $group->questions->pluck('id')->toArray();
         $availableQuestions = \App\Models\Question::with([
-                'exercise.lesson',
-                'exercise.type',
                 'exercises.lesson',
                 'exercises.type'
             ])
