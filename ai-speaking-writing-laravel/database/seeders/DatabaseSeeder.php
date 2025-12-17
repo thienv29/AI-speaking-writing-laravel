@@ -117,15 +117,16 @@ class DatabaseSeeder extends Seeder
         
         $spwWords1 = ['Hello', 'Name', 'School', 'Teacher', 'Friend', 'Family', 'Apple', 'Book', 'Pencil', 'Table'];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $spwWords1[$i],
-                'prompt_text' => $spwWords1[$i],
-                'starter_text' => null
-            ]);
-            $ex1_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $spwWords1[$i], 'target_text' => $spwWords1[$i]],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex1_1->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['SPW']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -143,15 +144,16 @@ class DatabaseSeeder extends Seeder
         
         $spwWords2 = ['Chair', 'Window', 'Door', 'Desk', 'Pen', 'Bag', 'Water', 'Milk', 'Bread', 'Rice'];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $spwWords2[$i],
-                'prompt_text' => $spwWords2[$i],
-                'starter_text' => null
-            ]);
-            $ex1_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $spwWords2[$i], 'target_text' => $spwWords2[$i]],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex1_2->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['SPW']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -183,15 +185,16 @@ class DatabaseSeeder extends Seeder
             'Thank you very much.'
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $spsSentences1[$i],
-                'prompt_text' => $spsSentences1[$i],
-                'starter_text' => null
-            ]);
-            $ex2_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $spsSentences1[$i], 'target_text' => $spsSentences1[$i]],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex2_1->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['SPS']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -220,15 +223,16 @@ class DatabaseSeeder extends Seeder
             'My teacher is very kind.'
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $spsSentences2[$i],
-                'prompt_text' => $spsSentences2[$i],
-                'starter_text' => null
-            ]);
-            $ex2_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $spsSentences2[$i], 'target_text' => $spsSentences2[$i]],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex2_2->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['SPS']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -260,15 +264,16 @@ class DatabaseSeeder extends Seeder
             ['prompt' => 'Say hello to your teacher.', 'target' => 'Hello, teacher!']
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $waqQuestions1[$i]['target'],
-                'prompt_text' => $waqQuestions1[$i]['prompt'],
-                'starter_text' => null
-            ]);
-            $ex3_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $waqQuestions1[$i]['prompt'], 'target_text' => $waqQuestions1[$i]['target']],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex3_1->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['WAQ']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -297,15 +302,16 @@ class DatabaseSeeder extends Seeder
             ['prompt' => 'How can you help protect the environment in your community?', 'target' => 'We can help by cleaning the park.']
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $waqQuestions2[$i]['target'],
-                'prompt_text' => $waqQuestions2[$i]['prompt'],
-                'starter_text' => null
-            ]);
-            $ex3_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $waqQuestions2[$i]['prompt'], 'target_text' => $waqQuestions2[$i]['target']],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex3_2->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['WAQ']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -337,15 +343,16 @@ class DatabaseSeeder extends Seeder
             ['prompt' => 'Complete the sentence about your teacher.', 'target' => 'My teacher is very kind.', 'starter' => 'My teacher is']
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $wcsQuestions1[$i]['target'],
-                'prompt_text' => $wcsQuestions1[$i]['prompt'],
-                'starter_text' => $wcsQuestions1[$i]['starter']
-            ]);
-            $ex4_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $wcsQuestions1[$i]['prompt'], 'target_text' => $wcsQuestions1[$i]['target']],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => $wcsQuestions1[$i]['starter']
+                ]
+            );
+            $ex4_1->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['WCS']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -374,15 +381,16 @@ class DatabaseSeeder extends Seeder
             ['prompt' => 'Complete: I have', 'target' => 'I have a pet cat.', 'starter' => 'I have']
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $wcsQuestions2[$i]['target'],
-                'prompt_text' => $wcsQuestions2[$i]['prompt'],
-                'starter_text' => $wcsQuestions2[$i]['starter']
-            ]);
-            $ex4_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $wcsQuestions2[$i]['prompt'], 'target_text' => $wcsQuestions2[$i]['target']],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => $wcsQuestions2[$i]['starter']
+                ]
+            );
+            $ex4_2->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['WCS']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
@@ -414,15 +422,16 @@ class DatabaseSeeder extends Seeder
             ['prompt' => 'TV', 'target' => 'I watch TV in the evening.']
         ];
         for ($i = 0; $i < 10; $i++) {
-            $q = Question::create([
-                'img_url' => null,
-                'audio_url' => null,
-                'order_index' => $i + 1,
-                'target_text' => $wsgWords1[$i]['target'],
-                'prompt_text' => $wsgWords1[$i]['prompt'],
-                'starter_text' => null
-            ]);
-            $ex5_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $q = Question::firstOrCreate(
+                ['prompt_text' => $wsgWords1[$i]['prompt'], 'target_text' => $wsgWords1[$i]['target']],
+                [
+                    'img_url' => null,
+                    'audio_url' => null,
+                    'order_index' => $i + 1,
+                    'starter_text' => null
+                ]
+            );
+            $ex5_1->questions()->syncWithoutDetaching([$q->id => ['order_index' => $i + 1]]);
             $groups[$typeToGroupMap['WSG']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
