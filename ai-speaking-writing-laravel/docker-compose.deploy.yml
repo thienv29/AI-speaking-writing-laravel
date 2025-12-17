@@ -94,29 +94,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  phpmyadmin:
-    image: phpmyadmin:5.2
-    container_name: iclc-phpmyadmin-deploy
-    restart: unless-stopped
-    ports:
-      - "${PHPMYADMIN_PORT:-8081}:80"
-    environment:
-      PMA_HOST: ${DB_HOST:-mysql}
-      PMA_PORT: 3306
-      PMA_USER: ${DB_USERNAME:-iclc_user}
-      PMA_PASSWORD: ${DB_PASSWORD:-password}
-      UPLOAD_LIMIT: 256M
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - iclc-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
+ 
   ai-speech-service:
     image: ${SPEECH_SERVICE_IMAGE:-thienv29/ai-speech-service:latest}
     container_name: iclc-ai-speech-service-deploy
