@@ -113,8 +113,26 @@ const questionApi = {
     return res.data;
   },
 
+  async getExerciseStatistics(exerciseId, userId, resetTimestamp = null) {
+    const params = { user_id: userId };
+    if (resetTimestamp) {
+      params.reset_timestamp = resetTimestamp;
+    }
+    const res = await axiosClient.get(API_ROUTES.question.getExerciseStatistics(exerciseId), {
+      params
+    });
+    return res.data;
+  },
+
   async deleteLessonAttempts(lessonId, userId) {
     const res = await axiosClient.delete(API_ROUTES.question.deleteLessonAttempts(lessonId), {
+      params: { user_id: userId }
+    });
+    return res.data;
+  },
+
+  async deleteExerciseAttempts(exerciseId, userId) {
+    const res = await axiosClient.delete(API_ROUTES.question.deleteExerciseAttempts(exerciseId), {
       params: { user_id: userId }
     });
     return res.data;

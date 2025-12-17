@@ -310,4 +310,119 @@ class AttemptController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get exercise statistics for a user
+     */
+    public function getExerciseStatistics(Request $request, int $exerciseId)
+    {
+        try {
+            $userId = $request->input('user_id', 2); // Default to user_id 2
+            
+            // Get exercise with questions
+            $exercise = \App\Models\Exercise::with(['questions' => function($q) {
+                $q->orderBy('exercise_question.order_index');
+            }])->findOrFail($exerciseId);
+            
+            // Get all questions for this exercise
+            $questionIds = $exercise->questions->pluck('id');
+            $totalQuestions = $questionIds->count();
+            
+            // Get reset timestamp if provided (for reset mode)
+            $resetTimestamp = $request->input('reset_timestamp');
+            
+            // Get all attempts for this exercise by this user
+            $attemptsQuery = Attempt::where('user_id', $userId)
+                ->whereIn('question_id', $questionIds);
+            
+            // If reset timestamp is provided, only count attempts created AFTER reset
+            if ($resetTimestamp) {
+                $resetDate = date('Y-m-d H:i:s', $resetTimestamp / 1000); // Convert JS timestamp (ms) to PHP datetime
+                $attemptsQuery->where('created_at', '>', $resetDate);
+            }
+            
+            $attempts = $attemptsQuery->with('question:id,order_index')
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Get latest attempt for each question
+            $latestAttempts = $attempts->groupBy('question_id')
+                ->map(function($questionAttempts) {
+                    return $questionAttempts->first(); // Get latest attempt
+                });
+            
+            // Count how many questions have been completed (have at least one attempt)
+            $completedQuestions = $latestAttempts->count();
+            $totalScore = $latestAttempts->sum(function($attempt) {
+                return $attempt->score ?? 0;
+            });
+            
+            // Calculate average score on scale of 10
+            $averageScore = $completedQuestions > 0 
+                ? round(($totalScore / $completedQuestions) / 10, 1) 
+                : 0;
+            
+            // Count correct answers (score >= 80 or is_correct = true)
+            $correctCount = $latestAttempts->filter(function($attempt) {
+                return ($attempt->score >= 80) || ($attempt->is_correct === true);
+            })->count();
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'exercise_id' => $exerciseId,
+                    'total_questions' => $totalQuestions,
+                    'completed_questions' => $completedQuestions,
+                    'correct_count' => $correctCount,
+                    'average_score' => $averageScore,
+                    'total_score' => $totalScore,
+                    'attempts' => $latestAttempts->values()->map(function($attempt) {
+                        return [
+                            'question_id' => $attempt->question_id,
+                            'question_order' => $attempt->question->order_index ?? null,
+                            'score' => $attempt->score,
+                            'is_correct' => $attempt->is_correct,
+                        ];
+                    })
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Get exercise statistics error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get exercise statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete all attempts for an exercise (for reset functionality)
+     */
+    public function deleteExerciseAttempts(Request $request, int $exerciseId)
+    {
+        try {
+            $userId = $request->input('user_id', 2);
+            
+            // Get exercise with questions
+            $exercise = \App\Models\Exercise::with('questions')->findOrFail($exerciseId);
+            $questionIds = $exercise->questions->pluck('id');
+            
+            // Delete all attempts for this exercise by this user
+            $deleted = Attempt::where('user_id', $userId)
+                ->whereIn('question_id', $questionIds)
+                ->delete();
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => "Deleted {$deleted} attempts for exercise {$exerciseId}",
+                'deleted_count' => $deleted
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Delete exercise attempts error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to delete exercise attempts: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

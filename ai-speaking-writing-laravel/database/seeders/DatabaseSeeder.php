@@ -46,693 +46,38 @@ class DatabaseSeeder extends Seeder
 
         //EXERCISE TYPES
         $types = collect([
-            ExerciseType::create([
-                'name' => 'Speaking - Word',
-                'code' => 'SPW'
-            ]),
-            ExerciseType::create([
-                'name' => 'Speaking - Sentence', 
-                'code' => 'SPS'
-            ]),
-            ExerciseType::create([
-                'name' => 'Writing - Answer the question', 
-                'code' => 'WAQ'
-            ]),
-            ExerciseType::create([
-                'name' => 'Writing - Complete the sentence', 
-                'code' => 'WCS'
-            ]),
-            ExerciseType::create([
-                'name' => 'Writing - Write sentence using the given word',
-                'code' => 'WSG'
-            ]),
+            ExerciseType::firstOrCreate(['code' => 'SPW'], ['name' => 'Speaking - Word']),
+            ExerciseType::firstOrCreate(['code' => 'SPS'], ['name' => 'Speaking - Sentence']),
+            ExerciseType::firstOrCreate(['code' => 'WAQ'], ['name' => 'Writing - Answer the question']),
+            ExerciseType::firstOrCreate(['code' => 'WCS'], ['name' => 'Writing - Complete the sentence']),
+            ExerciseType::firstOrCreate(['code' => 'WSG'], ['name' => 'Writing - Write sentence using the given word']),
         ]);
 
-        //LESSONS - Create 5 lessons to match local database
+        //LESSONS - 5 lessons: 2 Speaking, 3 Writing
         $lessons = collect([
-            Lesson::create([
-                'title' => 'Bài 1: Giới thiệu bản thân',
-                'description' => 'Giới thiệu bản thân và chào hỏi cơ bản',
-                'img_url' => null,
-                'level' => 'Easy'
-            ]),
-            Lesson::create([
-                'title' => 'Bài 2: Hoạt động hàng ngày',
-                'description' => 'Nói về thói quen hàng ngày của bạn',
-                'img_url' => null,
-                'level' => 'Medium'
-            ]),
-            Lesson::create([
-                'title' => 'Bài 3: Môi trường',
-                'description' => 'Thảo luận về môi trường và thiên nhiên',
-                'img_url' => null,
-                'level' => 'Hard'
-            ]),
-            Lesson::create([
-                'title' => 'Bài 4',
-                'description' => null,
-                'img_url' => null,
-                'level' => 'Easy'
-            ]),
-            Lesson::create([
-                'title' => 'Bài 5',
-                'description' => null,
-                'img_url' => null,
-                'level' => 'Easy'
-            ]),
+            Lesson::firstOrCreate(
+                ['title' => 'Bài 1: Luyện phát âm từ vựng'],
+                ['description' => 'Luyện phát âm các từ vựng cơ bản', 'img_url' => null, 'level' => 'Easy']
+            ),
+            Lesson::firstOrCreate(
+                ['title' => 'Bài 2: Luyện phát âm câu'],
+                ['description' => 'Luyện phát âm các câu hoàn chỉnh', 'img_url' => null, 'level' => 'Medium']
+            ),
+            Lesson::firstOrCreate(
+                ['title' => 'Bài 3: Luyện viết trả lời câu hỏi'],
+                ['description' => 'Trả lời các câu hỏi bằng câu hoàn chỉnh', 'img_url' => null, 'level' => 'Medium']
+            ),
+            Lesson::firstOrCreate(
+                ['title' => 'Bài 4: Luyện viết hoàn thành câu'],
+                ['description' => 'Hoàn thành các câu với từ cho sẵn', 'img_url' => null, 'level' => 'Easy']
+            ),
+            Lesson::firstOrCreate(
+                ['title' => 'Bài 5: Luyện viết từ thành câu'],
+                ['description' => 'Sắp xếp từ thành câu hoàn chỉnh', 'img_url' => null, 'level' => 'Easy']
+            ),
         ]);
 
-        //EXERCISES
-        $exercises = collect([
-            Exercise::create([
-                'type_id' => $types->where('code', 'WAQ')->first()->id,
-                'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
-                'title' => 'Bài tập 1',
-                'instruction' => 'Điền tên vào chỗ trống.',
-                'difficulty' => 'Dễ',
-                'img_url' => null,
-                'order_index' => 1
-            ]),
-            Exercise::create([
-                'type_id' => $types->where('code', 'SPS')->first()->id,
-                'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
-                'title' => 'Bài tập 2',
-                'instruction' => 'Đọc to và rõ ràng các câu sau:',
-                'difficulty' => 'Dễ',
-                'img_url' => null,
-                'order_index' => 2
-            ]),
-            Exercise::create([
-                'type_id' => $types->where('code', 'WCS')->first()->id,
-                'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
-                'title' => 'Bài tập 3',
-                'instruction' => 'Hoàn thành các câu sau.',
-                'difficulty' => 'Dễ',
-                'img_url' => null,
-                'order_index' => 3
-            ]),
-            Exercise::create([
-                'type_id' => $types->where('code', 'WAQ')->first()->id,
-                'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
-                'title' => 'Bài tập 4',
-                'instruction' => 'Trả lời các câu hỏi sau.',
-                'difficulty' => 'Dễ',
-                'img_url' => null,
-                'order_index' => 4
-            ]),
-            Exercise::create([
-                'type_id' => $types->where('code', 'WSG')->first()->id,
-                'lesson_id' => $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id,
-                'title' => 'Bài tập 5',
-                'instruction' => 'Sử dụng từ cho sẵn để đặt câu.',
-                'difficulty' => 'Dễ',
-                'img_url' => null,
-                'order_index' => 5
-            ]),
-        ]);
-
-        //QUESTIONS - Using many-to-many relationship (pivot table)
-        $lessonId = $lessons->where('title', 'Bài 1: Giới thiệu bản thân')->first()->id;
-        
-        // Get exercises for Bài 1 - use fresh query to ensure we get the models with relationships loaded
-        $exercise1 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 1')->first();
-        $exercise2 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 2')->first();
-        $exercise3 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 3')->first();
-        $exercise4 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 4')->first();
-        $exercise5 = Exercise::where('lesson_id', $lessonId)->where('title', 'Bài tập 5')->first();
-        
-        // Validate exercises exist
-        if (!$exercise1 || !$exercise2 || !$exercise3 || !$exercise4 || !$exercise5) {
-            throw new \Exception('One or more exercises not found. Exercise IDs: ' . 
-                ($exercise1 ? $exercise1->id : 'null') . ', ' .
-                ($exercise2 ? $exercise2->id : 'null') . ', ' .
-                ($exercise3 ? $exercise3->id : 'null') . ', ' .
-                ($exercise4 ? $exercise4->id : 'null') . ', ' .
-                ($exercise5 ? $exercise5->id : 'null'));
-        }
-        
-        $questions = collect([]);
-        
-        // Bài tập 1 - Questions (SPW - Speaking Word) - 10 questions
-        $q1_1 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 1,
-            'target_text' => 'Hello',
-            'prompt_text' => 'Hello',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_1->id, ['order_index' => 1]);
-        $questions->push($q1_1);
-        
-        $q1_2 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 2,
-            'target_text' => 'Name',
-            'prompt_text' => 'Name',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_2->id, ['order_index' => 2]);
-        $questions->push($q1_2);
-        
-        $q1_3 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 3,
-            'target_text' => 'School',
-            'prompt_text' => 'School',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_3->id, ['order_index' => 3]);
-        $questions->push($q1_3);
-        
-        $q1_4 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 4,
-            'target_text' => 'Teacher',
-            'prompt_text' => 'Teacher',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_4->id, ['order_index' => 4]);
-        $questions->push($q1_4);
-        
-        $q1_5 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 5,
-            'target_text' => 'Friend',
-            'prompt_text' => 'Friend',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_5->id, ['order_index' => 5]);
-        $questions->push($q1_5);
-        
-        $q1_6 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 6,
-            'target_text' => 'Family',
-            'prompt_text' => 'Family',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_6->id, ['order_index' => 6]);
-        $questions->push($q1_6);
-        
-        $q1_7 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 7,
-            'target_text' => 'Apple',
-            'prompt_text' => 'Apple',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_7->id, ['order_index' => 7]);
-        $questions->push($q1_7);
-        
-        $q1_8 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 8,
-            'target_text' => 'Book',
-            'prompt_text' => 'Book',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_8->id, ['order_index' => 8]);
-        $questions->push($q1_8);
-        
-        $q1_9 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 9,
-            'target_text' => 'Pencil',
-            'prompt_text' => 'Pencil',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_9->id, ['order_index' => 9]);
-        $questions->push($q1_9);
-        
-        $q1_10 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 10,
-            'target_text' => 'Table',
-            'prompt_text' => 'Table',
-            'starter_text' => null
-        ]);
-        $exercise1->questions()->attach($q1_10->id, ['order_index' => 10]);
-        $questions->push($q1_10);
-
-        // Bài tập 2 - Questions (SPS - Speaking Sentence) - 10 questions
-        $q2_1 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 1,
-            'target_text' => 'What is your name?',
-            'prompt_text' => 'What is your name?',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_1->id, ['order_index' => 1]);
-        $questions->push($q2_1);
-        
-        $q2_2 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 2,
-            'target_text' => 'How are you?',
-            'prompt_text' => 'How are you?',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_2->id, ['order_index' => 2]);
-        $questions->push($q2_2);
-        
-        $q2_3 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 3,
-            'target_text' => 'Nice to meet you.',
-            'prompt_text' => 'Nice to meet you.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_3->id, ['order_index' => 3]);
-        $questions->push($q2_3);
-        
-        $q2_4 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 4,
-            'target_text' => 'I am fine, thank you.',
-            'prompt_text' => 'I am fine, thank you.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_4->id, ['order_index' => 4]);
-        $questions->push($q2_4);
-        
-        $q2_5 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 5,
-            'target_text' => 'Good morning, teacher.',
-            'prompt_text' => 'Good morning, teacher.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_5->id, ['order_index' => 5]);
-        $questions->push($q2_5);
-        
-        $q2_6 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 6,
-            'target_text' => 'See you later.',
-            'prompt_text' => 'See you later.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_6->id, ['order_index' => 6]);
-        $questions->push($q2_6);
-        
-        $q2_7 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 7,
-            'target_text' => 'Have a nice day.',
-            'prompt_text' => 'Have a nice day.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_7->id, ['order_index' => 7]);
-        $questions->push($q2_7);
-        
-        $q2_8 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 8,
-            'target_text' => 'I love my family.',
-            'prompt_text' => 'I love my family.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_8->id, ['order_index' => 8]);
-        $questions->push($q2_8);
-        
-        $q2_9 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 9,
-            'target_text' => 'This is my school.',
-            'prompt_text' => 'This is my school.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_9->id, ['order_index' => 9]);
-        $questions->push($q2_9);
-        
-        $q2_10 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 10,
-            'target_text' => 'Thank you very much.',
-            'prompt_text' => 'Thank you very much.',
-            'starter_text' => null
-        ]);
-        $exercise2->questions()->attach($q2_10->id, ['order_index' => 10]);
-        $questions->push($q2_10);
-
-        // Bài tập 3 - Questions (WCS - Writing Complete Sentence) - 10 questions
-        $q3_1 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 1,
-            'target_text' => 'My favorite hobby is playing the piano.',
-            'prompt_text' => 'Complete the sentence about your favorite hobby.',
-            'starter_text' => 'My favorite hobby is',
-        ]);
-        $exercise3->questions()->attach($q3_1->id, ['order_index' => 1]);
-        $questions->push($q3_1);
-        
-        $q3_2 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 2,
-            'target_text' => 'I live in Hanoi.',
-            'prompt_text' => 'Complete the sentence to tell where you live.',
-            'starter_text' => 'I live in',
-        ]);
-        $exercise3->questions()->attach($q3_2->id, ['order_index' => 2]);
-        $questions->push($q3_2);
-        
-        $q3_3 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 3,
-            'target_text' => 'I go to school at 7 o\'clock.',
-            'prompt_text' => 'Complete the sentence about what time you go to school.',
-            'starter_text' => 'I go to school at',
-        ]);
-        $exercise3->questions()->attach($q3_3->id, ['order_index' => 3]);
-        $questions->push($q3_3);
-        
-        $q3_4 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 4,
-            'target_text' => 'My favorite color is blue.',
-            'prompt_text' => 'Complete the sentence about your favorite color.',
-            'starter_text' => 'My favorite color is',
-        ]);
-        $exercise3->questions()->attach($q3_4->id, ['order_index' => 4]);
-        $questions->push($q3_4);
-        
-        $q3_5 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 5,
-            'target_text' => 'I like to read books.',
-            'prompt_text' => 'Complete the sentence about what you like to do.',
-            'starter_text' => 'I like to',
-        ]);
-        $exercise3->questions()->attach($q3_5->id, ['order_index' => 5]);
-        $questions->push($q3_5);
-        
-        $q3_6 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 6,
-            'target_text' => 'Today is Monday.',
-            'prompt_text' => 'Complete the sentence about what day it is today.',
-            'starter_text' => 'Today is',
-        ]);
-        $exercise3->questions()->attach($q3_6->id, ['order_index' => 6]);
-        $questions->push($q3_6);
-        
-        $q3_7 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 7,
-            'target_text' => 'I have two brothers.',
-            'prompt_text' => 'Complete the sentence about your family.',
-            'starter_text' => 'I have',
-        ]);
-        $exercise3->questions()->attach($q3_7->id, ['order_index' => 7]);
-        $questions->push($q3_7);
-        
-        $q3_8 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 8,
-            'target_text' => 'I eat breakfast in the morning.',
-            'prompt_text' => 'Complete the sentence about when you eat breakfast.',
-            'starter_text' => 'I eat breakfast',
-        ]);
-        $exercise3->questions()->attach($q3_8->id, ['order_index' => 8]);
-        $questions->push($q3_8);
-        
-        $q3_9 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 9,
-            'target_text' => 'I play soccer with my friends.',
-            'prompt_text' => 'Complete the sentence about playing sports.',
-            'starter_text' => 'I play soccer',
-        ]);
-        $exercise3->questions()->attach($q3_9->id, ['order_index' => 9]);
-        $questions->push($q3_9);
-        
-        $q3_10 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 10,
-            'target_text' => 'My teacher is very kind.',
-            'prompt_text' => 'Complete the sentence about your teacher.',
-            'starter_text' => 'My teacher is',
-        ]);
-        $exercise3->questions()->attach($q3_10->id, ['order_index' => 10]);
-        $questions->push($q3_10);
-
-        // Bài tập 4 - Questions (WAQ - Writing Answer Question) - 10 questions
-        $q4_1 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 1,
-            'target_text' => 'My name is Anna.',
-            'prompt_text' => 'What is your name?',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_1->id, ['order_index' => 1]);
-        $questions->push($q4_1);
-        
-        $q4_2 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 2,
-            'target_text' => 'I am 8 years old.',
-            'prompt_text' => 'How old are you?',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_2->id, ['order_index' => 2]);
-        $questions->push($q4_2);
-        
-        $q4_3 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 3,
-            'target_text' => 'I live in Hanoi.',
-            'prompt_text' => 'Where do you live?',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_3->id, ['order_index' => 3]);
-        $questions->push($q4_3);
-        
-        $q4_4 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 4,
-            'target_text' => 'Hello, teacher!',
-            'prompt_text' => 'Say hello to your teacher.',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_4->id, ['order_index' => 4]);
-        $questions->push($q4_4);
-        
-        $q4_5 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 5,
-            'target_text' => "It is 7 o'clock.",
-            'prompt_text' => "What time is it? Answer using the format 'It is [number] o'clock'.",
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_5->id, ['order_index' => 5]);
-        $questions->push($q4_5);
-        
-        $q4_6 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 6,
-            'target_text' => 'Today is sunny.',
-            'prompt_text' => 'Describe the weather today using the format "Today is ...".',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_6->id, ['order_index' => 6]);
-        $questions->push($q4_6);
-        
-        $q4_7 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 7,
-            'target_text' => 'I like playing soccer.',
-            'prompt_text' => 'What is your favorite sport?',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_7->id, ['order_index' => 7]);
-        $questions->push($q4_7);
-        
-        $q4_8 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 8,
-            'target_text' => 'I go to school by bus.',
-            'prompt_text' => 'How do you go to school?',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_8->id, ['order_index' => 8]);
-        $questions->push($q4_8);
-        
-        $q4_9 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 9,
-            'target_text' => 'I have breakfast at 7 AM.',
-            'prompt_text' => 'What time do you have breakfast?',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_9->id, ['order_index' => 9]);
-        $questions->push($q4_9);
-        
-        $q4_10 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 10,
-            'target_text' => 'My favorite color is blue.',
-            'prompt_text' => 'What is your favorite color?',
-            'starter_text' => null,
-        ]);
-        $exercise4->questions()->attach($q4_10->id, ['order_index' => 10]);
-        $questions->push($q4_10);
-
-        // Bài tập 5 - Questions (WSG - Writing Word to Sentence) - 10 questions
-        $q5_1 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 1,
-            'target_text' => 'Today is sunny.',
-            'prompt_text' => 'sunny',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_1->id, ['order_index' => 1]);
-        $questions->push($q5_1);
-        
-        $q5_2 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 2,
-            'target_text' => 'My friend is very kind.',
-            'prompt_text' => 'friend',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_2->id, ['order_index' => 2]);
-        $questions->push($q5_2);
-        
-        $q5_3 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 3,
-            'target_text' => 'I love my family.',
-            'prompt_text' => 'family',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_3->id, ['order_index' => 3]);
-        $questions->push($q5_3);
-        
-        $q5_4 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 4,
-            'target_text' => 'I go to school every day.',
-            'prompt_text' => 'school',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_4->id, ['order_index' => 4]);
-        $questions->push($q5_4);
-        
-        $q5_5 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 5,
-            'target_text' => 'My teacher is nice.',
-            'prompt_text' => 'teacher',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_5->id, ['order_index' => 5]);
-        $questions->push($q5_5);
-        
-        $q5_6 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 6,
-            'target_text' => 'I like to read books.',
-            'prompt_text' => 'books',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_6->id, ['order_index' => 6]);
-        $questions->push($q5_6);
-        
-        $q5_7 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 7,
-            'target_text' => 'I eat an apple for lunch.',
-            'prompt_text' => 'apple',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_7->id, ['order_index' => 7]);
-        $questions->push($q5_7);
-        
-        $q5_8 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 8,
-            'target_text' => 'I play soccer in the park.',
-            'prompt_text' => 'soccer',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_8->id, ['order_index' => 8]);
-        $questions->push($q5_8);
-        
-        $q5_9 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 9,
-            'target_text' => 'I have a pet dog.',
-            'prompt_text' => 'dog',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_9->id, ['order_index' => 9]);
-        $questions->push($q5_9);
-        
-        $q5_10 = Question::create([
-            'img_url' => null,
-            'audio_url' => null,
-            'order_index' => 10,
-            'target_text' => 'I watch TV in the evening.',
-            'prompt_text' => 'TV',
-            'starter_text' => null,
-        ]);
-        $exercise5->questions()->attach($q5_10->id, ['order_index' => 10]);
-        $questions->push($q5_10);
-
-        // Note: Only Bài 1 has exercises and questions (5 exercises, 50 questions)
-        // Bài 2, 3, 4, 5 are kept as lessons but without exercises/questions
-        // to match local database structure (5 lessons, 5 exercises, 50 questions)
-
-        // GROUPS - Create groups and link questions based on exercise type (many-to-many)
+        // GROUPS - Create groups first
         $groupsData = [
             'Từ vựng cơ bản',
             'Ngữ pháp cơ bản',
@@ -747,13 +92,6 @@ class DatabaseSeeder extends Seeder
             $groups[] = $group;
         }
 
-        // Map exercise types to group indices
-        // SPW (Speaking Word) -> Từ vựng cơ bản (0)
-        // SPS (Speaking Sentence) -> Giao tiếp hàng ngày (2)
-        // WAQ (Writing Answer Question) -> Câu hỏi mở rộng (3)
-        // WCS (Writing Complete Sentence) -> Ngữ pháp cơ bản (1)
-        // WSG (Writing Word to Sentence) -> Luyện tập tổng hợp (4)
-        
         $typeToGroupMap = [
             'SPW' => 0, // Từ vựng cơ bản
             'SPS' => 2, // Giao tiếp hàng ngày
@@ -762,27 +100,374 @@ class DatabaseSeeder extends Seeder
             'WSG' => 4, // Luyện tập tổng hợp
         ];
 
-        // Link questions to groups based on their exercise type
-        foreach ($exercises as $exercise) {
-            $typeCode = $exercise->type->code ?? null;
-            if (!$typeCode || !isset($typeToGroupMap[$typeCode])) {
-                continue;
-            }
-            
-            $groupIndex = $typeToGroupMap[$typeCode];
-            $group = $groups[$groupIndex];
-            
-            // Get all questions for this exercise
-            $exerciseQuestions = $exercise->questions;
-            
-            // Link questions to group using many-to-many relationship
-            foreach ($exerciseQuestions as $question) {
-                $group->questions()->syncWithoutDetaching([$question->id]);
-            }
+        // LESSON 1: Speaking - Word (SPW) - 2 exercises, 20 questions
+        $lesson1 = $lessons->where('title', 'Bài 1: Luyện phát âm từ vựng')->first();
+        
+        // Exercise 1.1: SPW - 10 questions
+        $ex1_1 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson1->id, 'title' => 'Phát âm từ vựng cơ bản - Phần 1'],
+            [
+                'type_id' => $types->where('code', 'SPW')->first()->id,
+                'instruction' => 'Hãy đọc to và rõ ràng các từ vựng sau đây.',
+                'difficulty' => 'Dễ',
+                'img_url' => null,
+                'order_index' => 1
+            ]
+        );
+        
+        $spwWords1 = ['Hello', 'Name', 'School', 'Teacher', 'Friend', 'Family', 'Apple', 'Book', 'Pencil', 'Table'];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $spwWords1[$i],
+                'prompt_text' => $spwWords1[$i],
+                'starter_text' => null
+            ]);
+            $ex1_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['SPW']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // Exercise 1.2: SPW - 10 questions
+        $ex1_2 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson1->id, 'title' => 'Phát âm từ vựng cơ bản - Phần 2'],
+            [
+                'type_id' => $types->where('code', 'SPW')->first()->id,
+                'instruction' => 'Hãy đọc to và rõ ràng các từ vựng sau đây.',
+                'difficulty' => 'Dễ',
+                'img_url' => null,
+                'order_index' => 2
+            ]
+        );
+        
+        $spwWords2 = ['Chair', 'Window', 'Door', 'Desk', 'Pen', 'Bag', 'Water', 'Milk', 'Bread', 'Rice'];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $spwWords2[$i],
+                'prompt_text' => $spwWords2[$i],
+                'starter_text' => null
+            ]);
+            $ex1_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['SPW']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // LESSON 2: Speaking - Sentence (SPS) - 2 exercises, 20 questions
+        $lesson2 = $lessons->where('title', 'Bài 2: Luyện phát âm câu')->first();
+        
+        // Exercise 2.1: SPS - 10 questions
+        $ex2_1 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson2->id, 'title' => 'Phát âm câu hoàn chỉnh - Phần 1'],
+            [
+                'type_id' => $types->where('code', 'SPS')->first()->id,
+                'instruction' => 'Hãy đọc to và rõ ràng các câu sau đây với ngữ điệu phù hợp.',
+                'difficulty' => 'Trung bình',
+                'img_url' => null,
+                'order_index' => 1
+            ]
+        );
+        
+        $spsSentences1 = [
+            'What is your name?',
+            'How are you?',
+            'Nice to meet you.',
+            'I am fine, thank you.',
+            'Good morning, teacher.',
+            'See you later.',
+            'Have a nice day.',
+            'I love my family.',
+            'This is my school.',
+            'Thank you very much.'
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $spsSentences1[$i],
+                'prompt_text' => $spsSentences1[$i],
+                'starter_text' => null
+            ]);
+            $ex2_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['SPS']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // Exercise 2.2: SPS - 10 questions
+        $ex2_2 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson2->id, 'title' => 'Phát âm câu hoàn chỉnh - Phần 2'],
+            [
+                'type_id' => $types->where('code', 'SPS')->first()->id,
+                'instruction' => 'Hãy đọc to và rõ ràng các câu sau đây với ngữ điệu phù hợp.',
+                'difficulty' => 'Trung bình',
+                'img_url' => null,
+                'order_index' => 2
+            ]
+        );
+        
+        $spsSentences2 = [
+            'I go to school every day.',
+            'I like playing soccer.',
+            'My favorite color is blue.',
+            'I have breakfast at 7 AM.',
+            'I live in Hanoi.',
+            'I am 8 years old.',
+            'I have two brothers.',
+            'I eat an apple for lunch.',
+            'I play soccer with my friends.',
+            'My teacher is very kind.'
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $spsSentences2[$i],
+                'prompt_text' => $spsSentences2[$i],
+                'starter_text' => null
+            ]);
+            $ex2_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['SPS']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // LESSON 3: Writing - Answer Question (WAQ) - 2 exercises, 20 questions
+        $lesson3 = $lessons->where('title', 'Bài 3: Luyện viết trả lời câu hỏi')->first();
+        
+        // Exercise 3.1: WAQ - 10 questions
+        $ex3_1 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson3->id, 'title' => 'Trả lời câu hỏi bằng câu hoàn chỉnh - Phần 1'],
+            [
+                'type_id' => $types->where('code', 'WAQ')->first()->id,
+                'instruction' => 'Hãy đọc câu hỏi và trả lời bằng một câu hoàn chỉnh, có chủ ngữ và vị ngữ.',
+                'difficulty' => 'Trung bình',
+                'img_url' => null,
+                'order_index' => 1
+            ]
+        );
+        
+        $waqQuestions1 = [
+            ['prompt' => 'What is your name?', 'target' => 'My name is Anna.'],
+            ['prompt' => 'How old are you?', 'target' => 'I am 8 years old.'],
+            ['prompt' => 'Where do you live?', 'target' => 'I live in Hanoi.'],
+            ['prompt' => 'What is your favorite sport?', 'target' => 'I like playing soccer.'],
+            ['prompt' => 'What time do you have breakfast?', 'target' => 'I have breakfast at 7 AM.'],
+            ['prompt' => 'What is your favorite color?', 'target' => 'My favorite color is blue.'],
+            ['prompt' => 'How do you go to school?', 'target' => 'I go to school by bus.'],
+            ['prompt' => 'What time is it? Answer using the format \'It is [number] o\'clock\'.', 'target' => "It is 7 o'clock."],
+            ['prompt' => 'Describe the weather today using the format "Today is ...".', 'target' => 'Today is sunny.'],
+            ['prompt' => 'Say hello to your teacher.', 'target' => 'Hello, teacher!']
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $waqQuestions1[$i]['target'],
+                'prompt_text' => $waqQuestions1[$i]['prompt'],
+                'starter_text' => null
+            ]);
+            $ex3_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['WAQ']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // Exercise 3.2: WAQ - 10 questions
+        $ex3_2 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson3->id, 'title' => 'Trả lời câu hỏi bằng câu hoàn chỉnh - Phần 2'],
+            [
+                'type_id' => $types->where('code', 'WAQ')->first()->id,
+                'instruction' => 'Hãy đọc câu hỏi và trả lời bằng một câu hoàn chỉnh, có chủ ngữ và vị ngữ.',
+                'difficulty' => 'Trung bình',
+                'img_url' => null,
+                'order_index' => 2
+            ]
+        );
+        
+        $waqQuestions2 = [
+            ['prompt' => 'What is your favorite hobby?', 'target' => 'My favorite hobby is reading books.'],
+            ['prompt' => 'What do you do every morning?', 'target' => 'I brush my teeth every morning.'],
+            ['prompt' => 'What time do you have lunch?', 'target' => 'I have lunch at 12 o\'clock.'],
+            ['prompt' => 'When do you do your homework?', 'target' => 'I do my homework in the afternoon.'],
+            ['prompt' => 'What do you do in the evening?', 'target' => 'I watch TV in the evening.'],
+            ['prompt' => 'What time do you go to bed?', 'target' => 'I go to bed at 9 PM.'],
+            ['prompt' => 'How do you help your family?', 'target' => 'I help my mom cook dinner.'],
+            ['prompt' => 'What should we do to help the Earth?', 'target' => 'We should plant more trees.'],
+            ['prompt' => 'How can we protect the environment?', 'target' => 'We should recycle to protect the environment.'],
+            ['prompt' => 'How can you help protect the environment in your community?', 'target' => 'We can help by cleaning the park.']
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $waqQuestions2[$i]['target'],
+                'prompt_text' => $waqQuestions2[$i]['prompt'],
+                'starter_text' => null
+            ]);
+            $ex3_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['WAQ']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // LESSON 4: Writing - Complete Sentence (WCS) - 2 exercises, 20 questions
+        $lesson4 = $lessons->where('title', 'Bài 4: Luyện viết hoàn thành câu')->first();
+        
+        // Exercise 4.1: WCS - 10 questions
+        $ex4_1 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson4->id, 'title' => 'Hoàn thành câu với từ cho sẵn - Phần 1'],
+            [
+                'type_id' => $types->where('code', 'WCS')->first()->id,
+                'instruction' => 'Hãy hoàn thành các câu sau bằng cách điền từ thích hợp vào chỗ trống.',
+                'difficulty' => 'Dễ',
+                'img_url' => null,
+                'order_index' => 1
+            ]
+        );
+        
+        $wcsQuestions1 = [
+            ['prompt' => 'Complete the sentence about your favorite hobby.', 'target' => 'My favorite hobby is playing the piano.', 'starter' => 'My favorite hobby is'],
+            ['prompt' => 'Complete the sentence to tell where you live.', 'target' => 'I live in Hanoi.', 'starter' => 'I live in'],
+            ['prompt' => 'Complete the sentence about what time you go to school.', 'target' => 'I go to school at 7 o\'clock.', 'starter' => 'I go to school at'],
+            ['prompt' => 'Complete the sentence about your favorite color.', 'target' => 'My favorite color is blue.', 'starter' => 'My favorite color is'],
+            ['prompt' => 'Complete the sentence about what you like to do.', 'target' => 'I like to read books.', 'starter' => 'I like to'],
+            ['prompt' => 'Complete the sentence about what day it is today.', 'target' => 'Today is Monday.', 'starter' => 'Today is'],
+            ['prompt' => 'Complete the sentence about your family.', 'target' => 'I have two brothers.', 'starter' => 'I have'],
+            ['prompt' => 'Complete the sentence about when you eat breakfast.', 'target' => 'I eat breakfast in the morning.', 'starter' => 'I eat breakfast'],
+            ['prompt' => 'Complete the sentence about playing sports.', 'target' => 'I play soccer with my friends.', 'starter' => 'I play soccer'],
+            ['prompt' => 'Complete the sentence about your teacher.', 'target' => 'My teacher is very kind.', 'starter' => 'My teacher is']
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $wcsQuestions1[$i]['target'],
+                'prompt_text' => $wcsQuestions1[$i]['prompt'],
+                'starter_text' => $wcsQuestions1[$i]['starter']
+            ]);
+            $ex4_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['WCS']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // Exercise 4.2: WCS - 10 questions
+        $ex4_2 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson4->id, 'title' => 'Hoàn thành câu với từ cho sẵn - Phần 2'],
+            [
+                'type_id' => $types->where('code', 'WCS')->first()->id,
+                'instruction' => 'Hãy hoàn thành các câu sau bằng cách điền từ thích hợp vào chỗ trống.',
+                'difficulty' => 'Dễ',
+                'img_url' => null,
+                'order_index' => 2
+            ]
+        );
+        
+        $wcsQuestions2 = [
+            ['prompt' => 'Complete: I go to bed', 'target' => 'I go to bed at 9 PM.', 'starter' => 'I go to bed'],
+            ['prompt' => 'Complete: My favorite food is', 'target' => 'My favorite food is pizza.', 'starter' => 'My favorite food is'],
+            ['prompt' => 'Complete: I wake up', 'target' => 'I wake up at 6 o\'clock.', 'starter' => 'I wake up'],
+            ['prompt' => 'Complete: I study', 'target' => 'I study in the library.', 'starter' => 'I study'],
+            ['prompt' => 'Complete: My best friend is', 'target' => 'My best friend is very nice.', 'starter' => 'My best friend is'],
+            ['prompt' => 'Complete: I play', 'target' => 'I play in the park.', 'starter' => 'I play'],
+            ['prompt' => 'Complete: I eat', 'target' => 'I eat lunch at school.', 'starter' => 'I eat'],
+            ['prompt' => 'Complete: My school is', 'target' => 'My school is very big.', 'starter' => 'My school is'],
+            ['prompt' => 'Complete: I like', 'target' => 'I like to draw pictures.', 'starter' => 'I like'],
+            ['prompt' => 'Complete: I have', 'target' => 'I have a pet cat.', 'starter' => 'I have']
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $wcsQuestions2[$i]['target'],
+                'prompt_text' => $wcsQuestions2[$i]['prompt'],
+                'starter_text' => $wcsQuestions2[$i]['starter']
+            ]);
+            $ex4_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['WCS']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // LESSON 5: Writing - Word to Sentence (WSG) - 2 exercises, 20 questions
+        $lesson5 = $lessons->where('title', 'Bài 5: Luyện viết từ thành câu')->first();
+        
+        // Exercise 5.1: WSG - 10 questions
+        $ex5_1 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson5->id, 'title' => 'Sắp xếp từ thành câu - Phần 1'],
+            [
+                'type_id' => $types->where('code', 'WSG')->first()->id,
+                'instruction' => 'Hãy sắp xếp các từ cho sẵn thành một câu hoàn chỉnh và có nghĩa.',
+                'difficulty' => 'Dễ',
+                'img_url' => null,
+                'order_index' => 1
+            ]
+        );
+        
+        $wsgWords1 = [
+            ['prompt' => 'sunny', 'target' => 'Today is sunny.'],
+            ['prompt' => 'friend', 'target' => 'My friend is very kind.'],
+            ['prompt' => 'family', 'target' => 'I love my family.'],
+            ['prompt' => 'school', 'target' => 'I go to school every day.'],
+            ['prompt' => 'teacher', 'target' => 'My teacher is nice.'],
+            ['prompt' => 'books', 'target' => 'I like to read books.'],
+            ['prompt' => 'apple', 'target' => 'I eat an apple for lunch.'],
+            ['prompt' => 'soccer', 'target' => 'I play soccer in the park.'],
+            ['prompt' => 'dog', 'target' => 'I have a pet dog.'],
+            ['prompt' => 'TV', 'target' => 'I watch TV in the evening.']
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $wsgWords1[$i]['target'],
+                'prompt_text' => $wsgWords1[$i]['prompt'],
+                'starter_text' => null
+            ]);
+            $ex5_1->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['WSG']]->questions()->syncWithoutDetaching([$q->id]);
+        }
+
+        // Exercise 5.2: WSG - 10 questions
+        $ex5_2 = Exercise::firstOrCreate(
+            ['lesson_id' => $lesson5->id, 'title' => 'Sắp xếp từ thành câu - Phần 2'],
+            [
+                'type_id' => $types->where('code', 'WSG')->first()->id,
+                'instruction' => 'Hãy sắp xếp các từ cho sẵn thành một câu hoàn chỉnh và có nghĩa.',
+                'difficulty' => 'Dễ',
+                'img_url' => null,
+                'order_index' => 2
+            ]
+        );
+        
+        $wsgWords2 = [
+            ['prompt' => 'morning', 'target' => 'Good morning, teacher.'],
+            ['prompt' => 'breakfast', 'target' => 'I have breakfast at 7 AM.'],
+            ['prompt' => 'homework', 'target' => 'I do my homework after school.'],
+            ['prompt' => 'lunch', 'target' => 'I eat lunch at 12 o\'clock.'],
+            ['prompt' => 'dinner', 'target' => 'I have dinner with my family.'],
+            ['prompt' => 'bed', 'target' => 'I go to bed at 9 PM.'],
+            ['prompt' => 'park', 'target' => 'I play in the park.'],
+            ['prompt' => 'library', 'target' => 'I study in the library.'],
+            ['prompt' => 'cat', 'target' => 'I have a pet cat.'],
+            ['prompt' => 'bike', 'target' => 'I ride my bike to school.']
+        ];
+        for ($i = 0; $i < 10; $i++) {
+            $q = Question::create([
+                'img_url' => null,
+                'audio_url' => null,
+                'order_index' => $i + 1,
+                'target_text' => $wsgWords2[$i]['target'],
+                'prompt_text' => $wsgWords2[$i]['prompt'],
+                'starter_text' => null
+            ]);
+            $ex5_2->questions()->attach($q->id, ['order_index' => $i + 1]);
+            $groups[$typeToGroupMap['WSG']]->questions()->syncWithoutDetaching([$q->id]);
         }
 
         $this->command->info('All tables seeded successfully!');
-        $this->command->info('Groups created: ' . Group::count());
+        $this->command->info('Lessons: ' . Lesson::count());
+        $this->command->info('Exercises: ' . Exercise::count());
+        $this->command->info('Questions: ' . Question::count());
+        $this->command->info('Groups: ' . Group::count());
         $this->command->info('Questions linked to groups: ' . DB::table('group_question')->count());
     }
 }

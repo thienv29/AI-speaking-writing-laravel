@@ -6,7 +6,9 @@ export const API_ROUTES = {
     speechToText: `/stt`,  // Dùng Laravel proxy (baseURL="/api" đã có sẵn)
     textToSpeech: `/tts`,   // Dùng Laravel proxy (baseURL="/api" đã có sẵn)
     getLessonStatistics: (lessonId) => `/lessons/${lessonId}/statistics`,
+    getExerciseStatistics: (exerciseId) => `/exercises/${exerciseId}/statistics`,
     deleteLessonAttempts: (lessonId) => `/lessons/${lessonId}/attempts`,
+    deleteExerciseAttempts: (exerciseId) => `/exercises/${exerciseId}/attempts`,
   },
   exercise: {
     base: "/exercises",

@@ -1086,7 +1086,7 @@ function renderResult(data) {
         // Check statistics immediately after showing result
         // Add small delay to ensure attempt is saved in database
         setTimeout(() => {
-            checkAndShowLessonStatistics();
+            checkAndShowExerciseStatistics();
         }, 1000);
 
         // Auto-close after 5 seconds
@@ -1126,26 +1126,30 @@ function renderResult(data) {
     }
 }
 
-async function checkAndShowLessonStatistics() {
+async function checkAndShowExerciseStatistics() {
     try {
-        const lessonId = currentContext.lesson_id || question?.exercises?.[0]?.lesson_id;
+        // Get exercise_id from currentContext or question
+        const exerciseId = currentContext.exercise_id || question?.exercises?.[0]?.id;
         
-        if (!lessonId) {
-            console.log('No lesson_id found, skipping statistics check');
+        if (!exerciseId) {
+            console.log('No exercise_id found, skipping statistics check');
             return;
         }
         
-        // Check reset mode
-        const resetMode = getResetMode(lessonId);
+        // Get lesson_id for reset mode (still use lesson for reset mode)
+        const lessonId = currentContext.lesson_id || question?.exercises?.[0]?.lesson_id;
+        
+        // Check reset mode (still based on lesson)
+        const resetMode = lessonId ? getResetMode(lessonId) : { isActive: false, timestamp: null };
         
         if (resetMode.isActive) {
             console.log(`Reset mode active for lesson ${lessonId} - only counting attempts after reset timestamp: ${resetMode.timestamp}`);
         }
         
-        console.log('Checking lesson statistics for lesson_id:', lessonId, 'user_id:', userId);
+        console.log('Checking exercise statistics for exercise_id:', exerciseId, 'user_id:', userId);
         
-        // Get lesson statistics with reset timestamp if in reset mode
-        const response = await questionApi.getLessonStatistics(lessonId, userId, resetMode.timestamp);
+        // Get exercise statistics with reset timestamp if in reset mode
+        const response = await questionApi.getExerciseStatistics(exerciseId, userId, resetMode.timestamp);
         
         console.log('Statistics response:', response);
         
@@ -1160,8 +1164,8 @@ async function checkAndShowLessonStatistics() {
             // Reset mode: only show statistics if all questions completed again with NEW attempts
             if (resetMode.isActive && isCompleted) {
                 console.log('All questions completed again after reset! Removing flag and showing statistics');
-                clearResetMode(lessonId);
-                showLessonStatistics(stats);
+                if (lessonId) clearResetMode(lessonId);
+                showExerciseStatistics(stats);
             } 
             // Reset mode: hide statistics until all questions completed again
             else if (resetMode.isActive) {
@@ -1174,7 +1178,7 @@ async function checkAndShowLessonStatistics() {
             // Normal mode: show statistics if all questions completed
             else if (isCompleted) {
                 console.log('All questions completed! Showing statistics section');
-                showLessonStatistics(stats);
+                showExerciseStatistics(stats);
             } else {
                 console.log('Not all questions completed yet. Completed:', stats.completed_questions, 'Total:', stats.total_questions);
                 hideStatisticsSection();
@@ -1184,7 +1188,7 @@ async function checkAndShowLessonStatistics() {
             }
         }
     } catch (error) {
-        console.error('Error getting lesson statistics:', error);
+        console.error('Error getting exercise statistics:', error);
     }
 }
 
@@ -1280,7 +1284,7 @@ function hideStatisticsSection() {
     }
 }
 
-function showLessonStatistics(stats) {
+function showExerciseStatistics(stats) {
     const statisticsSection = document.getElementById('lessonStatisticsSection');
     const statisticsContent = document.getElementById('lessonStatisticsContent');
     
@@ -1299,7 +1303,7 @@ function showLessonStatistics(stats) {
     
     statisticsContent.innerHTML = `
         <div class="statistics-header">
-            <h3>🎉 Hoàn thành bài học!</h3>
+            <h3>🎉 Hoàn thành bài tập!</h3>
         </div>
         <div class="statistics-body">
             <div class="statistics-summary">
@@ -1321,7 +1325,7 @@ function showLessonStatistics(stats) {
             </div>
         </div>
         <div class="statistics-actions">
-            <button id="reset-lesson-btn" class="btn-secondary" type="button">Làm lại bài học</button>
+            <button id="reset-exercise-btn" class="btn-secondary" type="button">Làm lại bài tập</button>
         </div>
     `;
     
@@ -1330,14 +1334,56 @@ function showLessonStatistics(stats) {
         toggleAnswerWrappers(savedExerciseType, false);
     }
     
-    // Reset button
-    const resetBtn = document.getElementById('reset-lesson-btn');
+    // Reset button - reset exercise attempts
+    const resetBtn = document.getElementById('reset-exercise-btn');
     if (resetBtn) {
         resetBtn.addEventListener('click', async () => {
-            if (confirm('Bạn có muốn làm lại bài học này từ đầu?')) {
-                await resetLessonAttempts(stats.lesson_id);
+            if (confirm('Bạn có muốn làm lại bài tập này từ đầu?')) {
+                await resetExerciseAttempts(stats.exercise_id);
             }
         });
+    }
+}
+
+async function resetExerciseAttempts(exerciseId) {
+    try {
+        const response = await questionApi.deleteExerciseAttempts(exerciseId, userId);
+        
+        if (response.status === 'success') {
+            hideStatisticsSection();
+            toggleAnswerWrappers(savedExerciseType || getExerciseTypeFromQuestion(), true);
+            
+            // Clear result displays
+            if (resultCard) resultCard.style.display = 'none';
+            if (resultPopup) resultPopup.classList.remove('active');
+            if (answerField) answerField.value = '';
+            clearStoredAnswersForExercise();
+            resetAnswer();
+            
+            // Get lesson_id for reset mode
+            const lessonId = currentContext.lesson_id || question?.exercises?.[0]?.lesson_id;
+            if (lessonId) {
+                setResetMode(lessonId);
+            }
+            
+            // Navigate to first question of the exercise
+            const exercise = question?.exercises?.[0];
+            if (exercise && exercise.questions && exercise.questions.length > 0) {
+                const firstQuestion = exercise.questions[0];
+                const exerciseType = getExerciseTypeFromQuestion();
+                const url = buildEmbedUrl(firstQuestion.id, exerciseId, exerciseType);
+                window.location.href = url;
+                return;
+            }
+            
+            // Fallback: reload page
+            window.location.reload();
+        } else {
+            alert('Có lỗi xảy ra khi reset bài tập. Vui lòng thử lại.');
+        }
+    } catch (error) {
+        console.error('Error resetting exercise attempts:', error);
+        alert('Có lỗi xảy ra khi reset bài tập. Vui lòng thử lại.');
     }
 }
 
@@ -1678,8 +1724,8 @@ async function initQuestionPage() {
     const exerciseType = getExerciseTypeFromQuestion();
     toggleAnswerWrappers(exerciseType, true);
     
-    // Check and show lesson statistics on page load if already completed
-    await checkAndShowLessonStatistics();
+    // Check and show exercise statistics on page load if already completed
+    await checkAndShowExerciseStatistics();
 }
 
 if (document.readyState === 'loading') {
