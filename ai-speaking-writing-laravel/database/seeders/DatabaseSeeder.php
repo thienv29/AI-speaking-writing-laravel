@@ -19,6 +19,24 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+        // Clean up old data first (if exists)
+        // Delete old lessons that don't match new structure
+        $oldLessonTitles = [
+            'Bài 1: Giới thiệu bản thân',
+            'Bài 2: Hoạt động hàng ngày',
+            'Bài 3: Môi trường',
+            'Bài 4',
+            'Bài 5'
+        ];
+        
+        foreach ($oldLessonTitles as $oldTitle) {
+            $oldLesson = Lesson::where('title', $oldTitle)->first();
+            if ($oldLesson) {
+                $this->command->info("Deleting old lesson: {$oldTitle}");
+                $oldLesson->delete();
+            }
+        }
+        
         //USERS
         $users = collect([
             User::create([
