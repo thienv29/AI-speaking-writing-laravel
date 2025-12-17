@@ -167,7 +167,7 @@ class AttemptService
         $attempt->load([
             'user:id,name,email',
             'question' => function ($query) {
-                $query->select('id', 'exercise_id', 'order_index', 'prompt_text', 'target_text', 'starter_text')
+                $query->select('id', 'order_index', 'prompt_text', 'target_text', 'starter_text')
                     ->with([
                         'exercises' => function ($exerciseQuery) {
                             $exerciseQuery->select('exercises.id', 'exercises.title', 'exercises.type_id', 'exercises.lesson_id')

@@ -233,13 +233,16 @@ class AttemptController extends Controller
             $userId = $request->input('user_id', 2); // Default to user_id 2
             
             // Get all questions in this lesson (across all exercises)
-            $lesson = \App\Models\Lesson::with(['questions' => function($q) {
-                $q->orderBy('order_index');
+            $lesson = \App\Models\Lesson::with(['exercises.questions' => function($q) {
+                $q->orderBy('exercise_question.order_index');
             }])->findOrFail($lessonId);
             
+            // Get all questions from all exercises in this lesson
+            $allQuestions = $lesson->exercises->flatMap->questions->unique('id');
+            
             // Count total questions in the lesson (all exercises combined)
-            $totalQuestions = $lesson->questions->count();
-            $questionIds = $lesson->questions->pluck('id');
+            $totalQuestions = $allQuestions->count();
+            $questionIds = $allQuestions->pluck('id');
             
             // Get reset timestamp if provided (for reset mode)
             $resetTimestamp = $request->input('reset_timestamp');
