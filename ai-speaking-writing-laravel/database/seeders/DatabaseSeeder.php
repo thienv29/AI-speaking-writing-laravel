@@ -732,16 +732,55 @@ class DatabaseSeeder extends Seeder
         // Bài 2, 3, 4, 5 are kept as lessons but without exercises/questions
         // to match local database structure (5 lessons, 5 exercises, 50 questions)
 
-        // GROUPS - Create groups and link questions to groups
-        $group1 = Group::firstOrCreate(['name' => 'Nhóm câu hỏi Bài 1']);
-        $group2 = Group::firstOrCreate(['name' => 'Nhóm câu hỏi Bài 2']);
-        $group3 = Group::firstOrCreate(['name' => 'Nhóm câu hỏi Bài 3']);
-        
-        // Link all questions from Bài 1 to group 1
-        foreach ($questions as $question) {
-            $group1->questions()->syncWithoutDetaching([$question->id]);
+        // GROUPS - Create groups and link questions based on exercise type (many-to-many)
+        $groupsData = [
+            'Từ vựng cơ bản',
+            'Ngữ pháp cơ bản',
+            'Giao tiếp hàng ngày',
+            'Câu hỏi mở rộng',
+            'Luyện tập tổng hợp',
+        ];
+
+        $groups = [];
+        foreach ($groupsData as $groupName) {
+            $group = Group::firstOrCreate(['name' => $groupName]);
+            $groups[] = $group;
         }
+
+        // Map exercise types to group indices
+        // SPW (Speaking Word) -> Từ vựng cơ bản (0)
+        // SPS (Speaking Sentence) -> Giao tiếp hàng ngày (2)
+        // WAQ (Writing Answer Question) -> Câu hỏi mở rộng (3)
+        // WCS (Writing Complete Sentence) -> Ngữ pháp cơ bản (1)
+        // WSG (Writing Word to Sentence) -> Luyện tập tổng hợp (4)
         
+        $typeToGroupMap = [
+            'SPW' => 0, // Từ vựng cơ bản
+            'SPS' => 2, // Giao tiếp hàng ngày
+            'WAQ' => 3, // Câu hỏi mở rộng
+            'WCS' => 1, // Ngữ pháp cơ bản
+            'WSG' => 4, // Luyện tập tổng hợp
+        ];
+
+        // Link questions to groups based on their exercise type
+        foreach ($exercises as $exercise) {
+            $typeCode = $exercise->type->code ?? null;
+            if (!$typeCode || !isset($typeToGroupMap[$typeCode])) {
+                continue;
+            }
+            
+            $groupIndex = $typeToGroupMap[$typeCode];
+            $group = $groups[$groupIndex];
+            
+            // Get all questions for this exercise
+            $exerciseQuestions = $exercise->questions;
+            
+            // Link questions to group using many-to-many relationship
+            foreach ($exerciseQuestions as $question) {
+                $group->questions()->syncWithoutDetaching([$question->id]);
+            }
+        }
+
         $this->command->info('All tables seeded successfully!');
         $this->command->info('Groups created: ' . Group::count());
         $this->command->info('Questions linked to groups: ' . DB::table('group_question')->count());
