@@ -96,10 +96,15 @@ services:
 
  
   ai-speech-service:
+    # Note: For deployment, you may need to adjust the build context path
+    # or use a pre-built image. If ai-speech-service is in parent directory, use ../ai-speech-service
+    # If deploying from Docker Hub, uncomment image line and remove build section
     build:
-      context: ../ai-speech-service
+      context: ${SPEECH_SERVICE_CONTEXT:-../ai-speech-service}
       dockerfile: Dockerfile
     image: ${SPEECH_SERVICE_IMAGE:-ai-speech-service:latest}
+    # Alternative: Use pre-built image from Docker Hub (if available)
+    # image: ${SPEECH_SERVICE_IMAGE:-thienv29/ai-speech-service:latest}
     container_name: iclc-ai-speech-service-deploy
     restart: unless-stopped
     ports:
