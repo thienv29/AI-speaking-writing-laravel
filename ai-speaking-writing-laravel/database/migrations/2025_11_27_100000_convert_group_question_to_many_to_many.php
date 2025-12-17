@@ -14,30 +14,34 @@ class ConvertGroupQuestionToManyToMany extends Migration
      */
     public function up()
     {
-        // Create pivot table
-        Schema::create('group_question', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
-            $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
-            $table->timestamps();
-            
-            // Prevent duplicate entries
-            $table->unique(['group_id', 'question_id']);
-        });
+        // Create pivot table (only if it doesn't exist)
+        if (!Schema::hasTable('group_question')) {
+            Schema::create('group_question', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
+                $table->foreignId('question_id')->constrained('questions')->onDelete('cascade');
+                $table->timestamps();
+                
+                // Prevent duplicate entries
+                $table->unique(['group_id', 'question_id']);
+            });
+        }
 
-        // Migrate existing data from group_id to pivot table
-        DB::statement('
-            INSERT INTO group_question (group_id, question_id, created_at, updated_at)
-            SELECT group_id, id, NOW(), NOW()
-            FROM questions
-            WHERE group_id IS NOT NULL
-        ');
+        // Migrate existing data from group_id to pivot table (only if not already migrated)
+        if (Schema::hasColumn('questions', 'group_id')) {
+            DB::statement('
+                INSERT IGNORE INTO group_question (group_id, question_id, created_at, updated_at)
+                SELECT group_id, id, NOW(), NOW()
+                FROM questions
+                WHERE group_id IS NOT NULL
+            ');
 
-        // Drop group_id column from questions table
-        Schema::table('questions', function (Blueprint $table) {
-            $table->dropForeign(['group_id']);
-            $table->dropColumn('group_id');
-        });
+            // Drop group_id column from questions table
+            Schema::table('questions', function (Blueprint $table) {
+                $table->dropForeign(['group_id']);
+                $table->dropColumn('group_id');
+            });
+        }
     }
 
     /**

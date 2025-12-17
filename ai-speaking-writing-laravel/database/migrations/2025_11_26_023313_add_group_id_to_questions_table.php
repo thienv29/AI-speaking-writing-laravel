@@ -13,17 +13,21 @@ class AddGroupIdToQuestionsTable extends Migration
      */
     public function up()
     {
-        // Create groups table first
-        Schema::create('groups', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
+        // Create groups table first (only if it doesn't exist)
+        if (!Schema::hasTable('groups')) {
+            Schema::create('groups', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->timestamps();
+            });
+        }
 
-        // Add group_id to questions table
-        Schema::table('questions', function (Blueprint $table) {
-            $table->foreignId('group_id')->nullable()->constrained('groups')->onDelete('set null');
-        });
+        // Add group_id to questions table (only if column doesn't exist)
+        if (!Schema::hasColumn('questions', 'group_id')) {
+            Schema::table('questions', function (Blueprint $table) {
+                $table->foreignId('group_id')->nullable()->constrained('groups')->onDelete('set null');
+            });
+        }
     }
 
     /**

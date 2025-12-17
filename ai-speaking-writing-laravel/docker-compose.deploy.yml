@@ -96,7 +96,10 @@ services:
 
  
   ai-speech-service:
-    image: ${SPEECH_SERVICE_IMAGE:-thienv29/ai-speech-service:latest}
+    build:
+      context: ../ai-speech-service
+      dockerfile: Dockerfile
+    image: ${SPEECH_SERVICE_IMAGE:-ai-speech-service:latest}
     container_name: iclc-ai-speech-service-deploy
     restart: unless-stopped
     ports:
