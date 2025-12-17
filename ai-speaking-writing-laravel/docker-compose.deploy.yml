@@ -2,7 +2,11 @@ version: '3.8'
 
 services:
   app:
-    image: thienv29/iclc-speaking-and-writing-app:demo
+    # Build from local Dockerfile instead of using old image from Docker Hub
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${APP_IMAGE:-ai-speaking-writing-laravel-app:latest}
     container_name: iclc-app-deploy
     restart: unless-stopped
     ports:
@@ -28,6 +32,9 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-password}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
       
+      # Force fresh migrations on first run (set to false after first successful migration)
+      - FORCE_FRESH_MIGRATIONS=${FORCE_FRESH_MIGRATIONS:-true}
+      
       # Cache & Session
       - CACHE_DRIVER=${CACHE_DRIVER:-file}
       - SESSION_DRIVER=${SESSION_DRIVER:-file}
@@ -47,6 +54,15 @@ services:
       - FILESYSTEM_DISK=${FILESYSTEM_DISK:-local}
       
     volumes:
+      # Mount code from local to container (for development/debugging)
+      # Comment out these lines if you want to use code baked into image
+      - ./app:/var/www/html/app:ro
+      - ./routes:/var/www/html/routes:ro
+      - ./config:/var/www/html/config:ro
+      - ./database:/var/www/html/database:ro
+      - ./resources:/var/www/html/resources:ro
+      - ./public:/var/www/html/public:ro
+      
       # Persistent storage cho uploads và logs
       - app_storage:/var/www/html/storage
       - app_bootstrap_cache:/var/www/html/bootstrap/cache
