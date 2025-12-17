@@ -1,22 +1,73 @@
+# Git
 .git
 .gitignore
-.env
-.env.backup
-.env.production
-node_modules
-npm-debug.log
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-vendor
-.DS_Store
-*.md
-docker-compose.yml
-docker-compose.override.yml
-.dockerignore
-Dockerfile
-README.md
-DEPLOYMENT_INSTRUCTIONS.md
-NHAT_KY_THUC_TAP.md
+.gitattributes
 
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+docker-compose.override.yml.example
+.dockerignore
+
+# Documentation
+*.md
+README.md
+DEPLOY_INSTRUCTIONS.md
+BAO-CAO-THUC-TAP-TOT-NGHIEP.md
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Cache
+storage/framework/cache/*
+!storage/framework/cache/.gitkeep
+storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
+storage/framework/views/*
+!storage/framework/views/.gitkeep
+bootstrap/cache/*
+!bootstrap/cache/.gitkeep
+
+# Dependencies (will be installed in container)
+node_modules
+vendor
+public/build
+public/hot
+public/storage
+
+# Testing
+.phpunit.result.cache
+tests
+phpunit.xml
+
+# Build artifacts
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.sql
+
+# Temporary files
+*.tmp
+*.bak
+*.old

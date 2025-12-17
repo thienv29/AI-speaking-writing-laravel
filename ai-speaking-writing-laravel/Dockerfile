@@ -58,6 +58,27 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 RUN (getent group www-data || groupadd -g 1000 www-data) && \
     (id -u www-data >/dev/null 2>&1 || useradd -u 1000 -g www-data -s /bin/bash -m www-data)
 
+# Copy application code
+# Note: Use .dockerignore to exclude unnecessary files (node_modules, vendor, etc.)
+COPY --chown=www-data:www-data . /var/www/html
+
+# Install dependencies and build assets (if package.json exists)
+RUN if [ -f "package.json" ]; then \
+        npm ci --omit=optional || npm install --omit=optional; \
+        npm run build || true; \
+    fi
+
+# Install Composer dependencies (if composer.json exists)
+RUN if [ -f "composer.json" ]; then \
+        composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev || \
+        composer install --no-interaction --prefer-dist --optimize-autoloader; \
+    fi
+
+# Set proper permissions
+RUN chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html && \
+    chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache || true
+
 # Entrypoint tự động:
 # 1. Đợi MySQL ready (với retry logic)
 # 2. composer install (nếu chưa có vendor)
