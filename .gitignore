@@ -1,0 +1,22 @@
+# PDF files
+*.pdf
+
+# Office documents
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# Phụ lục, kế hoạch, nhật ký
+*phụ*lục*
+*Phụ*Lục*
+*PHU*LUC*
+*kế*hoạch*
+*Kế*Hoạch*
+*KE*HOACH*
+*nhật*ký*
+*Nhật*Ký*
+*NHAT*KY*
+
