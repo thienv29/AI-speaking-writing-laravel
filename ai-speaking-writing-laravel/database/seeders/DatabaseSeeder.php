@@ -11,7 +11,8 @@ use App\Models\{
     Exercise,
     ExerciseType,
     Question,
-    Attempt
+    Attempt,
+    Group
 };
 
 class DatabaseSeeder extends Seeder
@@ -731,6 +732,18 @@ class DatabaseSeeder extends Seeder
         // Bài 2, 3, 4, 5 are kept as lessons but without exercises/questions
         // to match local database structure (5 lessons, 5 exercises, 50 questions)
 
+        // GROUPS - Create groups and link questions to groups
+        $group1 = Group::firstOrCreate(['name' => 'Nhóm câu hỏi Bài 1']);
+        $group2 = Group::firstOrCreate(['name' => 'Nhóm câu hỏi Bài 2']);
+        $group3 = Group::firstOrCreate(['name' => 'Nhóm câu hỏi Bài 3']);
+        
+        // Link all questions from Bài 1 to group 1
+        foreach ($questions as $question) {
+            $group1->questions()->syncWithoutDetaching([$question->id]);
+        }
+        
         $this->command->info('All tables seeded successfully!');
+        $this->command->info('Groups created: ' . Group::count());
+        $this->command->info('Questions linked to groups: ' . DB::table('group_question')->count());
     }
 }
