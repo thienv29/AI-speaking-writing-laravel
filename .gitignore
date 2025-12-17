@@ -9,6 +9,9 @@
 *.ppt
 *.pptx
 
+# Database dumps
+*.sql
+
 # Phụ lục, kế hoạch, nhật ký
 *phụ*lục*
 *Phụ*Lục*
