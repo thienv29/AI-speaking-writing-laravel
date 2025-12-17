@@ -32,12 +32,20 @@ class CreateExerciseQuestionPivotTable extends Migration
         });
         
         // Migrate existing data from questions.exercise_id to pivot table
-        DB::statement("
-            INSERT INTO exercise_question (exercise_id, question_id, order_index, created_at, updated_at)
-            SELECT exercise_id, id, order_index, created_at, updated_at
-            FROM questions
-            WHERE exercise_id IS NOT NULL
-        ");
+        if (Schema::hasColumn('questions', 'exercise_id')) {
+            DB::statement("
+                INSERT INTO exercise_question (exercise_id, question_id, order_index, created_at, updated_at)
+                SELECT exercise_id, id, order_index, created_at, updated_at
+                FROM questions
+                WHERE exercise_id IS NOT NULL
+            ");
+            
+            // Drop exercise_id column after migrating data
+            Schema::table('questions', function (Blueprint $table) {
+                $table->dropForeign(['exercise_id']);
+                $table->dropColumn('exercise_id');
+            });
+        }
     }
 
     /**

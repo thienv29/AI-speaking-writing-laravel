@@ -11,7 +11,6 @@ class Question extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'exercise_id',
         'img_url',
         'audio_url',
         'order_index',

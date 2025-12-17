@@ -16,14 +16,14 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    # Entrypoint tự động:
-    # 1. Đợi MySQL ready (với retry logic)
-    # 2. composer install (nếu chưa có vendor)
-    # 3. php artisan key:generate (nếu chưa có APP_KEY)
-    # 4. Optimize Laravel (config, route, view cache)
-    # 5. Chạy migrations (fresh --seed nếu lần đầu, migrate nếu đã có data)
-    # 6. Tạo storage link và set permissions
-    # 7. Start Laravel server
+    # Quy trình khởi động tự động được thực hiện:
+    # Bước 1: Chờ MySQL sẵn sàng (có logic thử lại)
+    # Bước 2: Cài đặt dependencies bằng composer (kiểm tra vendor folder)
+    # Bước 3: Tạo APP_KEY nếu chưa tồn tại (php artisan key:generate)
+    # Bước 4: Tối ưu hóa Laravel (cache config, route, view)
+    # Bước 5: Thực thi migrations (fresh --seed cho lần đầu tiên, migrate cho lần sau)
+    # Bước 6: Thiết lập storage link và phân quyền
+    # Bước 7: Khởi động Laravel development server
     command: ["/usr/local/bin/docker-entrypoint.sh"]
     environment:
       - APP_ENV=${APP_ENV:-production}
