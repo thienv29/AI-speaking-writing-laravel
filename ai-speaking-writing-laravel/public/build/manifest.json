@@ -1,6 +1,6 @@
 {
-  "_routes-CeGuDIXQ.js": {
-    "file": "assets/routes-CeGuDIXQ.js",
+  "_routes-Bo8R6gkX.js": {
+    "file": "assets/routes-Bo8R6gkX.js",
     "name": "routes"
   },
   "resources/css/app.css": {
@@ -13,17 +13,17 @@
     ]
   },
   "resources/js/admin/exercises/importExcel.js": {
-    "file": "assets/importExcel-Dddd5z3x.js",
+    "file": "assets/importExcel-D0Qlm_P6.js",
     "name": "importExcel",
     "src": "resources/js/admin/exercises/importExcel.js",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_routes-CeGuDIXQ.js"
+      "_routes-Bo8R6gkX.js"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BS-uN9S_.js",
+    "file": "assets/app-DjIzm8Ls.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -34,13 +34,13 @@
     ]
   },
   "resources/js/user/questionPage/main.js": {
-    "file": "assets/main-GbNIV1gD.js",
+    "file": "assets/main-gNBkMiCY.js",
     "name": "main",
     "src": "resources/js/user/questionPage/main.js",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/app.js",
-      "_routes-CeGuDIXQ.js",
+      "_routes-Bo8R6gkX.js",
       "resources/js/user/questionPage/writing-feedback.js"
     ]
   },

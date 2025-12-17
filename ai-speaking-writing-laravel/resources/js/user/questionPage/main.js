@@ -1077,7 +1077,10 @@ function renderResult(data) {
         if (popupNextBtn && nextQuestionId) {
             popupNextBtn.addEventListener('click', () => {
                 closeResultPopup();
-                handleQuestionSelect(nextQuestionId);
+                // Skip completion check since we just submitted successfully
+                // Directly navigate to next question
+                const url = buildEmbedUrl(nextQuestionId);
+                window.location.assign(url);
             });
         }
 
