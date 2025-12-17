@@ -43,8 +43,6 @@ class GroupController extends Controller
     {
         $group->load(['questions' => function($query) {
             $query->with([
-                'exercise.lesson',
-                'exercise.type',
                 'exercises.lesson',
                 'exercises.type'
             ])->orderBy('questions.id');
