@@ -149,7 +149,7 @@ class DatabaseSeeder extends Seeder
         
         $questions = collect([]);
         
-        // Bài tập 1 - Questions
+        // Bài tập 1 - Questions (SPW - Speaking Word) - 10 questions
         $q1_1 = Question::create([
             'img_url' => null,
             'audio_url' => null,
@@ -171,8 +171,96 @@ class DatabaseSeeder extends Seeder
         ]);
         $exercise1->questions()->attach($q1_2->id, ['order_index' => 2]);
         $questions->push($q1_2);
+        
+        $q1_3 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 3,
+            'target_text' => 'School',
+            'prompt_text' => 'School',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_3->id, ['order_index' => 3]);
+        $questions->push($q1_3);
+        
+        $q1_4 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 4,
+            'target_text' => 'Teacher',
+            'prompt_text' => 'Teacher',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_4->id, ['order_index' => 4]);
+        $questions->push($q1_4);
+        
+        $q1_5 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 5,
+            'target_text' => 'Friend',
+            'prompt_text' => 'Friend',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_5->id, ['order_index' => 5]);
+        $questions->push($q1_5);
+        
+        $q1_6 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 6,
+            'target_text' => 'Family',
+            'prompt_text' => 'Family',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_6->id, ['order_index' => 6]);
+        $questions->push($q1_6);
+        
+        $q1_7 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 7,
+            'target_text' => 'Apple',
+            'prompt_text' => 'Apple',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_7->id, ['order_index' => 7]);
+        $questions->push($q1_7);
+        
+        $q1_8 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 8,
+            'target_text' => 'Book',
+            'prompt_text' => 'Book',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_8->id, ['order_index' => 8]);
+        $questions->push($q1_8);
+        
+        $q1_9 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 9,
+            'target_text' => 'Pencil',
+            'prompt_text' => 'Pencil',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_9->id, ['order_index' => 9]);
+        $questions->push($q1_9);
+        
+        $q1_10 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 10,
+            'target_text' => 'Table',
+            'prompt_text' => 'Table',
+            'starter_text' => null
+        ]);
+        $exercise1->questions()->attach($q1_10->id, ['order_index' => 10]);
+        $questions->push($q1_10);
 
-        // Bài tập 2 - Questions
+        // Bài tập 2 - Questions (SPS - Speaking Sentence) - 10 questions
         $q2_1 = Question::create([
             'img_url' => null,
             'audio_url' => null,
@@ -194,8 +282,96 @@ class DatabaseSeeder extends Seeder
         ]);
         $exercise2->questions()->attach($q2_2->id, ['order_index' => 2]);
         $questions->push($q2_2);
+        
+        $q2_3 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 3,
+            'target_text' => 'Nice to meet you.',
+            'prompt_text' => 'Nice to meet you.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_3->id, ['order_index' => 3]);
+        $questions->push($q2_3);
+        
+        $q2_4 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 4,
+            'target_text' => 'I am fine, thank you.',
+            'prompt_text' => 'I am fine, thank you.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_4->id, ['order_index' => 4]);
+        $questions->push($q2_4);
+        
+        $q2_5 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 5,
+            'target_text' => 'Good morning, teacher.',
+            'prompt_text' => 'Good morning, teacher.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_5->id, ['order_index' => 5]);
+        $questions->push($q2_5);
+        
+        $q2_6 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 6,
+            'target_text' => 'See you later.',
+            'prompt_text' => 'See you later.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_6->id, ['order_index' => 6]);
+        $questions->push($q2_6);
+        
+        $q2_7 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 7,
+            'target_text' => 'Have a nice day.',
+            'prompt_text' => 'Have a nice day.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_7->id, ['order_index' => 7]);
+        $questions->push($q2_7);
+        
+        $q2_8 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 8,
+            'target_text' => 'I love my family.',
+            'prompt_text' => 'I love my family.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_8->id, ['order_index' => 8]);
+        $questions->push($q2_8);
+        
+        $q2_9 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 9,
+            'target_text' => 'This is my school.',
+            'prompt_text' => 'This is my school.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_9->id, ['order_index' => 9]);
+        $questions->push($q2_9);
+        
+        $q2_10 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 10,
+            'target_text' => 'Thank you very much.',
+            'prompt_text' => 'Thank you very much.',
+            'starter_text' => null
+        ]);
+        $exercise2->questions()->attach($q2_10->id, ['order_index' => 10]);
+        $questions->push($q2_10);
 
-        // Bài tập 3 - Questions
+        // Bài tập 3 - Questions (WCS - Writing Complete Sentence) - 10 questions
         $q3_1 = Question::create([
             'img_url' => null,
             'audio_url' => null,
@@ -217,8 +393,96 @@ class DatabaseSeeder extends Seeder
         ]);
         $exercise3->questions()->attach($q3_2->id, ['order_index' => 2]);
         $questions->push($q3_2);
+        
+        $q3_3 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 3,
+            'target_text' => 'I go to school at 7 o\'clock.',
+            'prompt_text' => 'Complete the sentence about what time you go to school.',
+            'starter_text' => 'I go to school at',
+        ]);
+        $exercise3->questions()->attach($q3_3->id, ['order_index' => 3]);
+        $questions->push($q3_3);
+        
+        $q3_4 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 4,
+            'target_text' => 'My favorite color is blue.',
+            'prompt_text' => 'Complete the sentence about your favorite color.',
+            'starter_text' => 'My favorite color is',
+        ]);
+        $exercise3->questions()->attach($q3_4->id, ['order_index' => 4]);
+        $questions->push($q3_4);
+        
+        $q3_5 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 5,
+            'target_text' => 'I like to read books.',
+            'prompt_text' => 'Complete the sentence about what you like to do.',
+            'starter_text' => 'I like to',
+        ]);
+        $exercise3->questions()->attach($q3_5->id, ['order_index' => 5]);
+        $questions->push($q3_5);
+        
+        $q3_6 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 6,
+            'target_text' => 'Today is Monday.',
+            'prompt_text' => 'Complete the sentence about what day it is today.',
+            'starter_text' => 'Today is',
+        ]);
+        $exercise3->questions()->attach($q3_6->id, ['order_index' => 6]);
+        $questions->push($q3_6);
+        
+        $q3_7 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 7,
+            'target_text' => 'I have two brothers.',
+            'prompt_text' => 'Complete the sentence about your family.',
+            'starter_text' => 'I have',
+        ]);
+        $exercise3->questions()->attach($q3_7->id, ['order_index' => 7]);
+        $questions->push($q3_7);
+        
+        $q3_8 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 8,
+            'target_text' => 'I eat breakfast in the morning.',
+            'prompt_text' => 'Complete the sentence about when you eat breakfast.',
+            'starter_text' => 'I eat breakfast',
+        ]);
+        $exercise3->questions()->attach($q3_8->id, ['order_index' => 8]);
+        $questions->push($q3_8);
+        
+        $q3_9 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 9,
+            'target_text' => 'I play soccer with my friends.',
+            'prompt_text' => 'Complete the sentence about playing sports.',
+            'starter_text' => 'I play soccer',
+        ]);
+        $exercise3->questions()->attach($q3_9->id, ['order_index' => 9]);
+        $questions->push($q3_9);
+        
+        $q3_10 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 10,
+            'target_text' => 'My teacher is very kind.',
+            'prompt_text' => 'Complete the sentence about your teacher.',
+            'starter_text' => 'My teacher is',
+        ]);
+        $exercise3->questions()->attach($q3_10->id, ['order_index' => 10]);
+        $questions->push($q3_10);
 
-        // Bài tập 4 - Questions
+        // Bài tập 4 - Questions (WAQ - Writing Answer Question) - 10 questions
         $q4_1 = Question::create([
             'img_url' => null,
             'audio_url' => null,
@@ -284,13 +548,57 @@ class DatabaseSeeder extends Seeder
         ]);
         $exercise4->questions()->attach($q4_6->id, ['order_index' => 6]);
         $questions->push($q4_6);
+        
+        $q4_7 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 7,
+            'target_text' => 'I like playing soccer.',
+            'prompt_text' => 'What is your favorite sport?',
+            'starter_text' => null,
+        ]);
+        $exercise4->questions()->attach($q4_7->id, ['order_index' => 7]);
+        $questions->push($q4_7);
+        
+        $q4_8 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 8,
+            'target_text' => 'I go to school by bus.',
+            'prompt_text' => 'How do you go to school?',
+            'starter_text' => null,
+        ]);
+        $exercise4->questions()->attach($q4_8->id, ['order_index' => 8]);
+        $questions->push($q4_8);
+        
+        $q4_9 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 9,
+            'target_text' => 'I have breakfast at 7 AM.',
+            'prompt_text' => 'What time do you have breakfast?',
+            'starter_text' => null,
+        ]);
+        $exercise4->questions()->attach($q4_9->id, ['order_index' => 9]);
+        $questions->push($q4_9);
+        
+        $q4_10 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 10,
+            'target_text' => 'My favorite color is blue.',
+            'prompt_text' => 'What is your favorite color?',
+            'starter_text' => null,
+        ]);
+        $exercise4->questions()->attach($q4_10->id, ['order_index' => 10]);
+        $questions->push($q4_10);
 
-        // Bài tập 5 - Questions
+        // Bài tập 5 - Questions (WSG - Writing Word to Sentence) - 10 questions
         $q5_1 = Question::create([
             'img_url' => null,
             'audio_url' => null,
             'order_index' => 1,
-            'target_text' => 'sunny',
+            'target_text' => 'Today is sunny.',
             'prompt_text' => 'sunny',
             'starter_text' => null,
         ]);
@@ -301,7 +609,7 @@ class DatabaseSeeder extends Seeder
             'img_url' => null,
             'audio_url' => null,
             'order_index' => 2,
-            'target_text' => 'friend',
+            'target_text' => 'My friend is very kind.',
             'prompt_text' => 'friend',
             'starter_text' => null,
         ]);
@@ -312,12 +620,89 @@ class DatabaseSeeder extends Seeder
             'img_url' => null,
             'audio_url' => null,
             'order_index' => 3,
-            'target_text' => 'family',
+            'target_text' => 'I love my family.',
             'prompt_text' => 'family',
             'starter_text' => null,
         ]);
         $exercise5->questions()->attach($q5_3->id, ['order_index' => 3]);
         $questions->push($q5_3);
+        
+        $q5_4 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 4,
+            'target_text' => 'I go to school every day.',
+            'prompt_text' => 'school',
+            'starter_text' => null,
+        ]);
+        $exercise5->questions()->attach($q5_4->id, ['order_index' => 4]);
+        $questions->push($q5_4);
+        
+        $q5_5 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 5,
+            'target_text' => 'My teacher is nice.',
+            'prompt_text' => 'teacher',
+            'starter_text' => null,
+        ]);
+        $exercise5->questions()->attach($q5_5->id, ['order_index' => 5]);
+        $questions->push($q5_5);
+        
+        $q5_6 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 6,
+            'target_text' => 'I like to read books.',
+            'prompt_text' => 'books',
+            'starter_text' => null,
+        ]);
+        $exercise5->questions()->attach($q5_6->id, ['order_index' => 6]);
+        $questions->push($q5_6);
+        
+        $q5_7 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 7,
+            'target_text' => 'I eat an apple for lunch.',
+            'prompt_text' => 'apple',
+            'starter_text' => null,
+        ]);
+        $exercise5->questions()->attach($q5_7->id, ['order_index' => 7]);
+        $questions->push($q5_7);
+        
+        $q5_8 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 8,
+            'target_text' => 'I play soccer in the park.',
+            'prompt_text' => 'soccer',
+            'starter_text' => null,
+        ]);
+        $exercise5->questions()->attach($q5_8->id, ['order_index' => 8]);
+        $questions->push($q5_8);
+        
+        $q5_9 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 9,
+            'target_text' => 'I have a pet dog.',
+            'prompt_text' => 'dog',
+            'starter_text' => null,
+        ]);
+        $exercise5->questions()->attach($q5_9->id, ['order_index' => 9]);
+        $questions->push($q5_9);
+        
+        $q5_10 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 10,
+            'target_text' => 'I watch TV in the evening.',
+            'prompt_text' => 'TV',
+            'starter_text' => null,
+        ]);
+        $exercise5->questions()->attach($q5_10->id, ['order_index' => 10]);
+        $questions->push($q5_10);
 
         // Add exercises and questions for Bài 2: Hoạt động hàng ngày
         $lesson2Id = $lessons->where('title', 'Bài 2: Hoạt động hàng ngày')->first()->id;
@@ -334,7 +719,7 @@ class DatabaseSeeder extends Seeder
 
         $exercises->push($exerciseLesson2);
 
-        // Questions for Bài 2
+        // Questions for Bài 2 (WAQ) - 10 questions
         $qLesson2_1 = Question::create([
             'img_url' => null,
             'audio_url' => null,
@@ -378,6 +763,72 @@ class DatabaseSeeder extends Seeder
         ]);
         $exerciseLesson2->questions()->attach($qLesson2_4->id, ['order_index' => 4]);
         $questions->push($qLesson2_4);
+        
+        $qLesson2_5 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 5,
+            'target_text' => 'I brush my teeth every morning.',
+            'prompt_text' => 'What do you do every morning?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson2->questions()->attach($qLesson2_5->id, ['order_index' => 5]);
+        $questions->push($qLesson2_5);
+        
+        $qLesson2_6 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 6,
+            'target_text' => 'I have lunch at 12 o\'clock.',
+            'prompt_text' => 'What time do you have lunch?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson2->questions()->attach($qLesson2_6->id, ['order_index' => 6]);
+        $questions->push($qLesson2_6);
+        
+        $qLesson2_7 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 7,
+            'target_text' => 'I do my homework in the afternoon.',
+            'prompt_text' => 'When do you do your homework?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson2->questions()->attach($qLesson2_7->id, ['order_index' => 7]);
+        $questions->push($qLesson2_7);
+        
+        $qLesson2_8 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 8,
+            'target_text' => 'I watch TV in the evening.',
+            'prompt_text' => 'What do you do in the evening?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson2->questions()->attach($qLesson2_8->id, ['order_index' => 8]);
+        $questions->push($qLesson2_8);
+        
+        $qLesson2_9 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 9,
+            'target_text' => 'I go to bed at 9 PM.',
+            'prompt_text' => 'What time do you go to bed?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson2->questions()->attach($qLesson2_9->id, ['order_index' => 9]);
+        $questions->push($qLesson2_9);
+        
+        $qLesson2_10 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 10,
+            'target_text' => 'I help my mom cook dinner.',
+            'prompt_text' => 'How do you help your family?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson2->questions()->attach($qLesson2_10->id, ['order_index' => 10]);
+        $questions->push($qLesson2_10);
 
         // Add exercises and questions for Bài 3: Môi trường
         $lesson3Id = $lessons->where('title', 'Bài 3: Môi trường')->first()->id;
@@ -394,7 +845,7 @@ class DatabaseSeeder extends Seeder
 
         $exercises->push($exerciseLesson3);
 
-        // Questions for Bài 3
+        // Questions for Bài 3 (WAQ) - 10 questions
         $qLesson3_1 = Question::create([
             'img_url' => null,
             'audio_url' => null,
@@ -443,8 +894,8 @@ class DatabaseSeeder extends Seeder
             'img_url' => null,
             'audio_url' => null,
             'order_index' => 5,
-            'target_text' => 'Hello, teacher!',
-            'prompt_text' => 'Say hello to your teacher.',
+            'target_text' => 'We should recycle to protect the environment.',
+            'prompt_text' => 'How can we protect the environment?',
             'starter_text' => null,
         ]);
         $exerciseLesson3->questions()->attach($qLesson3_5->id, ['order_index' => 5]);
@@ -454,12 +905,56 @@ class DatabaseSeeder extends Seeder
             'img_url' => null,
             'audio_url' => null,
             'order_index' => 6,
-            'target_text' => 'Today is sunny.',
-            'prompt_text' => 'Describe the weather today using the format "Today is ...".',
+            'target_text' => 'We should plant more trees.',
+            'prompt_text' => 'What should we do to help the Earth?',
             'starter_text' => null,
         ]);
         $exerciseLesson3->questions()->attach($qLesson3_6->id, ['order_index' => 6]);
         $questions->push($qLesson3_6);
+        
+        $qLesson3_7 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 7,
+            'target_text' => 'We should save water and electricity.',
+            'prompt_text' => 'How can we save natural resources?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson3->questions()->attach($qLesson3_7->id, ['order_index' => 7]);
+        $questions->push($qLesson3_7);
+        
+        $qLesson3_8 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 8,
+            'target_text' => 'We should not throw trash on the ground.',
+            'prompt_text' => 'What should we not do to keep our environment clean?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson3->questions()->attach($qLesson3_8->id, ['order_index' => 8]);
+        $questions->push($qLesson3_8);
+        
+        $qLesson3_9 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 9,
+            'target_text' => 'I love animals and nature.',
+            'prompt_text' => 'What do you love about nature?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson3->questions()->attach($qLesson3_9->id, ['order_index' => 9]);
+        $questions->push($qLesson3_9);
+        
+        $qLesson3_10 = Question::create([
+            'img_url' => null,
+            'audio_url' => null,
+            'order_index' => 10,
+            'target_text' => 'We can help by cleaning the park.',
+            'prompt_text' => 'How can you help protect the environment in your community?',
+            'starter_text' => null,
+        ]);
+        $exerciseLesson3->questions()->attach($qLesson3_10->id, ['order_index' => 10]);
+        $questions->push($qLesson3_10);
 
         $this->command->info('All tables seeded successfully!');
     }
