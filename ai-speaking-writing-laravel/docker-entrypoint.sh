@@ -213,20 +213,43 @@ try {
     DB_HAS_TABLES=true
 fi
 
+# Check if we should force fresh migrations (useful when cloning repo fresh)
+# Set FORCE_FRESH_MIGRATIONS=true in .env to force fresh migrations
+FORCE_FRESH=false
+if [ -f ".env" ]; then
+    FORCE_FRESH_VALUE=$(grep -E '^FORCE_FRESH_MIGRATIONS=' .env | cut -d '=' -f2- | tr -d '[:space:]')
+    if [ "$FORCE_FRESH_VALUE" = "true" ] || [ "$FORCE_FRESH_VALUE" = "1" ]; then
+        FORCE_FRESH=true
+        log_warn "FORCE_FRESH_MIGRATIONS=true detected - will run fresh migrations"
+    fi
+fi
+
 # Run migrations
-if [ "$DB_HAS_TABLES" = false ]; then
-    log_info "First time setup: Running fresh migrations with seeders..."
+if [ "$DB_HAS_TABLES" = false ] || [ "$FORCE_FRESH" = true ]; then
+    if [ "$FORCE_FRESH" = true ] && [ "$DB_HAS_TABLES" = true ]; then
+        log_warn "Running fresh migrations (FORCE_FRESH_MIGRATIONS=true) - existing data will be lost!"
+    else
+        log_info "First time setup: Running fresh migrations with seeders..."
+    fi
     php artisan migrate:fresh --seed --force || {
         log_error "Initial migration failed!"
         exit 1
     }
+    # Remove the flag after successful fresh migration
+    if [ "$FORCE_FRESH" = true ] && [ -f ".env" ]; then
+        sed -i 's/^FORCE_FRESH_MIGRATIONS=.*/FORCE_FRESH_MIGRATIONS=false/' .env
+        log_info "Set FORCE_FRESH_MIGRATIONS=false after successful fresh migration"
+    fi
 else
     log_info "Database exists: Running migrations only..."
     php artisan migrate --force || {
-        log_warn "Migration failed. This might be due to schema conflicts."
-        log_warn "To reset database, run: docker compose exec app php artisan migrate:fresh --seed"
-        # Don't fail completely, let the app start anyway
-        log_warn "Continuing with existing database state..."
+        log_error "Migration failed! This might be due to schema conflicts."
+        log_error "If you cloned the repo fresh, you may need to reset the database:"
+        log_error "  1. Stop containers: docker compose down"
+        log_error "  2. Remove MySQL volume: docker volume rm <project-name>_mysql_data"
+        log_error "  3. Start again: docker compose up -d"
+        log_error "  OR set FORCE_FRESH_MIGRATIONS=true in .env and restart"
+        exit 1
     }
 fi
 
