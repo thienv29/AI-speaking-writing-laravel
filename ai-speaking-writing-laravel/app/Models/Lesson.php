@@ -29,15 +29,7 @@ class Lesson extends Model
         return $this->hasMany(Exercise::class, 'lesson_id');
     }
 
-    public function questions()
-    {
-        return $this->hasManyThrough(
-            Question::class,  
-            Exercise::class,  
-            'lesson_id',      
-            'exercise_id',    
-            'id',            
-            'id'             
-        );
-    }
+    // Note: questions() relationship removed because questions now have many-to-many with exercises via pivot table
+    // To get questions for a lesson, use: $lesson->exercises->flatMap->questions
+    // To count questions: $lesson->exercises->sum(fn($e) => $e->questions->count())
 }

@@ -131,7 +131,7 @@ class LessonController extends Controller
             ])
             ->loadCount([
                 'exercises', 
-                'questions', 
+                // 'questions', // Removed - questions now many-to-many, calculate via exercises instead
             ]);
 
             return response()->json([
@@ -164,7 +164,9 @@ class LessonController extends Controller
             ])
             ->findOrFail($id); 
 
-            $lesson->loadCount(['exercises','questions']);
+            $lesson->loadCount(['exercises']);
+            // Calculate questions_count manually via exercises (many-to-many relationship)
+            $lesson->questions_count = $lesson->exercises->sum('questions_count');
 
             return view('pages.user.lesson', compact('lesson'));
         } catch (\Throwable $e) {
