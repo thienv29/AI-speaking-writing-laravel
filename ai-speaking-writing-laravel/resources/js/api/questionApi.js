@@ -13,8 +13,20 @@ const questionApi = {
     if (userId && userId !== null && userId !== undefined && userId !== '') {
       fd.append('user_id', parseInt(userId, 10));
     }
-    fd.append('user_answer', userAnswer || '');
-    fd.append('question_id', parseInt(questionId, 10));
+    
+    // Đảm bảo user_answer không rỗng và là string
+    const answerText = (userAnswer || '').toString().trim();
+    if (!answerText) {
+      throw new Error('Câu trả lời không được để trống.');
+    }
+    fd.append('user_answer', answerText);
+    
+    // Đảm bảo question_id là số hợp lệ
+    const qId = parseInt(questionId, 10);
+    if (!qId || isNaN(qId)) {
+      throw new Error('Question ID không hợp lệ.');
+    }
+    fd.append('question_id', qId);
 
     if (audioBlob) {
         let filename = 'rec.webm';
@@ -24,12 +36,29 @@ const questionApi = {
         fd.append('user_audio', audioBlob, filename);
     }
 
-    const res = await axiosClient.post(API_ROUTES.question.evaluateAnswer, fd, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
+    console.log('Submitting answer:', {
+      userId: userId || 'null',
+      questionId: qId,
+      answerLength: answerText.length,
+      hasAudio: !!audioBlob
     });
-    return res.data;
+
+    try {
+      const res = await axiosClient.post(API_ROUTES.question.evaluateAnswer, fd, {
+          headers: {
+              'Content-Type': 'multipart/form-data',
+          },
+      });
+      return res.data;
+    } catch (error) {
+      console.error('API error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
   },
 
   async transcribeAudio(audioBlob) {

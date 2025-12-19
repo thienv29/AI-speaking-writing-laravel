@@ -151,9 +151,20 @@ class AttemptController extends Controller
                 'data'    => $attempt,
             ], 201);
         } catch (ValidationException $e) {
+            Log::warning('Attempt validation error', [
+                'errors' => $e->errors(),
+                'request_data' => [
+                    'user_id' => $request->input('user_id'),
+                    'question_id' => $request->input('question_id'),
+                    'user_answer_length' => strlen($request->input('user_answer') ?? ''),
+                    'has_user_audio' => $request->hasFile('user_audio'),
+                ]
+            ]);
             return response()->json([
                 'status'  => 'fail',
-                'message' => 'Validation error.',
+                'message' => 'Validation error: ' . implode(', ', array_map(function($errors) {
+                    return implode(', ', $errors);
+                }, $e->errors())),
                 'errors'  => $e->errors(),
             ], 422);
         } catch (\Throwable $e) {

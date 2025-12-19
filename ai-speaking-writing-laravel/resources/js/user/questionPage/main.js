@@ -937,7 +937,23 @@ async function submitAnswer(answerText='', audioBlob=null) {
         markQuestionCompleted(question.id);
         renderResult(response.data);
     } catch (error) {
-        showError(error.message);
+        console.error('Submit answer error:', error);
+        // Extract detailed error message from response
+        let errorMessage = error.message || 'Có lỗi xảy ra khi nộp bài.';
+        
+        if (error.response?.data) {
+            const errorData = error.response.data;
+            if (errorData.errors) {
+                // Validation errors - show first error
+                const firstErrorKey = Object.keys(errorData.errors)[0];
+                const firstError = errorData.errors[firstErrorKey];
+                errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+            } else if (errorData.message) {
+                errorMessage = errorData.message;
+            }
+        }
+        
+        showError(errorMessage);
     } finally {
         setLoadingState(false, submitBtn, loadingEl, errorEl, loadingPopup);
     }
