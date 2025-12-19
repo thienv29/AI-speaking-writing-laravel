@@ -37,35 +37,33 @@ class DatabaseSeeder extends Seeder
             }
         }
         
-        //USERS - Use firstOrCreate to prevent duplicates
+        //USERS - Delete old default users first, then create fresh ones to ensure consistent IDs
+        // This ensures IDs are always 1, 2, 3 for default users
+        $defaultEmails = ['admin@example.com', 'user1@example.com', 'user2@example.com'];
+        User::whereIn('email', $defaultEmails)->delete();
+        
         $users = collect([
-            User::firstOrCreate(
-                ['email' => 'admin@example.com'],
-                [
-                    'name' => 'Admin', 
-                    'password' => Hash::make('12345678'), 
-                    'dob' => '2000-01-01',
-                    'role' => 'admin'
-                ]
-            ),
-            User::firstOrCreate(
-                ['email' => 'user1@example.com'],
-                [
-                    'name' => 'User 1', 
-                    'password' => Hash::make('12345678'), 
-                    'role' => 'user',
-                    'dob' => '2007-05-15'
-                ]
-            ),
-            User::firstOrCreate(
-                ['email' => 'user2@example.com'],
-                [
-                    'name' => 'User 2', 
-                    'password' => Hash::make('12345678'), 
-                    'role' => 'user',
-                    'dob'=> '2009-08-22'
-                ]
-            ),
+            User::create([
+                'name' => 'Admin', 
+                'email' => 'admin@example.com', 
+                'password' => Hash::make('12345678'), 
+                'dob' => '2000-01-01',
+                'role' => 'admin'
+            ]),
+            User::create([
+                'name' => 'User 1', 
+                'email' => 'user1@example.com', 
+                'password' => Hash::make('12345678'), 
+                'role' => 'user',
+                'dob' => '2007-05-15'
+            ]),
+            User::create([
+                'name' => 'User 2', 
+                'email' => 'user2@example.com', 
+                'password' => Hash::make('12345678'), 
+                'role' => 'user',
+                'dob'=> '2009-08-22'
+            ]),
         ]);
 
         //EXERCISE TYPES
