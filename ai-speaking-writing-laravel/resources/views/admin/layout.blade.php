@@ -31,6 +31,7 @@
                     <a href="{{ route('admin.dashboard') }}" class="text-xl font-bold">ICLC Admin</a>
                     <div class="ml-10 flex space-x-4">
                         <a href="{{ route('admin.dashboard') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Dashboard</a>
+                        <a href="{{ route('admin.users.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Người dùng</a>
                         <a href="{{ route('admin.lessons.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Bài học</a>
                         <a href="{{ route('admin.exercises.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Bài tập</a>
                         <a href="{{ route('admin.questions.index') }}" class="px-3 py-2 rounded-md hover:bg-blue-700">Câu hỏi</a>
