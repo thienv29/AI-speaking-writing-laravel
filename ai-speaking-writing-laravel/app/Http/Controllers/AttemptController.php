@@ -65,10 +65,24 @@ class AttemptController extends Controller
     public function store(Request $request)
     {
         try {
+            // Normalize user_id: convert to integer or null
+            $userIdInput = $request->input('user_id');
+            if ($userIdInput !== null && $userIdInput !== '') {
+                $userIdInput = (int) $userIdInput;
+                if ($userIdInput <= 0) {
+                    $userIdInput = null;
+                }
+            } else {
+                $userIdInput = null;
+            }
+            if ($userIdInput !== null) {
+                $request->merge(['user_id' => $userIdInput]);
+            }
+
             $validated = $request->validate([
                 'user_id'       => ['nullable','integer', Rule::exists('users','id')],
                 'question_id'   => ['required','integer', Rule::exists('questions','id')],
-                'user_answer'   => ['required','string','max:255'],
+                'user_answer'   => ['required','string','max:5000'], // Tăng từ 255 lên 5000 cho writing
                 'user_audio'    => ['nullable','file','mimes:mp3,wav,m4a,ogg,webm'],
             ], [
                 'user_id.integer'      => 'User ID phải là số.',
@@ -77,15 +91,15 @@ class AttemptController extends Controller
                 'question_id.integer'  => 'Question ID phải là số.',
                 'question_id.exists'   => 'Câu hỏi không tồn tại.',
                 'user_answer.string'   => 'Câu trả lời phải là chuỗi.',
-                'user_answer.max'      => 'Câu trả lời không được dài quá 255 ký tự.',
+                'user_answer.max'      => 'Câu trả lời không được dài quá 5000 ký tự.',
                 'user_answer.required' => 'Bạn phải nhập câu trả lời',
                 'user_audio.file'      => 'Tệp audio không hợp lệ.',
                 'user_audio.mimes'     => 'Tệp audio phải có định dạng mp3, wav, m4a, ogg hoặc webm.',
             ]);
 
-            $userId      = $validated['user_id'];
+            $userId      = $validated['user_id'] ?? null;
             $questionId  = $validated['question_id'];
-            $userAnswer  = $validated['user_answer'];
+            $userAnswer  = trim($validated['user_answer']);
             $userAudioUrl = null;
 
             if ($request->hasFile('user_audio')) {

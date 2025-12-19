@@ -9,9 +9,12 @@ const questionApi = {
 
   async evaluateAnswer(userId, questionId, userAnswer, audioBlob = null) {
     const fd = new FormData();
-    fd.append('user_id', userId)
-    fd.append('user_answer', userAnswer);
-    fd.append('question_id', questionId);
+    // Chỉ append user_id nếu có giá trị hợp lệ
+    if (userId && userId !== null && userId !== undefined && userId !== '') {
+      fd.append('user_id', parseInt(userId, 10));
+    }
+    fd.append('user_answer', userAnswer || '');
+    fd.append('question_id', parseInt(questionId, 10));
 
     if (audioBlob) {
         let filename = 'rec.webm';
