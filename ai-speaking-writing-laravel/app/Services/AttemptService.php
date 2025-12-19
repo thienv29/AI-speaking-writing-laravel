@@ -102,7 +102,7 @@ class AttemptService
         }
 
         $attempt = Attempt::create([
-            'user_id'        => $userId ?? 2,
+            'user_id'        => $userId, // Can be null for guest users
             'question_id'    => $question->id,
             'user_answer'    => $userAnswer ?? null,
             'user_audio_url' => $userAudioUrl ?? null,

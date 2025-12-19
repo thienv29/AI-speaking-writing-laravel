@@ -231,7 +231,7 @@ class AttemptController extends Controller
     public function deleteLessonAttempts(Request $request, int $lessonId)
     {
         try {
-            $userId = $request->input('user_id', 2);
+            $userId = $request->input('user_id'); // No default - can be null for guest users
 
             // Just return success without actually deleting anything
             // Attempts are kept for history/learning analytics
@@ -255,7 +255,7 @@ class AttemptController extends Controller
     public function getLessonStatistics(Request $request, int $lessonId)
     {
         try {
-            $userId = $request->input('user_id', 2); // Default to user_id 2
+            $userId = $request->input('user_id'); // No default - can be null for guest users // Default to user_id 2
             
             // Get all questions in this lesson (across all exercises)
             $lesson = \App\Models\Lesson::with(['exercises.questions' => function($q) {
@@ -342,7 +342,7 @@ class AttemptController extends Controller
     public function getExerciseStatistics(Request $request, int $exerciseId)
     {
         try {
-            $userId = $request->input('user_id', 2); // Default to user_id 2
+            $userId = $request->input('user_id'); // No default - can be null for guest users // Default to user_id 2
             
             // Get exercise with questions
             $exercise = \App\Models\Exercise::with(['questions' => function($q) {
@@ -426,7 +426,7 @@ class AttemptController extends Controller
     public function deleteExerciseAttempts(Request $request, int $exerciseId)
     {
         try {
-            $userId = $request->input('user_id', 2);
+            $userId = $request->input('user_id'); // No default - can be null for guest users
             
             // Get exercise with questions
             $exercise = \App\Models\Exercise::with('questions')->findOrFail($exerciseId);

@@ -191,6 +191,9 @@ class WritingController extends Controller
             }
             $question->has_attempt = $hasAttempt;
             
+            // Pass userId to view for frontend use
+            $currentUserId = $userId;
+            
             // Use the current exercise (already loaded)
             $exerciseType = $exercise->type;
             $lesson = $exercise->lesson;
@@ -382,6 +385,7 @@ class WritingController extends Controller
                 'type' => $exerciseType->code ?? null,
                 'lesson_id' => $lesson->id ?? null,
                 'exercise_id' => $exercise->id ?? null,
+                'user_id' => $currentUserId ?? null,
             ];
             
             $navigationData = $navigationPayload;
@@ -398,7 +402,8 @@ class WritingController extends Controller
                 'allQuestions',
                 'allExercises',
                 'navigationData',
-                'currentContext'
+                'currentContext',
+                'currentUserId'
             ));
             
             // Remove X-Frame-Options to allow embedding

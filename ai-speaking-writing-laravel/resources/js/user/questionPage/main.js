@@ -16,7 +16,17 @@ import * as Navigation from './navigation';
 
 // Current question id
 const question = window.appData.question;
-const userId = "2";
+// Get userId from URL query param, appData, or null (for guest users)
+const userId = (() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUserId = urlParams.get('user_id');
+    if (urlUserId) return urlUserId;
+    
+    const appDataUserId = window.appData?.current?.user_id;
+    if (appDataUserId) return appDataUserId;
+    
+    return null; // Guest user - no userId
+})();
 
 const prevBtn = document.getElementById('prevQuestionBtn');
 const nextBtn = document.getElementById('nextQuestionBtn');
