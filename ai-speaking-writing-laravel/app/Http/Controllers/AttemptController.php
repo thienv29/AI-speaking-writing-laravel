@@ -80,13 +80,13 @@ class AttemptController extends Controller
             }
 
             $validated = $request->validate([
-                'user_id'       => ['nullable','integer', Rule::exists('users','id')],
+                'user_id'       => ['nullable','integer', Rule::exists('users','id')->withoutTrashed()],
                 'question_id'   => ['required','integer', Rule::exists('questions','id')],
                 'user_answer'   => ['required','string','max:5000'], // Tăng từ 255 lên 5000 cho writing
                 'user_audio'    => ['nullable','file','mimes:mp3,wav,m4a,ogg,webm'],
             ], [
                 'user_id.integer'      => 'User ID phải là số.',
-                'user_id.exists'       => 'Người dùng không tồn tại.',
+                'user_id.exists'       => 'Người dùng không tồn tại. Vui lòng kiểm tra lại user_id hoặc liên hệ admin.',
                 'question_id.required' => 'Câu hỏi là bắt buộc.',
                 'question_id.integer'  => 'Question ID phải là số.',
                 'question_id.exists'   => 'Câu hỏi không tồn tại.',
